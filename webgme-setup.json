@@ -1,0 +1,43 @@
+{
+  "components": {
+    "addons": {},
+    "decorators": {},
+    "layouts": {},
+    "plugins": {
+      "checkout": {
+        "src": "src/plugins/checkout",
+        "test": "test/plugins/checkout"
+      },
+      "checkin": {
+        "src": "src/plugins/checkin",
+        "test": "test/plugins/checkin"
+      },
+      "foo": {
+        "src": "src/plugins/foo",
+        "test": "test/plugins/foo"
+      }
+    },
+    "seeds": {
+      "immortals": {
+        "src": "src/seeds/immortals"
+      }
+    },
+    "visualizers": {
+      "cytoscape": {
+        "src": "panels/cytoscape/cytoscapePanel",
+        "title": "cytoscape",
+        "panel": "src/visualizers/panels/cytoscape",
+        "secondary": false,
+        "widget": "src/visualizers/widgets/cytoscape"
+      }
+    }
+  },
+  "dependencies": {
+    "addons": {},
+    "decorators": {},
+    "layouts": {},
+    "plugins": {},
+    "seeds": {},
+    "visualizers": {}
+  }
+}
