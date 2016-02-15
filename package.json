@@ -6,7 +6,8 @@
   },
   "version": "1.0.0",
   "dependencies": {
-    "webgme": "^1.1.0"
+    "cytoscape": "^2.6.3",
+    "webgme": "latest"
   },
   "devDependencies": {
     "mocha": "^2.2.5",

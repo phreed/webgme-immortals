@@ -6,11 +6,12 @@
 
 define(['js/Constants',
     'js/Utils/GMEConcepts',
-    'js/NodePropertyNames'
+    'js/NodePropertyNames',
+    'cytoscape/cytoscape.min'
 ], function (CONSTANTS,
              GMEConcepts,
-             nodePropertyNames) {
-
+             nodePropertyNames,
+             cytoscape) {
     'use strict';
 
     var cytoscapeControl;

@@ -11,6 +11,8 @@ config.plugin.allowBrowserExecution = true
 config.plugin.allowServerExecution = false
 config.seedProjects.enable = true
 
+config.requirejsPaths["cytoscape"] = './node_modules/cytoscape/dist/'
+
 
 validateConfig(config);
 module.exports = config;

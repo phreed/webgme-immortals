@@ -6,94 +6,196 @@
  */
 
 define([
-    'plugin/PluginConfig',
-    'plugin/PluginBase'
-], function (
-    PluginConfig,
-    PluginBase) {
-    'use strict';
+  'plugin/PluginConfig',
+  'plugin/PluginBase',
+  'jszip',
+  'xmljsonconverter'
+], function(
+  PluginConfig,
+  PluginBase,
+  JSZip,
+  Converter) {
+  'use strict';
 
-    /**
-     * Initializes a new instance of checkout.
-     * @class
-     * @augments {PluginBase}
-     * @classdesc This class represents the plugin checkout.
-     * @constructor
-     */
-    var checkout = function () {
-        // Call base class' constructor.
-        PluginBase.call(this);
-    };
+  /**
+   * Initializes a new instance of checkout.
+   * @class
+   * @augments {PluginBase}
+   * @classdesc This class represents the plugin checkout.
+   * @constructor
+   */
+  var checkout = function() {
+    // Call base class' constructor.
+    PluginBase.call(this);
+  };
 
-    // Prototypal inheritance from PluginBase.
-    checkout.prototype = Object.create(PluginBase.prototype);
-    checkout.prototype.constructor = checkout;
+  // Prototypal inheritance from PluginBase.
+  checkout.prototype = Object.create(PluginBase.prototype);
+  checkout.prototype.constructor = checkout;
 
-    /**
-     * Gets the name of the checkout.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    checkout.prototype.getName = function () {
-        return 'checkout';
-    };
+  /**
+   * Gets the name of the checkout.
+   * @returns {string} The name of the plugin.
+   * @public
+   */
+  checkout.prototype.getName = function() {
+    return 'checkout';
+  };
 
-    /**
-     * Gets the semantic version (semver.org) of the checkout.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    checkout.prototype.getVersion = function () {
-        return '0.1.0';
-    };
+  /**
+   * Gets the semantic version (semver.org) of the checkout.
+   * @returns {string} The version of the plugin.
+   * @public
+   */
+  checkout.prototype.getVersion = function() {
+    return '0.1.0';
+  };
 
-    /**
-      Main function for the plugin to execute. This will perform the execution.
-      Notes:
-      - Always log with the provided logger.[error,warning,info,debug].
-      - Do NOT put any user interaction logic UI, etc. inside this method.
-      - callback always has to be called even if error happened.
+  /**
+   * Gets the configuration structure for the checkout.
+   * The ConfigurationStructure defines the configuration for the plugin
+   * and will be used to populate the GUI when invoking the plugin from webGME.
+   * @returns {object} The version of the plugin.
+   * @public
+   */
+  checkout.prototype.getConfigStructure = function() {
+    return [{
+      name: 'mode',
+      displayName: 'Mode file or websocket',
+      description: 'Are we importing a file or making an extract from the super model?',
+      value: 'file',
+      valueType: 'string',
+      valueItems: [
+        'file',
+        'websocket'
+      ]
+    }, {
+      name: 'hostAddr',
+      displayName: 'graph db host IP address or name',
+      // regex: '^[a-zA-Z]+$',
+      // regexMessage: 'Name can only contain English characters!',
+      // ValidHostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$";
+      // ValidIpAddressRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
+      description: 'What is the ip address or name of the host for the ' + 'graph database multi-model.',
+      value: '127.0.0.1',
+      valueType: 'string',
+      readOnly: false
+    }, {
+      name: 'query',
+      displayName: 'extract sub-model',
+      description: 'Model extraction from system Multi-Model.',
+      value: '',
+      valueType: 'string',
+      readOnly: false
+    }, {
+      name: 'file',
+      displayName: 'graph model',
+      description: 'click and drag file .',
+      value: 'default_graph.json',
+      valueType: 'asset',
+      readOnly: false
+    }];
+  };
 
-      When this runs the core api is used to extract the meta-model and
-      the model instance from the system multi-model. The multi-model contains
-      all of the models used to describe the target system.
-      The current model is replacd with the requested model.
 
-     * @param {function(string, plugin.PluginResult)} callback - the result callback
-     */
-    checkout.prototype.main = function (callback) {
-        // Use self to access core, project, result, logger etc from PluginBase.
-        // These are all instantiated at this point.
-        var self = this,
-            nodeObject;
+  /**
+    Main function for the plugin to execute. This will perform the execution.
+    Notes:
+    - Always log with the provided logger.[error,warning,info,debug].
+    - Do NOT put any user interaction logic UI, etc. inside this method.
+    - callback always has to be called even if error happened.
 
+    When this runs the core api is used to extract the meta-model and
+    the model instance from the system multi-model. The super-model contains
+    all of the models used to describe the target system.
+    The current model is replacd with the requested model.
 
-        // Using the logger.
-        self.logger.debug('This is a debug message.');
-        self.logger.info('This is an info message.');
-        self.logger.warn('This is a warning message.');
-        self.logger.error('This is an error message.');
+   * @param {function(string, plugin.PluginResult)} callback - the result callback
+   */
+  checkout.prototype.main = function(callback) {
+    // Use self to access core, project, result, logger etc from PluginBase.
+    // These are all instantiated at this point.
 
-        // Using the coreAPI to make changes.
+    var self = this,
+      // nodeObject = self.activeNode;
+      baseNode = self.core.getBase(),
+      currentConfig = self.getCurrentConfig();
 
-        nodeObject = self.activeNode;
+    switch (self.currentConfig.mode) {
+      case 'file':
+        if (!self.currentConfig.file) {
+          callback(new Error('No file provided.'), self.result);
+          return;
+        }
+        self.blobClient.getObject(self.currentConfig.file, saveFile);
+        break;
+      case 'websocket':
+        if (!self.currentConfig.hostAddr) {
+          callback(new Error('No host address provided.'), self.result);
+          return;
+        }
+        self.blobClient.getObject(self.currentConfig.file, saveWebsocket);
+        break;
+      default:
+        callback(new Error('unknown mode provided.'), self.result);
+        return;
+    }
 
-        self.core.setAttribute(nodeObject, 'name', 'My new obj');
-        self.core.setRegistry(nodeObject, 'position', {x: 70, y: 70});
+    self.blobClient.getObject(currentConfig.file, function(err, jsonOrBuf) {
+      var dataModel;
+      if (err) {
+        callback(err);
+        return;
+      }
 
+      if (typeof Buffer !== 'undefined' && jsonOrBuf instanceof Buffer) {
+        // This clause is entered when the plugin in executed in a node process (on the server) rather than
+        // in a browser. Then the getObject returns a Buffer and we need to convert it to string and then
+        // parse it into an object.
+        try {
+          jsonOrBuf = String.fromCharCode.apply(null, new Uint8Array(jsonOrBuf));
+          dataModel = JSON.parse(jsonOrBuf);
+        } catch (err) {
+          callback(err, self.result);
+          return;
+        }
+      } else {
+        // In the browser the getObject automatically returns a json object.
+        dataModel = jsonOrBuf;
+      }
 
-        // This will save the changes. If you don't want to save;
-        // exclude self.save and call callback directly from this scope.
-        self.save('checkout updated model.', function (err) {
-            if (err) {
-                callback(err, self.result);
-                return;
-            }
-            self.result.setSuccess(true);
-            callback(null, self.result);
+      self.logger.info('Obtained dataModel', dataModel);
+      self.buildUpFMDiagram(dataModel, function(err) {
+        if (err) {
+          callback(err, self.result);
+          return;
+        }
+
+        self.save('FSM Importer created new model.', function(err) {
+          if (err) {
+            callback(err, self.result);
+            return;
+          }
+
+          self.result.setSuccess(true);
+          callback(null, self.result);
         });
+      })
+    });
 
-    };
 
-    return checkout;
+    // This will save the changes. If you don't want to save;
+    // exclude self.save and call callback directly from this scope.
+    self.save('checkout updated model.', function(err) {
+      if (err) {
+        callback(err, self.result);
+        return;
+      }
+      self.result.setSuccess(true);
+      callback(null, self.result);
+    });
+
+  };
+
+  return checkout;
 });

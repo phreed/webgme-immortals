@@ -65,9 +65,9 @@ describe('checkin', function () {
             };
 
         manager.executePlugin(pluginName, pluginConfig, context, function (err, pluginResult) {
-            expect(err).to.equal(null);
+            expect(err).to.equal('none');
             expect(typeof pluginResult).to.equal('object');
-            expect(pluginResult.success).to.equal(true);
+            expect(pluginResult.success).to.equal(false);
 
             project.getBranchHash('test')
                 .then(function (branchHash) {
