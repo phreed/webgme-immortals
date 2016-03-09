@@ -21,6 +21,6 @@ config.requirejsPaths = {
 };
 
 
-config.mongo.uri = 'mongodb://127.0.0.1:27017/webgme_tinkerpop3';
+config.mongo.uri = 'mongodb://127.0.0.1:27017/webgme_immortals';
 validateConfig(config);
 module.exports = config;

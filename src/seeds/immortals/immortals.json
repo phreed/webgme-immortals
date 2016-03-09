@@ -48,7 +48,7 @@
         },
         "usedAddOns": "",
         "validDecorators": "ModelDecorator CircleDecorator MetaDecorator SVGDecorator UMLStateMachineDecorator DefaultDecorator",
-        "validPlugins": "checkin",
+        "validPlugins": "push",
         "validVisualizers": "ModelEditor METAAspect"
       },
       "sets": {

@@ -1,5 +1,5 @@
 {
-  "name": "webgme-tinkerpop3",
+  "name": "webgme-immortals",
   "scripts": {
     "start": "node app.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test"
@@ -7,6 +7,7 @@
   "version": "1.0.0",
   "dependencies": {
     "cytoscape": "^2.6.3",
+    "jassa-core": "^0.6.0",
     "webgme": "latest"
   },
   "devDependencies": {

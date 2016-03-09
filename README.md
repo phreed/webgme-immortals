@@ -18,9 +18,9 @@ make sure we are up to date.
 Now we can get the webgme-setup-tool
     npm install -g webgme-setup-tool
 
-Now we can make a webgme project using the setupt tool
-    webgme init webgme-tinkerpop3
-    cd webgme-tinkerpop3/
+Now we can make a webgme project using the setup tool
+    webgme init webgme-immortals
+    cd webgme-immortals/
 
 Let us make sure everything is in working order.
     webgme start
@@ -32,19 +32,19 @@ Probably better to consider insignificant, i.e. changes to javascript or css.
 These insignificant changes only require a save and a reload in the browser.
 
 This sytem will have plugins, addons and visualizers.
-First order of business is getting the 'checkout' and 'checkin' plugins working.
+First order of business is getting the 'pull' and 'push' plugins working.
     webgme new plugin -h
 
 The --config-structure allows the operator to change configuration variables.
 In this case the graph multi-model host and the query to run.
-    webgme new plugin --config-structure checkout
-    webgme new plugin --config-structure checkin
+    webgme new plugin --config-structure pull
+    webgme new plugin --config-structure push
 
 Now enable the plugins for the paradigm.
-    webgme enable plugin checkin feature_model
-    webgme enable plugin checkout feature_model
+    webgme enable plugin push feature_model
+    webgme enable plugin pull feature_model
 
-We want a seed model so that the checkout can be run.
+We want a seed model so that the pull can be run.
     webgme new seed baz --seed-name immortals
 
 Eventually we will want to visualize the graph more conventionally:
