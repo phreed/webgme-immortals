@@ -17,7 +17,8 @@ config.visualization.visualizerDescriptors.push('./src/visualizers/Visualizers.j
 // Add requirejs paths
 config.requirejsPaths = {
   'panels': './src/visualizers/panels',
-  'widgets': './src/visualizers/widgets'
+  'widgets': './src/visualizers/widgets',
+  'serialize': './src/serialize'
 };
 
 

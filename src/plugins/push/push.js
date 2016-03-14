@@ -9,6 +9,7 @@ define([
   'plugin/PluginConfig',
   'plugin/PluginBase',
   'common/core/users/newserialization',
+  'serialize/FlatSerializer',
   'blob/BlobMetadata',
   'blob/util',
   'q'
@@ -16,6 +17,7 @@ define([
   PluginConfig,
   PluginBase,
   newserialization,
+  FlatSerializer,
   BlobMetadata,
   Q) {
   'use strict';
@@ -86,10 +88,11 @@ define([
       name: 'typedVersion',
       displayName: 'TypedVersion',
       description: 'Specify the type and version to be used.',
-      value: 'json:1.0.0',
+      value: 'json-flat:1.0.0',
       valueType: 'string',
       valueItems: [
-        'json:1.0.0'
+        'json-flat:1.0.0',
+        'json-tree:1.0.0'
       ]
     }, {
       name: 'hostAddr',
@@ -112,7 +115,7 @@ define([
       displayName: 'graph model file name',
       description: 'click and drag file .',
       value: 'default_graph.json',
-      valueType: 'asset',
+      valueType: 'string',
       readOnly: false
     }];
   };
@@ -145,8 +148,14 @@ define([
 
     self.logger.info('serialize the model in the requested manner');
     switch (config.typedVersion) {
-      case 'json:1.0.0':
-        self.serializeDataModelJson100(config, mainHandler,
+      case 'json-tree:1.0.0':
+        self.serializeTreeJson100(config, mainHandler,
+          function(jsonStr) {
+            self.deliver(config, mainHandler, jsonStr);
+          });
+        return;
+      case 'json-flat:1.0.0':
+        self.serializeFlatJson100(config, mainHandler,
           function(jsonStr) {
             self.deliver(config, mainHandler, jsonStr);
           });
@@ -164,7 +173,26 @@ define([
   /**
   Pushing the current data-model into a JSON structure.
   */
-  push.prototype.serializeDataModelJson100 =
+  push.prototype.serializeFlatJson100 =
+    function(config, mainHandler, deliveryFn) {
+      var self = this,
+        jsonStr;
+
+      // produce a js-object
+      FlatSerializer.export(self.core, self.activeNode,
+        function(err, jsonObject) {
+          if (err) {
+            mainHandler(err, self.result);
+            return;
+          }
+          jsonStr = JSON.stringify(jsonObject, null, 4);
+          deliveryFn(jsonStr)
+        });
+    };
+  /**
+  Pushing the current data-model into a JSON structure.
+  */
+  push.prototype.serializeTreeJson100 =
     function(config, mainHandler, deliveryFn) {
       var self = this,
         jsonStr;
