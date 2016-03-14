@@ -7,10 +7,17 @@
 
 define([
   'plugin/PluginConfig',
-  'plugin/PluginBase'
+  'plugin/PluginBase',
+  'common/core/users/newserialization',
+  'blob/BlobMetadata',
+  'blob/util',
+  'q'
 ], function(
   PluginConfig,
-  PluginBase) {
+  PluginBase,
+  newserialization,
+  BlobMetadata,
+  Q) {
   'use strict';
 
   /**
@@ -46,6 +53,17 @@ define([
   push.prototype.getVersion = function() {
     return '0.1.0';
   };
+
+  /**
+   * Gets the description of the push plugin.
+   * @returns {string} The description of the plugin.
+   * @public
+   */
+  push.prototype.getDescription = function() {
+    return 'Example of how to push a data-model from webgme.\n' +
+      'The active node (i.e. open node on the canvas) will be the starting point, ' +
+      'expect when importing a project.';
+  };
   /**
    * Gets the configuration structure for the foo.
    * The ConfigurationStructure defines the configuration for the plugin
@@ -55,7 +73,7 @@ define([
    */
   push.prototype.getConfigStructure = function() {
     return [{
-      name: 'mode',
+      name: 'deliveryMode',
       displayName: 'Mode file or websocket',
       description: '',
       value: 'file',
@@ -65,11 +83,20 @@ define([
         'websocket'
       ]
     }, {
+      name: 'typedVersion',
+      displayName: 'TypedVersion',
+      description: 'Specify the type and version to be used.',
+      value: 'json:1.0.0',
+      valueType: 'string',
+      valueItems: [
+        'json:1.0.0'
+      ]
+    }, {
       name: 'hostAddr',
       displayName: 'graph db host IP address or name',
       // regex: '^[a-zA-Z]+$',
       // regexMessage: 'Name can only contain English characters!',
-      description: 'What is the ip address or name of the host for the ' + 'graph database multi-model.',
+      description: 'What is the ip address or name of the host for the ' + 'graph database mega-model.',
       value: '127.0.0.1',
       valueType: 'string',
       readOnly: false
@@ -81,8 +108,8 @@ define([
       valueType: 'string',
       readOnly: false
     }, {
-      name: 'file',
-      displayName: 'graph model',
+      name: 'fileName',
+      displayName: 'graph model file name',
       description: 'click and drag file .',
       value: 'default_graph.json',
       valueType: 'asset',
@@ -91,107 +118,104 @@ define([
   };
 
   /**
-    Main function for the plugin to execute. This will perform the execution.
+    Main function for the plugin to execute.
     Notes:
     - Always log with the provided logger.[error,warning,info,debug].
     - Do NOT put any user interaction logic UI, etc. inside this method.
-    - callback always has to be called even if error happened.
+    - handler always has to be called even if error happened.
 
     When this runs the core api is used to extract the essential
-    meta-model and the model instance, these are then written to the multi-model.
-    The multi-model contains all of the models used to describe the target system.
+    meta-model and the model-instance, these are then written to the mega-model.
+    The mega-model contains all of the models used to describe the target system.
 
     https://github.com/ptaoussanis/sente
     and https://github.com/cognitect/transit-format
     will be used to connect to the
-    graph database (immortals) where the multi-model is stored.
+    graph database (immortals) where the mega-model is stored.
 
-    @param {function(string, plugin.PluginResult)} callback - the result callback
+    @param {function(string, plugin.PluginResult)} handler - the result handler
    */
-  push.prototype.main = function(callback) {
-    // Use self to access core, project, result, logger etc from PluginBase.
+  push.prototype.main =
+    function(mainHandler) {
+    // Use self to access core, project, result, logger etc from
+    // PluginBase.
     // These are all instantiated at this point.
     var self = this,
-      // nodeObject = self.activeNode;
-      baseNode = self.core.getBase(),
-      currentConfig = self.getCurrentConfig();
+      config = self.getCurrentConfig();
 
-    switch (self.currentConfig.mode) {
-      case 'file':
-        if (!self.currentConfig.file) {
-          callback(new Error('No file provided.'), self.result);
-          return;
-        }
-        self.blobClient.getObject(self.currentConfig.file, function (err, objectValue) {
-            var dataModel;
-            if (err) {
-                callback(err);
-                return;
-            }
-            dataModel = self.regularize(objectValue);
-
-
-            self.logger.info('Saved dataModel', dataModel);
-            self.buildUpTripleCollection(dataModel, function (err) {
-                if (err) {
-                    callback(err, self.result);
-                    return;
-                }
-
-                self.save('Immortals exporter saved model.', function (err) {
-                    if (err) {
-                        callback(err, self.result);
-                        return;
-                    }
-
-                    self.result.setSuccess(true);
-                    callback(null, self.result);
-                });
-            })
-        };);
-        break;
-      case 'websocket':
-        if (!self.currentConfig.hostAddr) {
-          callback(new Error('No host address provided.'), self.result);
-          return;
-        }
-        self.blobClient.getDownloadURL(self.currentConfig.hostAddr, saveWebsocket);
-        break;
+    self.logger.info('serialize the model in the requested manner');
+    switch (config.typedVersion) {
+      case 'json:1.0.0':
+        self.serializeDataModelJson100(config, mainHandler,
+          function(jsonStr) {
+            self.deliver(config, mainHandler, jsonStr);
+          });
+        return;
       default:
-        callback(new Error('unknown mode provided.'), self.result);
+        self.result.setSuccess(false);
+        mainHandler("Unknown serialization type ", self.result);
         return;
     }
 
-
-    // Using the logger.
-    self.logger.debug('This is a debug message.');
-    self.logger.info('This is an info message.');
-    self.logger.warn('This is a warning message.');
-    self.logger.error('This is an error message.');
-
-
-    // extract the meta-model
-
-    // extract the model-instance
-    self.core.setAttribute(nodeObject, 'name', 'My new obj');
-    self.core.setRegistry(nodeObject, 'position', {
-      x: 70,
-      y: 70
-    });
-
-
-    // This will save the changes. If you don't want to save;
-    // exclude self.save and call callback directly from this scope.
-    self.save('push updated model.', function(err) {
-      if (err) {
-        callback(err, self.result);
-        return;
-      }
-      self.result.setSuccess(true);
-      callback(null, self.result);
-    });
-
+    self.result.setSuccess(false);
+    mainHandler("could not push data model", self.result);
   };
 
+  /**
+  Pushing the current data-model into a JSON structure.
+  */
+  push.prototype.serializeDataModelJson100 =
+    function(config, mainHandler, deliveryFn) {
+      var self = this,
+        jsonStr;
+
+      // produce a js-object
+      newserialization.export(self.core, self.activeNode,
+        function(err, jsonObject) {
+          if (err) {
+            mainHandler(err, self.result);
+            return;
+          }
+          jsonStr = JSON.stringify(jsonObject, null, 4);
+          deliveryFn(jsonStr)
+        });
+    };
+
+  push.prototype.deliver =
+    function (config, mainHandler, payload) {
+      var self = this,
+        isProject = self.core.getPath(self.activeNode) === '',
+        pushedFileName,
+        artifact;
+
+    switch (config.deliveryMode) {
+      case 'file':
+        if (!config.fileName) {
+          mainHandler(new Error('No file provided.'), self.result);
+          return;
+        }
+        pushedFileName = config.fileName;
+        artifact = self.blobClient.createArtifact('pushed');
+        self.logger.debug('Exported: ', pushedFileName);
+        artifact.addFile(pushedFileName, payload,
+          function(err) {
+            if (err) {
+              mainHandler(err, self.result);
+              return;
+            }
+            artifact.save(
+              function(err, hash) {
+                if (err) {
+                  mainHandler(err, self.result);
+                  return;
+                }
+                self.result.addArtifact(hash);
+                self.result.setSuccess(true);
+                mainHandler(null, self.result);
+              });
+          });
+        }
+      }
+  /* Then end of the module */
   return push;
 });
