@@ -100,12 +100,16 @@ function (ASSERT, CANON) {
 
         function getPointersOfNode(node) {
             //this version only puts paths to target so they need to be either removed or replaced by guid targets
-
+            // The 'base' pointer is a redundant artifact
+            // and should not appear in the export file.
             var names = core.getOwnPointerNames(node).sort(),
                 i,
+                candidate,
                 result = {};
             for (i = 0; i < names.length; i++) {
-                result[names[i]] = core.getPointerPath(node, names[i]);
+              candidate = names[i];
+              if (candidate == 'base') continue;
+              result[candidate] = core.getPointerPath(node, candidate);
             }
             return result;
         }

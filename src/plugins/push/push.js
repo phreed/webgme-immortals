@@ -185,7 +185,7 @@ define([
             mainHandler(err, self.result);
             return;
           }
-          jsonStr = JSON.stringify(jsonObject, null, 4);
+          jsonStr = JSON.stringify(jsonObject.nodes, null, 4);
           deliveryFn(jsonStr)
         });
     };
