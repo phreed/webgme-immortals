@@ -10,6 +10,7 @@ define([
   'plugin/PluginBase',
   'common/core/users/newserialization',
   'serialize/FlatSerializer',
+  'serialize/CyjsSerializer',
   'blob/BlobMetadata',
   'blob/util',
   'q'
@@ -18,9 +19,25 @@ define([
   PluginBase,
   newserialization,
   FlatSerializer,
+  CyjsSerializer,
   BlobMetadata,
   Q) {
   'use strict';
+
+  /**
+  Provide for true prototypal-inheritance
+  http://javascript.crockford.com/prototypal.html
+  New objects can then be created from
+  existing objects.
+  newObject = Object.create(oldObject);
+  */
+  if (typeof Object.create !== 'function') {
+      Object.create = function (o) {
+          function F() {}
+          F.prototype = o;
+          return new F();
+      };
+  }
 
   /**
    * Initializes a new instance of push.
@@ -88,11 +105,11 @@ define([
       name: 'typedVersion',
       displayName: 'TypedVersion',
       description: 'Specify the type and version to be used.',
-      value: 'json-flat:1.0.0',
+      value: 'json-cytoscape:1.0.0',
       valueType: 'string',
       valueItems: [
         'json-flat:1.0.0',
-        'json-tree:1.0.0'
+        'json-cytoscape:1.0.0'
       ]
     }, {
       name: 'hostAddr',
@@ -160,6 +177,12 @@ define([
             self.deliver(config, mainHandler, jsonStr);
           });
         return;
+      case 'json-cytoscape:1.0.0':
+        self.serializeCytoscapeJson100(config, mainHandler,
+          function(jsonStr) {
+            self.deliver(config, mainHandler, jsonStr);
+          });
+        return;
       default:
         self.result.setSuccess(false);
         mainHandler("Unknown serialization type ", self.result);
@@ -186,6 +209,23 @@ define([
             return;
           }
           jsonStr = JSON.stringify(jsonObject.nodes, null, 4);
+          deliveryFn(jsonStr)
+        });
+    };
+
+  push.prototype.serializeCytoscapeJson100 =
+    function(config, mainHandler, deliveryFn) {
+      var self = this,
+        jsonStr;
+
+      // produce a js-object
+      CyjsSerializer.export(self.core, self.activeNode,
+        function(err, jsonObject) {
+          if (err) {
+            mainHandler(err, self.result);
+            return;
+          }
+          jsonStr = JSON.stringify(jsonObject, null, 4);
           deliveryFn(jsonStr)
         });
     };
