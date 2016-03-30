@@ -6,10 +6,11 @@ the author of this document.
 I run the following commands to install on Ubuntu.
 ```bash
   sudo apt-get install mongodb-server
+  sudo apt-get install git
 
   mkdir -p ~/projects/brass
   cd ~/projects/brass
-  git clone git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git
+  git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
   cd webgme-immortals
 
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
