@@ -13,8 +13,11 @@ config.seedProjects.enable = true;
 
 config.requirejsPaths["cytoscape"] = './node_modules/cytoscape/dist/';
 config.requirejsPaths["bower"] = './bower_modules/';
+config.requirejsPaths["style"] = './style/';
 // need to get https://github.com/GeoKnow/Jassa-Bower/archive/v0.9.0-SNAPSHOT.zip
 // so that there can be interaction with Jena
+
+config.visualization.extraCss = ['style/immortals.css'];
 
 validateConfig(config);
 module.exports = config;

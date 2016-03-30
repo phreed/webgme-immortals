@@ -1,5 +1,10 @@
 {
   "name": "webgme-immortals",
+  "license": "MIT",
+  "repository" :
+  { "type" : "git",
+    "url" : "git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git"
+  },
   "scripts": {
     "start": "node app.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test"
@@ -8,7 +13,7 @@
   "dependencies": {
     "cytoscape": "^2.6.3",
     "jassa-core": "^0.6.0",
-    "webgme": "1.6.0"
+    "webgme": "phreed/webgme#b1"
   },
   "devDependencies": {
     "mocha": "^2.2.5",

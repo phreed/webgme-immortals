@@ -1,0 +1,27 @@
+
+ul.dropdown-navigator > li:not(.separator):hover > div.hierarchical-menu {
+  transition-delay: 5s;
+}
+
+ul.dropdown-navigator > li:focus {
+  visibility: visible;
+  pointer-events: none;
+}
+
+ul.dropdown-navigator > li:focus > div.hierarchical-menu {
+    pointer-events: none;
+    visibility: visible;
+    z-index: 3;
+  }
+
+ul.dropdown-navigator > li:focus > div.hierarchical-menu > ul.menu-contents {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+ul.dropdown-navigator > li > div.hierarchical-menu > ul.menu-contents {
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0.5s;
+    }
