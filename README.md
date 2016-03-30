@@ -1,56 +1,78 @@
 
-The plugins were created using
-https://github.com/webgme/webgme-setup-tool
+### Quick Start ###
 
-But first the Node.js development environment needs to be established.
-https://github.com/creationix/nvm
-This gives us 'nvm'.
+In the following "I" represents the configuration used by
+the author of this document.
+"You" should feel free to change "I"'s settings.
+I run the following commands to install on Ubuntu.
 
-    nvm use system
-    nvm list
+  sudo apt-get install mongodb-server
 
-    nvm install 5.2.0
-    nvm use 5.2.0
+  mkdir -p ~/projects/brass
+  cd ~/projects/brass
+  git clone git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git
+  cd webgme-immortals
 
-make sure we are up to date.
-    npm install -g npm
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+  nvm install v4.2.4
+  nvm use v4.2.4
 
-Now we can get the webgme-setup-tool
-    npm install -g webgme-setup-tool
+  npm install
 
-Now we can make a webgme project using the setup tool
-    webgme init webgme-immortals
-    cd webgme-immortals/
+  webgme start
 
-Let us make sure everything is in working order.
-    webgme start
 
-Ctrl-C to shut the server down.
-You will do this each time you make significant changes to your project.
-What is a significant change?
-Probably better to consider insignificant, i.e. changes to javascript or css.
-These insignificant changes only require a save and a reload in the browser.
+webGME and its derivatives are node.js applications which
+use mongodb as the backing store and git for version-control.
+Development and operation are possible on MS-Windows and Mac-OSX.
+The following instructions are for Ubuntu 16.04 (which I use).
 
-This sytem will have plugins, addons and visualizers.
-First order of business is getting the 'pull' and 'push' plugins working.
-    webgme new plugin -h
+  sudo apt-get install mongodb-server
+  sudo apt-get install git
 
-The --config-structure allows the operator to change configuration variables.
-In this case the graph multi-model host and the query to run.
-    webgme new plugin --config-structure pull
-    webgme new plugin --config-structure push
+Clone the webgme-immortals project into an appropriate place.
+I work in a project folder and clone projects into that:
+  mkdir -p ~/projects/brass
+  cd ~/projects/brass
 
-Now enable the plugins for the paradigm.
-    webgme enable plugin push feature_model
-    webgme enable plugin pull feature_model
+  git clone git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git
 
-We want a seed model so that the pull can be run.
-    webgme new seed baz --seed-name immortals
+WebGME does not closely track node.js nor npm therefore it is
+useful to use the node-version-manager (nvm https://github.com/creationix/nvm)
+to establish a consistent set of Javascript packages.
 
-Eventually we will want to visualize the graph more conventionally:
-    webgme new viz  cytoscape
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
 
-And we will want to use addons to prevent the model from being damaged
-too severely while it is being worked on. Basically this means that
-some nodes cannot be deleted or anything that changes their uuids.
-    webgme new addon  preserve
+Once nvm installed the appropriate bundle for webGME is enabled.
+
+  nvm install v4.2.4
+  nvm use v4.2.4
+
+Now we can get the webgme-setup-tool which includes the 'webgme' tool.
+
+  npm install -g webgme-setup-tool
+
+Update all the npm packages within the webgme-immortals directory.
+This establishes a set of node_modules specifically for the project.
+
+  cd ~/projects/brass/webgme-immortals
+  npm install
+
+Things are now configured to start the webGME server.
+Pay attention to the output as the URL for connecting
+to the 'gme web server' will be written stdout.
+
+  webgme start
+
+Ctrl-C is used to shut the server down.
+Some changes to the running system will necessitate restarting the server.
+This includes changes to the packages listed in 'packages.json' (npm),
+or 'bower.json'.
+Changes to Javascript or CSS will only require an refresh on the browser.
+
+### Samples ###
+
+There are a few sample projects in...
+webgme-immortals/samples/model/
+...notably ./deployment_model/webgme/immortals_dm_v2_master.json
+See the accompanying README.md for more information.
