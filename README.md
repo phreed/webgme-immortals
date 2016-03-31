@@ -36,7 +36,10 @@ I work in a project folder and clone projects into that:
   mkdir -p ~/projects/brass
   cd ~/projects/brass
 
+  git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
   git clone git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git
+
+  cd webgme-immortals
 ```
 WebGME does not closely track node.js nor npm therefore it is
 useful to use the node-version-manager (nvm https://github.com/creationix/nvm)
@@ -44,6 +47,8 @@ to establish a consistent set of Javascript packages.
 ```bash
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
 ```
+**Close and reopen your terminal to start using nvm (or source .bashrc).**
+
 Once nvm installed the appropriate bundle for webGME is enabled.
 ```bash
   nvm install v4.2.4
@@ -77,3 +82,15 @@ There are a few sample projects in...
 webgme-immortals/samples/model/
 ...notably ./deployment_model/webgme/immortals_dm_v2_master.json
 See the accompanying README.md for more information.
+
+### Creating User Accounts ###
+By default webgme starts with a single user, 'guest',
+additional users can be added with the 'usermanager'.
+
+```bash
+node node_modules/webgme/src/bin/usermanager.js -h
+```
+
+```bash
+node node_modules/webgme/src/bin/usermanager.js useradd foo foo@bar.org foopass
+```
