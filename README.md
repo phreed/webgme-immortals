@@ -54,6 +54,11 @@ Once nvm installed the appropriate bundle for webGME is enabled.
   nvm install v4.2.4
   nvm use v4.2.4
 ```
+It may be necessary to disable the prefix.
+```bash
+nvm use --delete-prefix v4.2.4
+```
+
 Now we can get the webgme-setup-tool which includes the 'webgme' tool.
 ```bash
   npm install -g webgme-setup-tool
@@ -92,5 +97,7 @@ node node_modules/webgme/src/bin/usermanager.js -h
 ```
 
 ```bash
-node node_modules/webgme/src/bin/usermanager.js useradd foo foo@bar.org foopass
+node node_modules/webgme/src/bin/usermanager.js useradd --canCreate foo foo@bar.org foopass
+node node_modules/webgme/src/bin/usermanager.js organizationadd baz
+node node_modules/webgme/src/bin/usermanager.js usermod_organization_add foo baz
 ```

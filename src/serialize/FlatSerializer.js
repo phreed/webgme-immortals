@@ -88,6 +88,40 @@ function (ASSERT, CANON) {
             return result;
         }
 
+        function buildSemanticUriForNode(node) {
+          var
+            uriPrefix = core.getAttribute(node, "uriPrefix").trim(),
+            uriExt = core.getAttribute(node, "uriExt").trim(),
+            uriName = core.getAttribute(node, "uriName").trim(),
+            name = core.getAttribute(node, "name").trim();
+
+            if (uriExt.slice(-1) !== '#') uriExt += '#';
+
+            if (uriName == null || uriName.length == 0) {
+              return uriPrefix + uriExt + name;
+            } else {
+              return uriPrefix + uriExt + uriName;
+            }
+        }
+
+        function getDerivativeAttrOfNode(node) {
+          var result = {},
+            uriGen = core.getAttribute(node, "uriGen");
+
+          result.uriGen = uriGen;
+          result.name = core.getAttribute(node, "name");
+
+          switch (uriGen) {
+            case "semantic":
+              result.uri = buildSemanticUriForNode(node);
+            case undefined:
+            case null:
+            case "none":
+            default:
+          }
+          return result;
+        }
+
         function getRegistryOfNode(node) {
             var names = core.getOwnRegistryNames(node).sort(),
                 i,
@@ -208,7 +242,8 @@ function (ASSERT, CANON) {
 
         function getNodeData(path, next) {
             var jsonNode = {},
-                guid;
+                guid,
+                nname;
             notInComputation = false;
             core.loadByPath(root, path, function (err, node) {
                 if (err || !node) {
@@ -231,12 +266,20 @@ function (ASSERT, CANON) {
                  meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
                  */
 
+                nname = core.getAttribute(node, "name");
                 jsonNode.attributes = getAttributesOfNode(node);
-                jsonNode.registry = getRegistryOfNode(node);
+                jsonNode.derivative = getDerivativeAttrOfNode(node);
+
+                // jsonNode.registry = getRegistryOfNode(node);
                 jsonNode.base = core.getBase(node) ? core.getGuid(core.getBase(node)) : null;
                 jsonNode.parent = core.getParent(node) ? core.getGuid(core.getParent(node)) : null;
                 jsonNode.pointers = getPointersOfNode(node);
-                jsonNode.sets = getSetsOfNode(node);
+                if (nname != "ROOT") {
+                  jsonNode.sets = getSetsOfNode(node);
+                } else {
+                  jsonNode.sets = { };
+                  jsonNode.derivative.suppressed = "sets";
+                }
                 jsonNode.meta = core.getOwnJsonMeta(node);
 
                 //putting children into task list
