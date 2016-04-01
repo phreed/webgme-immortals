@@ -13,7 +13,9 @@ var config = require('./config.default');
 
 // config.addOns.enable = true;
 // config.addOns.basePaths.push('C:/addons');
-config.server.port = 3000
+config.server.port = 3000;
+config.authentication.enable = true;
+config.authentication.logOutUrl = '/login';
 
 module.exports = config;
 
