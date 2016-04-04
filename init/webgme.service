@@ -1,0 +1,28 @@
+#
+# webgme.service
+#
+
+[Unit]
+Description=WebGME service"
+Documentation=man:webgme(1)
+Requires=mongodb.service
+
+[Service]
+Type=simple
+StandardInput=
+EnvironmentFile=/etc/defult/webgme
+ExecStart=/bin/sh /usr/share/webgme/webgme.sh
+ExecStop
+
+[Socket]
+ListenStream=/run/webgme.socket
+SocketMode=0600
+Accept=yes
+MaxConnections=10
+Backlog=5
+
+# man systemd.special
+# Services that can be socket-activated shall add Wants=
+# dependencies to this unit for their socket unit during installation.
+[Install]
+WantedBy=sockets.target
