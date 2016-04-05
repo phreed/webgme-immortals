@@ -13,7 +13,7 @@
   "dependencies": {
     "cytoscape": "^2.6.3",
     "jassa-core": "^0.6.0",
-    "webgme": "phreed/webgme#b1"
+    "webgme": "webgme/webgme#master"
   },
   "devDependencies": {
     "mocha": "^2.2.5",

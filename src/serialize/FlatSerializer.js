@@ -88,6 +88,41 @@ function (ASSERT, CANON) {
             return result;
         }
 
+        function buildSemanticUriForNode(node) {
+          var
+            uriPrefix = core.getAttribute(node, "uriPrefix").trim(),
+            uriExt = core.getAttribute(node, "uriExt").trim(),
+            uriName = core.getAttribute(node, "uriName").trim(),
+            name = core.getAttribute(node, "name").trim();
+
+            if (uriExt.slice(-1) !== '#') uriExt += '#';
+
+            if (uriName == null || uriName.length == 0) {
+              return uriPrefix + uriExt + name;
+            } else {
+              return uriPrefix + uriExt + uriName;
+            }
+        }
+
+        function getDerivativeAttrOfNode(node) {
+          var result = {},
+            uriGen = core.getAttribute(node, "uriGen");
+
+          result.uriGen = uriGen;
+          result.name = core.getAttribute(node, "name");
+
+          switch (uriGen) {
+            case "semantic":
+              result.uri = buildSemanticUriForNode(node);
+            case undefined:
+            case null:
+            case "none":
+            default:
+          }
+          return result;
+        }
+
+        /*
         function getRegistryOfNode(node) {
             var names = core.getOwnRegistryNames(node).sort(),
                 i,
@@ -97,6 +132,7 @@ function (ASSERT, CANON) {
             }
             return result;
         }
+        */
 
         function getPointersOfNode(node) {
             //this version only puts paths to target so they need to be either removed or replaced by guid targets
@@ -121,7 +157,9 @@ function (ASSERT, CANON) {
                 jsonSet,
                 i,
                 getMemberData = function (setName, memberPath) {
-                    var data = {attributes: {}, registry: {}},
+                    var data = {attributes: {}
+                        // , registry: {}
+                        },
                         i, names;
                     //attributes
                     names = core.getMemberAttributeNames(node, setName, memberPath);
@@ -130,17 +168,21 @@ function (ASSERT, CANON) {
                     }
 
                     //registry
+                    /*
                     names = core.getMemberRegistryNames(node, setName, memberPath);
                     for (i = 0; i < names.length; i++) {
                         data.registry[names[i]] = core.getMemberRegistry(node, setName, memberPath, names[i]);
                     }
+                    */
                     return data;
                 },
                 getOwnMemberData = function (setName, memberPath) {
                     var base = core.getBase(node),
                         names,
                         i,
-                        data = {attributes: {}, registry: {}},
+                        data = {attributes: {}
+                        //, registry: {}
+                        },
                         value;
 
                     //no base
@@ -171,6 +213,7 @@ function (ASSERT, CANON) {
                     }
 
                     //registry
+                    /*
                     names = core.getMemberRegistryNames(node, setName, memberPath);
                     for (i = 0; i < names.length; i++) {
                         value = core.getMemberRegistry(node, setName, memberPath, names[i]);
@@ -180,6 +223,7 @@ function (ASSERT, CANON) {
                             data.attributes[names[i]] = value;
                         }
                     }
+                    */
 
                     return data;
 
@@ -208,7 +252,8 @@ function (ASSERT, CANON) {
 
         function getNodeData(path, next) {
             var jsonNode = {},
-                guid;
+                guid,
+                nname;
             notInComputation = false;
             core.loadByPath(root, path, function (err, node) {
                 if (err || !node) {
@@ -231,12 +276,22 @@ function (ASSERT, CANON) {
                  meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
                  */
 
+                nname = core.getAttribute(node, "name");
                 jsonNode.attributes = getAttributesOfNode(node);
-                jsonNode.registry = getRegistryOfNode(node);
+                jsonNode.derivative = getDerivativeAttrOfNode(node);
+
+                // jsonNode.registry = getRegistryOfNode(node);
                 jsonNode.base = core.getBase(node) ? core.getGuid(core.getBase(node)) : null;
                 jsonNode.parent = core.getParent(node) ? core.getGuid(core.getParent(node)) : null;
                 jsonNode.pointers = getPointersOfNode(node);
-                jsonNode.sets = getSetsOfNode(node);
+                switch (nname) {
+                  case "ROOT":
+                    // jsonNode.sets = { };
+                    // jsonNode.derivative.suppressed = "sets";
+                    // break;
+                  default:
+                    jsonNode.sets = getSetsOfNode(node);
+                }
                 jsonNode.meta = core.getOwnJsonMeta(node);
 
                 //putting children into task list
@@ -278,6 +333,7 @@ function (ASSERT, CANON) {
                     }
                     return attributes;
                 },
+                /*
                 getRegistryEntry = function (setname) {
                     var index = registry.length;
 
@@ -288,8 +344,9 @@ function (ASSERT, CANON) {
                     }
                     return {};
                 },
+                */
                 sheets = {},
-                registry = core.getRegistry(node, 'MetaSheets'),
+                // registry = core.getRegistry(node, 'MetaSheets'),
                 keys = core.getSetNames(node),
                 elements, guid,
                 i, j;
@@ -301,16 +358,18 @@ function (ASSERT, CANON) {
                         if (guid) {
                             sheets[keys[i]] = sheets[keys[i]] || {};
                             sheets[keys[i]][guid] = {
-                                registry: getMemberRegistry(keys[i], elements[j]),
+                                // registry: getMemberRegistry(keys[i], elements[j]),
                                 attributes: getMemberAttributes(keys[i], elements[j])
                             };
                         }
                     }
 
+                    /*
                     if (sheets[keys[i]] && keys[i] !== 'MetaAspectSet') {
                         //we add the global registry values as well
                         sheets[keys[i]].global = getRegistryEntry(keys[i]);
                     }
+                    */
                 }
             }
             return sheets;
@@ -1044,7 +1103,7 @@ function (ASSERT, CANON) {
                         parent: null,
                         meta: {},
                         attributes: {},
-                        registry: {},
+                        // registry: {},
                         pointers: {},
                         sets: {}
                     };
