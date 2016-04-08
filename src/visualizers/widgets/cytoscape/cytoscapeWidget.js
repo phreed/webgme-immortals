@@ -78,7 +78,7 @@ define(['cytoscape/cytoscape.min',
     };
 
     cytoscapeWidget.prototype.onWidgetContainerResize = function (width, height) {
-        console.log('Widget is resizing...');
+        // console.log('Widget is resizing...');
     };
 
     // Adding/Removing/Updating items
@@ -159,11 +159,11 @@ define(['cytoscape/cytoscape.min',
     };
 
     cytoscapeWidget.prototype.onActivate = function () {
-        console.log('cytoscapeWidget has been activated');
+        // console.log('cytoscapeWidget has been activated');
     };
 
     cytoscapeWidget.prototype.onDeactivate = function () {
-        console.log('cytoscapeWidget has been deactivated');
+        // console.log('cytoscapeWidget has been deactivated');
     };
 
     return cytoscapeWidget;

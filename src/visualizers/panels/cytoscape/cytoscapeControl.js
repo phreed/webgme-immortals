@@ -128,26 +128,49 @@ define(['js/Constants',
             objDescriptor.isConnection = GMEConcepts.isConnection(nodeId);  // GMEConcepts can be helpful
             objDescriptor.position = nodeObj.getRegistry(registryKeys.POSITION);
             if (objDescriptor.isConnection) {
-                objDescriptor.source = nodeObj.getPointer("src");
-                objDescriptor.target = nodeObj.getPointer("dst");
-            }
+                objDescriptor.source = objDescriptor.source = nodeObj.getPointer("src");
+                objDescriptor.target = objDescriptor.target = nodeObj.getPointer("dst");
+           }
         }
 
         return objDescriptor;
-    };
-
-    cytoscapeControl.prototype.getConnectionDescriptor = function () {
-        return {};
     };
 
     cytoscapeControl.prototype._getCytoscapeData = function (desc) {
         var data = [];
         if (desc) {
             if (desc.isConnection) {
+                /***** this section is used to create hyper edges *****/
+
+                data.push({
+                    group: "nodes",
+                    data: {
+                        id: desc.id, 
+                        name: desc.name
+                    },
+                    position: {
+                        x: (desc.srcPos.x + desc.dstPos.x) / 2,
+                        y: (desc.dstPos.y + desc.dstPos.y) / 2
+                    }
+                })
+
                 data.push({
                     group: "edges",
-                    data: { id: desc.id, source: desc.source.to, target: desc.target.to}
+                    data: { id: desc.id + 'src', source: desc.id, target: desc.srcObjId}
                 });
+
+                data.push({
+                    group: "edges",
+                    data: { id: desc.id + 'dst', source: desc.id, target: desc.dstObjId}
+                });
+
+                /*****/
+
+
+                // data.push({
+                //     group: "edges",
+                //     data: { id: desc.id, source: desc.source.to, target: desc.target.to}
+                // });
             } else {
                 data.push({
                     group: "nodes",
@@ -447,7 +470,6 @@ define(['js/Constants',
             k,
             l;
 
-
         //component loaded
         //we are interested in the load of sub_components of the opened component
         if (this._currentNodeId !== gmeID) {
@@ -458,11 +480,7 @@ define(['js/Constants',
 
                     if (!objDesc.isConnection) {
 
-
-                        var description = this._getObjectDescriptor(gmeID);
-                        var cyData = this._getCytoscapeData(description);
-                        this._widget.addNode(cyData);
-
+                        this.createCyObject(objDesc);
 
                         this._GMEModels.push(gmeID);
 
@@ -471,12 +489,8 @@ define(['js/Constants',
                         objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
                         objDesc.preferencesHelper = PreferencesHelper.getPreferences();
 
-                        // uiComponent = this.designerCanvas.createDesignerItem(objDesc);
-
                         this._GmeID2ComponentID[gmeID].push(gmeID);
                         this._ComponentID2GmeID[gmeID] = gmeID;
-
-                        // getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
 
                     } else {
 
@@ -492,6 +506,7 @@ define(['js/Constants',
                         if (k > 0 && l > 0) {
                             while (k--) {
                                 while (l--) {
+
                                     objDesc.srcObjId = sources[k].objId;
                                     objDesc.srcSubCompId = sources[k].subCompId;
                                     objDesc.dstObjId = destinations[l].objId;
@@ -499,16 +514,14 @@ define(['js/Constants',
                                     objDesc.reconnectable = true;
                                     objDesc.editable = true;
 
+                                    objDesc.srcPos = this._client.getNode(objDesc.srcObjId).getRegistry(registryKeys.POSITION);
+                                    objDesc.dstPos = this._client.getNode(objDesc.dstObjId).getRegistry(registryKeys.POSITION);
+
+
                                     delete objDesc.source;
                                     delete objDesc.target;
 
-                                    // _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    // uiComponent = this.designerCanvas.createConnection(objDesc);
-
-
-                                    var description = this._getObjectDescriptor(gmeID);
-                                    var cyData = this._getCytoscapeData(description);
-                                    this._widget.addNode(cyData);
+                                    this.createCyObject(objDesc);
 
                                     this._logger.debug('Connection: ' + gmeID + ' for GME object: ' +
                                                       objDesc.id);
@@ -598,6 +611,11 @@ define(['js/Constants',
             sources: sources,
             destinations: destinations
         };
+    };
+
+    cytoscapeControl.prototype.createCyObject = function (desc) {
+        var cyData = this._getCytoscapeData(desc);
+        this._widget.addNode(cyData);
     };
 
 
