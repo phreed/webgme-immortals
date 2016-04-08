@@ -109,7 +109,9 @@ define(['js/Constants',
     // This next function retrieves the relevant node information for the widget
     cytoscapeControl.prototype._getObjectDescriptor = function (nodeId) {
         var nodeObj = this._client.getNode(nodeId),
-            objDescriptor;
+            objDescriptor,
+            pointers,
+            i;
 
         if (nodeObj) {
             objDescriptor = {
@@ -130,7 +132,17 @@ define(['js/Constants',
             if (objDescriptor.isConnection) {
                 objDescriptor.source = objDescriptor.source = nodeObj.getPointer("src");
                 objDescriptor.target = objDescriptor.target = nodeObj.getPointer("dst");
-           }
+            }
+            
+            pointers = nodeObj.getPointerNames();
+            for (i = 0; i < pointers.length; ++i) {
+                if (pointers[i] !== "src" && pointers[i] !== "dst" && pointers[i] !== "base") {
+                    if (!objDescriptor.pointers) {
+                        objDescriptor.pointers = {};
+                    }
+                    objDescriptor.pointers[pointers[i]] = nodeObj.getPointer(pointers[i]);
+                }
+            }
         }
 
         return objDescriptor;
@@ -191,6 +203,17 @@ define(['js/Constants',
                 //     });
                 // }
             }
+
+            if (desc.pointers) {
+                for (var i in desc.pointers) {
+                    if (desc.pointers[i].to) {
+                        data.push({
+                            group: "edges",
+                            data: {name: i, id: desc.id + i, source: desc.id, target: desc.pointers[i].to}
+                        });
+                    }
+                }
+            }
         }
         return data;
     };
@@ -201,23 +224,6 @@ define(['js/Constants',
             event;
 
         this._logger.debug('_eventCallback \'' + i + '\' items');
-
-        // while (i--) {
-        //     event = events[i];
-        //     switch (event.etype) {
-        //         case CONSTANTS.TERRITORY_EVENT_LOAD:
-        //             this._onLoad(event.eid);
-        //             break;
-        //         case CONSTANTS.TERRITORY_EVENT_UPDATE:
-        //             this._onUpdate(event.eid);
-        //             break;
-        //         case CONSTANTS.TERRITORY_EVENT_UNLOAD:
-        //             this._onUnload(event.eid);
-        //             break;
-        //         default:
-        //             break;
-        //     }
-        // }
 
         if (i > 0) {
             this.eventQueue.push(events);
@@ -468,7 +474,9 @@ define(['js/Constants',
 
             srcDst,
             k,
-            l;
+            l,
+
+            pointersLoaded;
 
         //component loaded
         //we are interested in the load of sub_components of the opened component
@@ -478,19 +486,25 @@ define(['js/Constants',
                     objDesc = _.extend({}, objD);
                     this._GmeID2ComponentID[gmeID] = [];
 
+                    pointersLoaded = this._areAllPointersLoaded(objDesc);
+
                     if (!objDesc.isConnection) {
 
-                        this.createCyObject(objDesc);
+                        if (pointersLoaded) {
+                            this.createCyObject(objDesc);
 
-                        this._GMEModels.push(gmeID);
+                            this._GMEModels.push(gmeID);
 
-                        objDesc.control = this;
-                        objDesc.metaInfo = {};
-                        objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
-                        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+                            objDesc.control = this;
+                            objDesc.metaInfo = {};
+                            objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+                            objDesc.preferencesHelper = PreferencesHelper.getPreferences();
 
-                        this._GmeID2ComponentID[gmeID].push(gmeID);
-                        this._ComponentID2GmeID[gmeID] = gmeID;
+                            this._GmeID2ComponentID[gmeID].push(gmeID);
+                            this._ComponentID2GmeID[gmeID] = gmeID;
+                        } else {
+                            this._delayedConnections.push(gmeID);
+                        }
 
                     } else {
 
@@ -503,7 +517,7 @@ define(['js/Constants',
                         k = sources.length;
                         l = destinations.length;
 
-                        if (k > 0 && l > 0) {
+                        if (k > 0 && l > 0 && pointersLoaded) {
                             while (k--) {
                                 while (l--) {
 
@@ -613,6 +627,23 @@ define(['js/Constants',
         };
     };
 
+    cytoscapeControl.prototype._areAllPointersLoaded = function (desc) {
+        var pointers = desc.pointers,
+            i,
+            len = 0;
+
+            if (!pointers) {
+                return true;
+            }
+
+            for (i in pointers) { 
+                if (!pointers[i].to || this._GmeID2ComponentID.hasOwnProperty(pointers[i].to)) {
+                    ++len;
+                }
+            }
+        return len === Object.keys(desc.pointers).length;
+    }
+
     cytoscapeControl.prototype.createCyObject = function (desc) {
         var cyData = this._getCytoscapeData(desc);
         this._widget.addNode(cyData);
@@ -694,6 +725,8 @@ define(['js/Constants',
             }
         }
     };
+
+
 
     cytoscapeControl.prototype._initializeToolbar = function () {
         var self = this,
