@@ -118,12 +118,12 @@ define(['cytoscape/cytoscape.min',
         }
     };
 
-    cytoscape.prototype.beginUpdate = function () {
-        this.logger.debug('beginUpdate');
+    cytoscapeWidget.prototype.beginUpdate = function () {
+        this._logger.debug('beginUpdate');
 
         this._updating = true;
 
-        /*designer item accounting*/
+        /*item accounting*/
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
         this._deletedDesignerItemIDs = [];
@@ -134,8 +134,8 @@ define(['cytoscape/cytoscape.min',
         this._deletedConnectionIDs = [];
     };
     
-    cytoscape.prototype.endUpdate = function () {
-        this.logger.debug('endUpdate');
+    cytoscapeWidget.prototype.endUpdate = function () {
+        this._logger.debug('endUpdate');
 
         this._updating = false;
         // this._tryRefreshScreen();
