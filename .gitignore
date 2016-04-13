@@ -2,4 +2,5 @@ node_modules/
 server*.log
 blob-local-storage/
 .nrepl-*
+npm-debug.log*
 
