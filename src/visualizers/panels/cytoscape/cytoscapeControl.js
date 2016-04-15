@@ -10,17 +10,17 @@ define(['js/Constants',
     'js/RegistryKeys',
     'js/Utils/PreferencesHelper',
     'cytoscape/cytoscape.min'
-], function (CONSTANTS,
-             GMEConcepts,
-             nodePropertyNames,
-             registryKeys,
-             PreferencesHelper,
-             cytoscape) {
+], function(CONSTANTS,
+    GMEConcepts,
+    nodePropertyNames,
+    registryKeys,
+    PreferencesHelper,
+    cytoscape) {
     'use strict';
 
     var cytoscapeControl;
 
-    cytoscapeControl = function (options) {
+    cytoscapeControl = function(options) {
 
         this._logger = options.logger.fork('Control');
 
@@ -38,8 +38,8 @@ define(['js/Constants',
         this._logger.debug('ctor finished');
     };
 
-    cytoscapeControl.prototype._initWidgetEventHandlers = function () {
-        this._widget.onNodeClick = function (id) {
+    cytoscapeControl.prototype._initWidgetEventHandlers = function() {
+        this._widget.onNodeClick = function(id) {
             // Change the current active object
             WebGMEGlobal.State.registerActiveObject(id);
         };
@@ -49,7 +49,7 @@ define(['js/Constants',
     // One major concept here is with managing the territory. The territory
     // defines the parts of the project that the visualizer is interested in
     // (this allows the browser to then only load those relevant parts).
-    cytoscapeControl.prototype.selectedObjectChanged = function (nodeId) {
+    cytoscapeControl.prototype.selectedObjectChanged = function(nodeId) {
         var desc = this._getObjectDescriptor(nodeId),
             self = this;
 
@@ -82,7 +82,9 @@ define(['js/Constants',
 
             // Put new node's info into territory rules
             self._selfPatterns = {};
-            self._selfPatterns[nodeId] = {children: 0};  // Territory "rule"
+            self._selfPatterns[nodeId] = {
+                children: 0
+            }; // Territory "rule"
 
             self._widget.setTitle(desc.name.toUpperCase());
 
@@ -94,20 +96,22 @@ define(['js/Constants',
 
             self._currentNodeParentId = desc.parentId;
 
-            self._territoryId = self._client.addUI(self, function (events) {
+            self._territoryId = self._client.addUI(self, function(events) {
                 self._eventCallback(events);
             });
 
             // Update the territory
             self._client.updateTerritory(self._territoryId, self._selfPatterns);
 
-            self._selfPatterns[nodeId] = {children: 1};
+            self._selfPatterns[nodeId] = {
+                children: 1
+            };
             self._client.updateTerritory(self._territoryId, self._selfPatterns);
         }
     };
 
     // This next function retrieves the relevant node information for the widget
-    cytoscapeControl.prototype._getObjectDescriptor = function (nodeId) {
+    cytoscapeControl.prototype._getObjectDescriptor = function(nodeId) {
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
             pointers,
@@ -127,7 +131,7 @@ define(['js/Constants',
             objDescriptor.childrenIds = nodeObj.getChildrenIds();
             objDescriptor.childrenNum = objDescriptor.childrenIds.length;
             objDescriptor.parentId = nodeObj.getParentId();
-            objDescriptor.isConnection = GMEConcepts.isConnection(nodeId);  // GMEConcepts can be helpful
+            objDescriptor.isConnection = GMEConcepts.isConnection(nodeId); // GMEConcepts can be helpful
             objDescriptor.position = nodeObj.getRegistry(registryKeys.POSITION);
             if (objDescriptor.isConnection) {
                 objDescriptor.source = objDescriptor.source = nodeObj.getPointer("src");
@@ -148,33 +152,64 @@ define(['js/Constants',
         return objDescriptor;
     };
 
-    cytoscapeControl.prototype._getCytoscapeData = function (desc) {
+    cytoscapeControl.prototype._getCytoscapeData = function(desc) {
         var data = [];
         if (desc) {
+
             if (desc.isConnection) {
                 /***** this section is used to create hyper edges *****/
 
-                data.push({
-                    group: "nodes",
-                    data: {
-                        id: desc.id,
-                        name: desc.name
-                    },
-                    position: {
-                        x: (desc.srcPos.x + desc.dstPos.x) / 2,
-                        y: (desc.srcPos.y + desc.dstPos.y) / 2
+                if (desc.pointers) {
+                    var x = desc.srcPos.x + desc.dstPos.x;
+                    var y = desc.srcPos.y + desc.dstPos.y;
+                    var n = 2;
+                    for (var i in desc.pointers) {
+                       if (!desc.pointers[i].to) continue;
+                       if (!this._GmeID2ComponentID.hasOwnProperty(desc.pointers[i].to)) continue;
+                       n++;
+                       var pos = this._client.getNode(desc.pointers[i].to).getRegistry(registryKeys.POSITION);
+                       x += pos.x;
+                       y += pos.y;
                     }
-                })
+                    data.push({
+                        group: "nodes",
+                        data: {
+                            id: desc.id,
+                            name: desc.name
+                        },
+                        position: {
+                            x: x / n,
+                            y: y / n
+                        }
+                    })
 
-                data.push({
-                    group: "edges",
-                    data: { id: desc.id + 'src', source: desc.id, target: desc.srcObjId}
-                });
+                    data.push({
+                        group: "edges",
+                        data: {
+                            id: desc.id + 'src',
+                            source: desc.id,
+                            target: desc.srcObjId
+                        }
+                    });
 
-                data.push({
-                    group: "edges",
-                    data: { id: desc.id + 'dst', source: desc.id, target: desc.dstObjId}
-                });
+                    data.push({
+                        group: "edges",
+                        data: {
+                            id: desc.id + 'dst',
+                            source: desc.id,
+                            target: desc.dstObjId
+                        }
+                    });
+                } else {
+                    data.push({
+                        group: "edges",
+                        data: {
+                            id: desc.id,
+                            source: desc.srcObjId,
+                            target: desc.dstObjId
+                        }
+                    });
+                }
 
                 /*****/
 
@@ -209,7 +244,12 @@ define(['js/Constants',
                     if (desc.pointers[i].to) {
                         data.push({
                             group: "edges",
-                            data: {name: i, id: desc.id + i, source: desc.id, target: desc.pointers[i].to}
+                            data: {
+                                name: i,
+                                id: desc.id + i,
+                                source: desc.id,
+                                target: desc.pointers[i].to
+                            }
                         });
                     }
                 }
@@ -219,7 +259,7 @@ define(['js/Constants',
     };
 
     /* * * * * * * * Node Event Handling * * * * * * * */
-    cytoscapeControl.prototype._eventCallback = function (events) {
+    cytoscapeControl.prototype._eventCallback = function(events) {
         var i = events ? events.length : 0,
             event;
 
@@ -233,7 +273,7 @@ define(['js/Constants',
         this._logger.debug('_eventCallback \'' + events.length + '\' items - DONE');
     };
 
-    cytoscapeControl.prototype.processNextInQueue = function () {
+    cytoscapeControl.prototype.processNextInQueue = function() {
         var nextBatchInQueue,
             len = this.eventQueue.length,
             self = this;
@@ -254,7 +294,7 @@ define(['js/Constants',
         }
     };
 
-    cytoscapeControl.prototype._dispatchEvents = function (events) {
+    cytoscapeControl.prototype._dispatchEvents = function(events) {
         var i = events.length,
             e,
             territoryChanged = false,
@@ -354,10 +394,10 @@ define(['js/Constants',
                             insertIdxBefore === MAX_VAL) {
                             orderedConnectionEvents.splice(insertIdxAfter + 1, 0, e);
                         } else if (insertIdxAfter === -1 &&
-                                   insertIdxBefore !== MAX_VAL) {
+                            insertIdxBefore !== MAX_VAL) {
                             orderedConnectionEvents.splice(insertIdxBefore, 0, e);
                         } else if (insertIdxAfter !== -1 &&
-                                   insertIdxBefore !== MAX_VAL) {
+                            insertIdxBefore !== MAX_VAL) {
                             orderedConnectionEvents.splice(insertIdxBefore, 0, e);
                         }
                     }
@@ -421,14 +461,14 @@ define(['js/Constants',
         if (territoryChanged) {
             //TODO: review this async here
             if (this.___SLOW_CONN === true) {
-                setTimeout(function () {
+                setTimeout(function() {
                     self.logger.debug('Updating territory with ruleset from decorators: ' +
-                                      JSON.stringify(self._selfPatterns));
+                        JSON.stringify(self._selfPatterns));
                     self._client.updateTerritory(self._territoryId, self._selfPatterns);
                 }, 2000);
             } else {
                 this._logger.debug('Updating territory with ruleset from decorators: ' +
-                                  JSON.stringify(this._selfPatterns));
+                    JSON.stringify(this._selfPatterns));
                 this._client.updateTerritory(this._territoryId, this._selfPatterns);
             }
         }
@@ -463,7 +503,7 @@ define(['js/Constants',
         this.processNextInQueue();
     };
 
-    cytoscapeControl.prototype._onLoad = function (gmeID, objD) {
+    cytoscapeControl.prototype._onLoad = function(gmeID, objD) {
         var uiComponent,
             decClass,
             objDesc,
@@ -538,7 +578,7 @@ define(['js/Constants',
                                     this.createCyObject(objDesc);
 
                                     this._logger.debug('Connection: ' + gmeID + ' for GME object: ' +
-                                                      objDesc.id);
+                                        objDesc.id);
 
                                     this._GmeID2ComponentID[gmeID].push(gmeID);
                                     this._ComponentID2GmeID[gmeID] = gmeID;
@@ -569,7 +609,7 @@ define(['js/Constants',
 
     };
 
-    cytoscapeControl.prototype._getAllSourceDestinationPairsForConnection = function (GMESrcId, GMEDstId) {
+    cytoscapeControl.prototype._getAllSourceDestinationPairsForConnection = function(GMESrcId, GMEDstId) {
         var sources = [],
             destinations = [],
             i;
@@ -627,24 +667,24 @@ define(['js/Constants',
         };
     };
 
-    cytoscapeControl.prototype._areAllPointersLoaded = function (desc) {
+    cytoscapeControl.prototype._areAllPointersLoaded = function(desc) {
         var pointers = desc.pointers,
             i,
             len = 0;
 
-            if (!pointers) {
-                return true;
-            }
+        if (!pointers) {
+            return true;
+        }
 
-            for (i in pointers) {
-                if (!pointers[i].to || this._GmeID2ComponentID.hasOwnProperty(pointers[i].to)) {
-                    ++len;
-                }
+        for (i in pointers) {
+            if (!pointers[i].to || this._GmeID2ComponentID.hasOwnProperty(pointers[i].to)) {
+                ++len;
             }
+        }
         return len === Object.keys(desc.pointers).length;
     }
 
-    cytoscapeControl.prototype.createCyObject = function (desc) {
+    cytoscapeControl.prototype.createCyObject = function(desc) {
         var cyData = this._getCytoscapeData(desc);
         this._widget.addNode(cyData);
     };
@@ -658,46 +698,46 @@ define(['js/Constants',
     //     }
     // };
 
-    cytoscapeControl.prototype._onUpdate = function (gmeId) {
+    cytoscapeControl.prototype._onUpdate = function(gmeId) {
         var description = this._getObjectDescriptor(gmeId);
         this._widget.updateNode(description);
     };
 
-    cytoscapeControl.prototype._onUnload = function (gmeId) {
+    cytoscapeControl.prototype._onUnload = function(gmeId) {
         this._widget.removeNode(gmeId);
     };
 
-    cytoscapeControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+    cytoscapeControl.prototype._stateActiveObjectChanged = function(model, activeObjectId) {
         this.selectedObjectChanged(activeObjectId);
     };
 
     /* * * * * * * * Visualizer life cycle callbacks * * * * * * * */
-    cytoscapeControl.prototype.destroy = function () {
+    cytoscapeControl.prototype.destroy = function() {
         this._detachClientEventListeners();
         this._removeToolbarItems();
     };
 
-    cytoscapeControl.prototype._attachClientEventListeners = function () {
+    cytoscapeControl.prototype._attachClientEventListeners = function() {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
-    cytoscapeControl.prototype._detachClientEventListeners = function () {
+    cytoscapeControl.prototype._detachClientEventListeners = function() {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
-    cytoscapeControl.prototype.onActivate = function () {
+    cytoscapeControl.prototype.onActivate = function() {
         this._attachClientEventListeners();
         this._displayToolbarItems();
     };
 
-    cytoscapeControl.prototype.onDeactivate = function () {
+    cytoscapeControl.prototype.onDeactivate = function() {
         this._detachClientEventListeners();
         this._hideToolbarItems();
     };
 
     /* * * * * * * * * * Updating the toolbar * * * * * * * * * */
-    cytoscapeControl.prototype._displayToolbarItems = function () {
+    cytoscapeControl.prototype._displayToolbarItems = function() {
 
         if (this._toolbarInitialized === true) {
             for (var i = this._toolbarItems.length; i--;) {
@@ -708,7 +748,7 @@ define(['js/Constants',
         }
     };
 
-    cytoscapeControl.prototype._hideToolbarItems = function () {
+    cytoscapeControl.prototype._hideToolbarItems = function() {
 
         if (this._toolbarInitialized === true) {
             for (var i = this._toolbarItems.length; i--;) {
@@ -717,7 +757,7 @@ define(['js/Constants',
         }
     };
 
-    cytoscapeControl.prototype._removeToolbarItems = function () {
+    cytoscapeControl.prototype._removeToolbarItems = function() {
 
         if (this._toolbarInitialized === true) {
             for (var i = this._toolbarItems.length; i--;) {
@@ -728,7 +768,7 @@ define(['js/Constants',
 
 
 
-    cytoscapeControl.prototype._initializeToolbar = function () {
+    cytoscapeControl.prototype._initializeToolbar = function() {
         var self = this,
             toolBar = WebGMEGlobal.Toolbar;
 
@@ -740,7 +780,7 @@ define(['js/Constants',
         this.$btnModelHierarchyUp = toolBar.addButton({
             title: 'Go to parent',
             icon: 'glyphicon glyphicon-circle-arrow-up',
-            clickFn: function (/*data*/) {
+            clickFn: function( /*data*/ ) {
                 WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
             }
         });
@@ -752,7 +792,7 @@ define(['js/Constants',
         this.$cbShowConnection = toolBar.addCheckBox({
             title: 'toggle checkbox',
             icon: 'gme icon-gme_diagonal-arrow',
-            checkChangedFn: function (data, checked) {
+            checkChangedFn: function(data, checked) {
                 self._logger.log('Checkbox has been clicked!');
             }
         });
