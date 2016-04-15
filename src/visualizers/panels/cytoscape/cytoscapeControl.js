@@ -54,7 +54,7 @@ define(['js/Constants',
             self = this;
 
         self._logger.debug('activeObject nodeId \'' + nodeId + '\'');
-            
+
         // reinitialize cy data in widget
         self._widget._cy.remove('node').remove('edge');
 
@@ -133,7 +133,7 @@ define(['js/Constants',
                 objDescriptor.source = objDescriptor.source = nodeObj.getPointer("src");
                 objDescriptor.target = objDescriptor.target = nodeObj.getPointer("dst");
             }
-            
+
             pointers = nodeObj.getPointerNames();
             for (i = 0; i < pointers.length; ++i) {
                 if (pointers[i] !== "src" && pointers[i] !== "dst" && pointers[i] !== "base") {
@@ -157,12 +157,12 @@ define(['js/Constants',
                 data.push({
                     group: "nodes",
                     data: {
-                        id: desc.id, 
+                        id: desc.id,
                         name: desc.name
                     },
                     position: {
                         x: (desc.srcPos.x + desc.dstPos.x) / 2,
-                        y: (desc.dstPos.y + desc.dstPos.y) / 2
+                        y: (desc.srcPos.y + desc.dstPos.y) / 2
                     }
                 })
 
@@ -186,8 +186,8 @@ define(['js/Constants',
             } else {
                 data.push({
                     group: "nodes",
-                    data: {   
-                        id: desc.id, 
+                    data: {
+                        id: desc.id,
                         name: desc.name
                     },
                     position: desc.position
@@ -196,8 +196,8 @@ define(['js/Constants',
                 // for (var i = 0; i < desc.childrenIds.length; ++i) {
                 //     data.push({
                 //         group: "nodes",
-                //         data: {   
-                //             id: desc.childrenIds[i], 
+                //         data: {
+                //             id: desc.childrenIds[i],
                 //             parent: desc.id
                 //         }
                 //     });
@@ -636,7 +636,7 @@ define(['js/Constants',
                 return true;
             }
 
-            for (i in pointers) { 
+            for (i in pointers) {
                 if (!pointers[i].to || this._GmeID2ComponentID.hasOwnProperty(pointers[i].to)) {
                     ++len;
                 }

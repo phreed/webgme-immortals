@@ -1,28 +1,30 @@
 #
 # webgme.service
+
+# /etc/systemd/system/
 #
 
 [Unit]
-Description=WebGME service"
-Documentation=man:webgme(1)
+Description=WebGME Immortals Service"
+Documentation=https://webgme.org
 Requires=mongodb.service
 
 [Service]
 Type=simple
-StandardInput=
-EnvironmentFile=/etc/defult/webgme
-ExecStart=/bin/sh /usr/share/webgme/webgme.sh
-ExecStop
+# Restart=always
+# StandardInput=
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=webgme
+SyslogLevel=debug
+User=nobody
+# Group=nobody
+WorkingDirectory=/home/fred/projects/brass/webgme-immortals
+ExecStart=/bin/sh /home/fred/projects/brass/webgme-immortals/init/webgme_immortals.sh
 
-[Socket]
-ListenStream=/run/webgme.socket
-SocketMode=0600
-Accept=yes
-MaxConnections=10
-Backlog=5
 
 # man systemd.special
 # Services that can be socket-activated shall add Wants=
 # dependencies to this unit for their socket unit during installation.
 [Install]
-WantedBy=sockets.target
+WantedBy=multi-user.target
