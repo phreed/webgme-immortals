@@ -131,16 +131,18 @@ define(['js/Constants',
             objDescriptor.childrenIds = nodeObj.getChildrenIds();
             objDescriptor.childrenNum = objDescriptor.childrenIds.length;
             objDescriptor.parentId = nodeObj.getParentId();
-            objDescriptor.isConnection = GMEConcepts.isConnection(nodeId); // GMEConcepts can be helpful
+            // objDescriptor.isConnection = GMEConcepts.isConnection(nodeId); // GMEConcepts can be helpful
+            objDescriptor.isConnection = nodeObj.getPointer("src") && nodeObj.getPointer("dst");
             objDescriptor.position = nodeObj.getRegistry(registryKeys.POSITION);
             if (objDescriptor.isConnection) {
-                objDescriptor.source = objDescriptor.source = nodeObj.getPointer("src");
-                objDescriptor.target = objDescriptor.target = nodeObj.getPointer("dst");
+                objDescriptor.source = nodeObj.getPointer("src");
+                objDescriptor.target = nodeObj.getPointer("dst");
             }
 
             pointers = nodeObj.getPointerNames();
             for (i = 0; i < pointers.length; ++i) {
-                if (pointers[i] !== "src" && pointers[i] !== "dst" && pointers[i] !== "base") {
+                if (((pointers[i] !== "src" && pointers[i] !== "dst") || !objDescriptor.isConnection)
+                    && pointers[i] !== "base") {
                     if (!objDescriptor.pointers) {
                         objDescriptor.pointers = {};
                     }

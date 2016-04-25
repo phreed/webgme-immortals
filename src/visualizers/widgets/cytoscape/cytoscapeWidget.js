@@ -80,8 +80,7 @@ define(['cytoscape/cytoscape.min',
 
     cytoscapeWidget.prototype.onWidgetContainerResize = function (width, height) {
         this._logger.debug('Widget is resizing...'); 
-        // this._el.width(width);
-        // this._el.height(height);
+        this._cy.invalidateDimensions();
     };
 
     // Adding/Removing/Updating items
@@ -110,14 +109,14 @@ define(['cytoscape/cytoscape.min',
 
     cytoscapeWidget.prototype.removeNode = function (gmeId) {
         var desc = this.nodes[gmeId];
-        this._el.append('<div>Removing node "'+desc.name+'"</div>');
+        //this._el.append('<div>Removing node "'+desc.name+'"</div>');
         delete this.nodes[gmeId];
     };
 
     cytoscapeWidget.prototype.updateNode = function (desc) {
         if (desc) {
             this._logger.debug('Updating node:', desc);
-            this._el.append('<div>Updating node "'+desc.name+'"</div>');
+            //this._el.append('<div>Updating node "'+desc.name+'"</div>');
         }
     };
 
