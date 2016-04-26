@@ -80,7 +80,7 @@ define(['cytoscape/cytoscape.min',
 
     cytoscapeWidget.prototype.onWidgetContainerResize = function (width, height) {
         this._logger.debug('Widget is resizing...'); 
-        this._cy.invalidateDimensions();
+        // this._cy.invalidateDimensions();
     };
 
     // Adding/Removing/Updating items

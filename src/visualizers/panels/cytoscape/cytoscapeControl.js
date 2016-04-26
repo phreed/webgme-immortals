@@ -69,6 +69,7 @@ define(['js/Constants',
         this._Subcomponent2GMEID = {};
 
         this._delayedConnections = [];
+        this._delayedPointingObjects = [];
 
         // Remove current territory patterns
         if (self._currentNodeId) {
@@ -131,8 +132,8 @@ define(['js/Constants',
             objDescriptor.childrenIds = nodeObj.getChildrenIds();
             objDescriptor.childrenNum = objDescriptor.childrenIds.length;
             objDescriptor.parentId = nodeObj.getParentId();
-            // objDescriptor.isConnection = GMEConcepts.isConnection(nodeId); // GMEConcepts can be helpful
-            objDescriptor.isConnection = nodeObj.getPointer("src") && nodeObj.getPointer("dst");
+            objDescriptor.isConnection = GMEConcepts.isConnection(nodeId); // GMEConcepts can be helpful
+            // objDescriptor.isConnection = Boolean(nodeObj.getPointer("src") && nodeObj.getPointer("dst"));
             objDescriptor.position = nodeObj.getRegistry(registryKeys.POSITION);
             if (objDescriptor.isConnection) {
                 objDescriptor.source = nodeObj.getPointer("src");
@@ -338,8 +339,18 @@ define(['js/Constants',
                 });
             }
         }
+        if (this._delayedPointingObjects && this._delayedPointingObjects.length > 0) {
+            for (i = 0; i < this._delayedPointingObjects.length; i += 1) {
+                orderedItemEvents.push({
+                    etype: CONSTANTS.TERRITORY_EVENT_LOAD,
+                    eid: this._delayedPointingObjects[i],
+                    desc: this._getObjectDescriptor(this._delayedPointingObjects[i])
+                });
+            }
+        }
 
         this._delayedConnections = [];
+        this._delayedPointingObjects = [];
 
         unloadEvents = [];
         i = events.length;
@@ -545,7 +556,7 @@ define(['js/Constants',
                             this._GmeID2ComponentID[gmeID].push(gmeID);
                             this._ComponentID2GmeID[gmeID] = gmeID;
                         } else {
-                            this._delayedConnections.push(gmeID);
+                            this._delayedPointingObjects.push(gmeID);
                         }
 
                     } else {
