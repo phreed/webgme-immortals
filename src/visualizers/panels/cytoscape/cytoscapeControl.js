@@ -190,6 +190,7 @@ define(['js/Constants',
                         group: "edges",
                         data: {
                             id: desc.id + 'src',
+                            name: 'src',
                             source: desc.id,
                             target: desc.srcObjId
                         }
@@ -199,6 +200,7 @@ define(['js/Constants',
                         group: "edges",
                         data: {
                             id: desc.id + 'dst',
+                            name: 'dst',
                             source: desc.id,
                             target: desc.dstObjId
                         }
@@ -208,6 +210,7 @@ define(['js/Constants',
                         group: "edges",
                         data: {
                             id: desc.id,
+                            name: desc.name,
                             source: desc.srcObjId,
                             target: desc.dstObjId
                         }
