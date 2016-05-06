@@ -84,6 +84,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     cytoscapePanel.prototype.onActivate = function () {
         this.widget.onActivate();
         this.control.onActivate();
+        this.onResize(this.widget._el.width(), this.widget._el.height());
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
         WebGMEGlobal.Toolbar.refresh();
     };

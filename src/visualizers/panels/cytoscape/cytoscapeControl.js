@@ -9,12 +9,14 @@ define(['js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/PreferencesHelper',
+    './cytoscape.Constants',
     'cytoscape/cytoscape.min'
 ], function(CONSTANTS,
     GMEConcepts,
     nodePropertyNames,
     registryKeys,
     PreferencesHelper,
+    CytoscapeConstants,
     cytoscape) {
     'use strict';
 
@@ -28,6 +30,8 @@ define(['js/Constants',
 
         // Initialize core collections and variables
         this._widget = options.widget;
+
+        this._widget._control = this;
 
         this._currentNodeId = null;
         this._currentNodeParentId = undefined;
@@ -87,12 +91,14 @@ define(['js/Constants',
                 children: 0
             }; // Territory "rule"
 
-            self._widget.setTitle(desc.name.toUpperCase());
+            self._widget.setTitle(desc.name);
+            // save active node (current active container)
+            self._widget.setActiveNode(nodeId);
 
             if (desc.parentId || desc.parentId === CONSTANTS.PROJECT_ROOT_ID) {
-                self.$btnModelHierarchyUp.show();
+                self._toolbarItems.btnModelHierarchyUp.show();
             } else {
-                self.$btnModelHierarchyUp.hide();
+                self._toolbarItems.btnModelHierarchyUp.hide();
             }
 
             self._currentNodeParentId = desc.parentId;
@@ -756,7 +762,7 @@ define(['js/Constants',
     cytoscapeControl.prototype._displayToolbarItems = function() {
 
         if (this._toolbarInitialized === true) {
-            for (var i = this._toolbarItems.length; i--;) {
+            for (var i in this._toolbarItems) {
                 this._toolbarItems[i].show();
             }
         } else {
@@ -767,7 +773,7 @@ define(['js/Constants',
     cytoscapeControl.prototype._hideToolbarItems = function() {
 
         if (this._toolbarInitialized === true) {
-            for (var i = this._toolbarItems.length; i--;) {
+            for (var i in this._toolbarItems) {
                 this._toolbarItems[i].hide();
             }
         }
@@ -776,45 +782,252 @@ define(['js/Constants',
     cytoscapeControl.prototype._removeToolbarItems = function() {
 
         if (this._toolbarInitialized === true) {
-            for (var i = this._toolbarItems.length; i--;) {
+            for (var i in this._toolbarItems) {
                 this._toolbarItems[i].destroy();
             }
         }
     };
 
+    cytoscapeControl.prototype._setCyObjectProperty = function(params) {
+        if (this._widget._selectedCyObject) {
+            for (var p in params) {
+                this._widget._selectedCyObject.style(p, params[p]);
+            }
+        }
+    };
 
 
     cytoscapeControl.prototype._initializeToolbar = function() {
         var self = this,
-            toolBar = WebGMEGlobal.Toolbar;
+            toolBar = WebGMEGlobal.Toolbar,
+            btnIconBase = $('<i/>');
 
-        this._toolbarItems = [];
+        this._toolbarItems = {};
 
-        this._toolbarItems.push(toolBar.addSeparator());
+        this._toolbarItems.beginSeparator = toolBar.addSeparator();
 
         /************** Go to hierarchical parent button ****************/
-        this.$btnModelHierarchyUp = toolBar.addButton({
+        this._toolbarItems.btnModelHierarchyUp = toolBar.addButton({
             title: 'Go to parent',
             icon: 'glyphicon glyphicon-circle-arrow-up',
             clickFn: function( /*data*/ ) {
                 WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
             }
         });
-        this._toolbarItems.push(this.$btnModelHierarchyUp);
-        this.$btnModelHierarchyUp.hide();
+        this._toolbarItems.btnModelHierarchyUp.hide();
 
-        /************** Checkbox example *******************/
+        this._toolbarItems.ddbtnConnectionArrowStart = toolBar.addDropDownButton({
+                    title: 'Line start marker',
+                    icon: 'glyphicon glyphicon-arrow-left',
+                    menuClass: 'no-min-width'
+        });
+        this._toolbarItems.ddbtnConnectionPattern = toolBar.addDropDownButton({
+            title: 'Line pattern',
+            icon: 'glyphicon glyphicon-minus',
+            menuClass: 'no-min-width'
+        });
+        this._toolbarItems.ddbtnConnectionArrowEnd = toolBar.addDropDownButton({
+            title: 'Line end marker',
+            icon: 'glyphicon glyphicon-arrow-right',
+            menuClass: 'no-min-width'
+        });
 
-        this.$cbShowConnection = toolBar.addCheckBox({
-            title: 'toggle checkbox',
-            icon: 'gme icon-gme_diagonal-arrow',
-            checkChangedFn: function(data, checked) {
-                self._logger.log('Checkbox has been clicked!');
+        this._toolbarItems.ddbtnConnectionLineWidth = toolBar.addDropDownButton({
+            title: 'Line width',
+            icon: btnIconBase.clone().addClass('gme icon-gme_lines'),
+            menuClass: 'no-min-width'
+        });
+
+        this._toolbarItems.ddbtnConnectionLineType = toolBar.addDropDownButton({
+            title: 'Line type',
+            icon: btnIconBase.clone().addClass('gme  icon-gme_curvy-line'),
+            menuClass: 'no-min-width'
+        });
+
+        var createArrowMenuItem = function (arrowType, isEnd) {
+            var size = arrowType === CytoscapeConstants.LINE_ARROWS.NONE ? '' : '-xwide-xlong',
+                startArrow = isEnd ? null : arrowType + size,
+                startArrowCy = isEnd ? null : CytoscapeConstants.CY_LINE_ARROWS[arrowType],
+                endArrow = isEnd ? arrowType + size : null,
+                endArrowCy = isEnd ? CytoscapeConstants.CY_LINE_ARROWS[arrowType] : null;
+
+            return {
+                title: arrowType,
+                icon: self._createLineStyleMenuItem(null, null, null, startArrow, endArrow),
+                data: {
+                    endArrow: endArrowCy,
+                    startArrow: startArrowCy
+                },
+                clickFn: function (data) {
+                    var p = {};
+                    if (data.endArrow) {
+                        p[CytoscapeConstants.LINE_END_ARROW] = data.endArrow;
+                    }
+                    if (data.startArrow) {
+                        p[CytoscapeConstants.LINE_START_ARROW] = data.startArrow;
+                    }
+                    self._setCyObjectProperty(p);
+                }
+            };
+        };
+
+        var createPatternMenuItem = function (pattern) {
+            return {
+                title: pattern,
+                icon: self._createLineStyleMenuItem(null, null,
+                    CytoscapeConstants.LINE_PATTERNS[pattern], null, null),
+                data: {pattern: pattern},
+                clickFn: function (data) {
+                    var p = {};
+                    p[CytoscapeConstants.LINE_PATTERN] =
+                        CytoscapeConstants.LINE_PATTERNS[data.pattern];
+                    self._setCyObjectProperty(p);
+                }
+            };
+        };
+
+        var it;
+        for (it in CytoscapeConstants.LINE_ARROWS) {
+            if (CytoscapeConstants.LINE_ARROWS.hasOwnProperty(it)) {
+                this._toolbarItems.ddbtnConnectionArrowStart.addButton(
+                    createArrowMenuItem(CytoscapeConstants.LINE_ARROWS[it], false));
+
+                this._toolbarItems.ddbtnConnectionArrowEnd.addButton(
+                    createArrowMenuItem(CytoscapeConstants.LINE_ARROWS[it], true));
+            }
+        }
+
+        for (it in CytoscapeConstants.LINE_PATTERNS) {
+            if (CytoscapeConstants.LINE_PATTERNS.hasOwnProperty(it)) {
+                this._toolbarItems.ddbtnConnectionPattern.addButton(createPatternMenuItem(it));
+            }
+        }
+
+        //fill linetype dropdown
+        this._toolbarItems.ddbtnConnectionLineType.addButton({
+            title: 'Straight',
+            icon: self._createLineStyleMenuItem(),
+            clickFn: function (/*data*/) {
+                var p = {};
+                p[CytoscapeConstants.LINE_TYPE] = CytoscapeConstants.LINE_TYPES.NONE;
+                self._setCyObjectProperty(p);
             }
         });
-        this._toolbarItems.push(this.$cbShowConnection);
+
+        this._toolbarItems.ddbtnConnectionLineType.addButton({
+            title: 'Bezier',
+            icon: self._createLineStyleMenuItem(null, null, null, null, null,
+                CytoscapeConstants.LINE_TYPES.BEZIER),
+            clickFn: function (/*data*/) {
+                var p = {};
+                p[CytoscapeConstants.LINE_TYPE] = CytoscapeConstants.LINE_TYPES.BEZIER;
+                self._setCyObjectProperty(p);
+            }
+        });
+
+        //fill linewidth dropdown
+        var createWidthMenuItem = function (width) {
+            return {
+                title: width,
+                icon: self._createLineStyleMenuItem(width, null,
+                    CytoscapeConstants.LINE_PATTERNS.SOLID, null, null),
+                data: {width: width},
+                clickFn: function (data) {
+                    var p = {};
+                    p[CytoscapeConstants.LINE_WIDTH] = data.width;
+                    self._setCyObjectProperty(p);
+                }
+            };
+        };
+
+        for (it = 1; it < 10; it += 1) {
+            this._toolbarItems.ddbtnConnectionLineWidth.addButton(createWidthMenuItem(it));
+        }
+
+        this._toolbarItems.ddbtnConnectionArrowStart.enabled(false);
+        this._toolbarItems.ddbtnConnectionPattern.enabled(false);
+        this._toolbarItems.ddbtnConnectionArrowEnd.enabled(false);
+        this._toolbarItems.ddbtnConnectionLineType.enabled(false);
+        this._toolbarItems.ddbtnConnectionLineWidth.enabled(false);
+        /************** END OF - VISUAL STYLE ARROWS *****************/
+
+
+        //add fill color, text color, border color controls
+        this._toolbarItems.cpFillColor = toolBar.addColorPicker({
+                icon: 'glyphicon glyphicon-tint',
+                title: 'Fill color',
+                colorChangedFn: function (color) {
+                    var p = {};
+                    if (self._widget._selectedCyObject.isEdge()) {
+                        p[CytoscapeConstants.LINE_COLOR] = color;
+                        p[CytoscapeConstants.SOURCE_ARROW_COLOR] = color;
+                        p[CytoscapeConstants.TARGET_ARROW_COLOR] = color;
+                    } else {
+                        p[CytoscapeConstants.NODE_COLOR] = color;
+                    }
+                    self._setCyObjectProperty(p);
+                }
+            }
+        );
+
+
+        this._toolbarItems.cpTextColor = toolBar.addColorPicker({
+                icon: 'glyphicon glyphicon-font',
+                title: 'Text color',
+                colorChangedFn: function (color) {
+                    var p = {};
+                    p[CytoscapeConstants.LABEL_COLOR] = color;
+                    self._setCyObjectProperty(p);
+                }
+            }
+        );
+
+        this._toolbarItems.cpFillColor.enabled(false);
+        this._toolbarItems.cpTextColor.enabled(false);
+
 
         this._toolbarInitialized = true;
+    };
+
+    cytoscapeControl.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow,
+                                                                         endArrow, type) {
+        //jshint newcap:false
+        var el = $('<div/>'),
+            path,
+            hSize = 50,
+            vSize = 20,
+            paper = Raphael(el[0], hSize, vSize),
+            bezierControlOffset = 10;
+
+
+        width = width || 1;
+        color = color || '#000000';
+        pattern = pattern || CytoscapeConstants.LINE_PATTERNS.SOLID;
+        startArrow = startArrow || CytoscapeConstants.LINE_ARROWS.NONE;
+        endArrow = endArrow || CytoscapeConstants.LINE_ARROWS.NONE;
+        type = (type || CytoscapeConstants.LINE_TYPES.NONE).toLowerCase();
+
+        el.attr({style: 'height: ' + vSize + 'px; width: ' + hSize + 'px;'});
+
+        if (type === CytoscapeConstants.LINE_TYPES.BEZIER) {
+            path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' C' + (5 + bezierControlOffset) + ',' +
+                (Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2) + ' ' + (hSize - bezierControlOffset) + ',' +
+                (Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2) + ' ' + (hSize - 5) + ',' +
+                (Math.round(vSize / 2) + 0.5));
+        } else {
+            path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' L' + (hSize - 5) + ',' +
+                (Math.round(vSize / 2) + 0.5));
+        }
+
+        path.attr({
+            'arrow-start': startArrow,
+            'arrow-end': endArrow,
+            stroke: color,
+            'stroke-width': width,
+            'stroke-dasharray': pattern
+        });
+
+        return el;
     };
 
     return cytoscapeControl;

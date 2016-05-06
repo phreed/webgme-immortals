@@ -20,6 +20,7 @@ define(['cytoscape/cytoscape.min',
 
         this.nodes = {};
         this._initialize();
+        this._selectedCyObject = null;
 
         this._logger.debug('ctor finished');
     };
@@ -33,6 +34,7 @@ define(['cytoscape/cytoscape.min',
         this._el.addClass(WIDGET_CLASS);
 
         this._initializeCytoscape();
+        this.initializeEventListeners();
 
         // Registering to events can be done with jQuery (as normal)
         this._el.on('dblclick', function (event) {
@@ -58,7 +60,6 @@ define(['cytoscape/cytoscape.min',
                 // 'width': 'label'
               }
             },
-
             {
               selector: 'edge',
               style: {
@@ -68,19 +69,89 @@ define(['cytoscape/cytoscape.min',
                 'target-arrow-shape': 'triangle',
                 'label': 'data(name)'
               }
+            },
+            {
+              selector: ':selected',
+              style: {
+                'background-color': 'gold',
+                'line-color': 'gold',
+                'target-arrow-color': 'gold',
+                'source-arrow-color': 'gold',
+                'opacity': 1
+              }
+            },
+            {
+              selector: '.faded',
+              style: {
+                'opacity': 0.25,
+                'text-opacity': 0
+              }
             }
           ],
 
           layout: {
             name: 'circle',
-            rows: 1
+            padding: 10
           }
+        });
+    };
+
+    cytoscapeWidget.prototype.initializeEventListeners = function () {
+        var self = this;
+
+        this._cy.on('tap', function(evt){
+
+            var control = WebGMEGlobal.PanelManager.getActivePanel().control,
+                isEdge,
+                isNode;
+            if (typeof evt.cyTarget.id === 'function') {
+                isEdge = evt.cyTarget.isEdge();
+                isNode = evt.cyTarget.isNode();
+
+                WebGMEGlobal.State.registerActiveSelection([evt.cyTarget.id()]);
+                self._selectedCyObject = evt.cyTarget;
+                
+            } else if (evt.cyTarget === self._cy) {
+                isEdge = false;
+                WebGMEGlobal.State.registerActiveSelection([self._activeNode]);
+            }
+
+
+            if (control._toolbarItems.cpFillColor) {
+                control._toolbarItems.cpFillColor.enabled(isEdge || isNode);
+            }
+            if (control._toolbarItems.cpTextColor) {
+                control._toolbarItems.cpTextColor.enabled(isEdge || isNode);
+            }
+
+            if (control._toolbarItems.ddbtnConnectionArrowEnd) {
+                control._toolbarItems.ddbtnConnectionArrowEnd.enabled(isEdge);
+            }
+
+            if (control._toolbarItems.ddbtnConnectionArrowStart) {
+                control._toolbarItems.ddbtnConnectionArrowStart.enabled(isEdge);
+            }
+
+            if (control._toolbarItems.ddbtnConnectionPattern) {
+                control._toolbarItems.ddbtnConnectionPattern.enabled(isEdge);
+            }
+
+            if (control._toolbarItems.ddbtnConnectionLineType) {
+                control._toolbarItems.ddbtnConnectionLineType.enabled(isEdge);
+            }
+
+            if (control._toolbarItems.ddbtnConnectionLineWidth) {
+                control._toolbarItems.ddbtnConnectionLineWidth.enabled(isEdge);
+            }
+
+
         });
     };
 
     cytoscapeWidget.prototype.onWidgetContainerResize = function (width, height) {
         this._logger.debug('Widget is resizing...'); 
         // this._cy.invalidateDimensions();
+        this._cy.resize();
     };
 
     // Adding/Removing/Updating items
@@ -105,6 +176,10 @@ define(['cytoscape/cytoscape.min',
             // this._el.append(node);
             // node.onclick = this.onNodeClick.bind(this, desc.id);
         }
+    };
+
+    cytoscapeWidget.prototype.setActiveNode = function (nodeId) {
+        this._activeNode = nodeId;
     };
 
     cytoscapeWidget.prototype.removeNode = function (gmeId) {
