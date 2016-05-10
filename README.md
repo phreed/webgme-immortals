@@ -59,10 +59,11 @@ It may be necessary to disable the prefix.
 nvm use --delete-prefix v4.2.4
 ```
 
-Now we can get the webgme-setup-tool which includes the 'webgme' tool.
+Some of the tasks use the webgme-cli which includes the 'webgme' tool.
 ```bash
-  npm install -g webgme-setup-tool
+  npm install -g webgme-cli
 ```
+
 Update all the npm packages within the webgme-immortals directory.
 This establishes a set of node_modules specifically for the project.
 ```bash
@@ -80,6 +81,56 @@ Some changes to the running system will necessitate restarting the server.
 This includes changes to the packages listed in 'packages.json' (npm),
 or 'bower.json'.
 Changes to Javascript or CSS will only require an refresh on the browser.
+
+### Long Running Service
+
+WebGME can be run as a service on Ubuntu.
+It makes use of 'upstart' (<16.04) and 'systemd' (>= 16.04).
+
+#### Upstart (Ubuntu <16.04)
+Copy the webgme files to their appropriate locations.
+The config file may need to be updated based on where your
+webgme-immortals project resides.
+```bash
+sudo cp ./init/webgme.conf /etc/init/webgme.conf
+```
+Fire it up!
+```bash
+# service webgme start
+```
+
+
+#### systemd (Ubuntu >=16.04)
+
+
+```bash
+SYSTEMD_DIR=/lib/systemd/system
+mkdir -p $SYSTEMD_DIR
+cp webgme.service  $SYSTEMD_DIR
+cp webgme.socket $SYSTEMD_DIR
+
+# ENV_DIR=/etc/default/webgme/
+ENV_DIR=~/.config/webgme/
+mkdir -p $ENV_DIR
+# cp webgme_immortals.env $ENV_DIR
+
+systemctl --system daemon-reload
+
+systemctl --system enable webgme.socket
+systemctl --system start webgme.socket
+# systemctl status webgme.socket
+
+# SHARE_DIR=/usr/share/webgme
+SHARE_DIR=~/.config/webgme
+mkdir -p $SHARE_DIR
+# cp webgme_immortals.sh $SHARE_DIR
+
+systemctl --system enable webgme.service
+systemctl --system start webgme.service
+# systemctl status webgme.service
+
+journalctl -xe
+```
 
 ### Samples ###
 
