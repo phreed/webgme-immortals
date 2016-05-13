@@ -6,6 +6,7 @@
  https://www.stevefenton.co.uk/2013/01/complex-typescript-definitions-made-easy/
  http://immortals.isis.vanderbilt.edu:3000/docs/source/PluginConfig.html
  */
+/// <reference path="typings/main/ambient/plugin/plubinconfig/index.d.ts" />
 
 import PluginConfig = require("plugin/pluginconfig");
 import PluginBase = require("plugin/PluginBase");

@@ -1,5 +1,7 @@
 {
   "name": "webgme-immortals",
+  "author": "Fred Eisele",
+  "version": "1.0.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -9,7 +11,6 @@
     "start": "node app.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test"
   },
-  "version": "1.0.0",
   "dependencies": {
     "cytoscape": "^2.6.3",
     "jassa-core": "^0.6.0",
