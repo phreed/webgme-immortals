@@ -1,0 +1,33 @@
+{
+    "compileOnSave": true,
+    "buildOnSave": false,
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "module": "amd",
+        "moduleResolution": "classic",
+        "removeComments": false,
+        "target": "es3",
+        "watch": true,
+        "allowJs": true,
+        "pretty": true,
+        "noFallthroughCasesInSwitch": true
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "!./node_modules/**/*.ts"
+    ],
+    "files": [
+        "./config.ts",
+        "./src/plugins/push/push.ts",
+        "./typings/globals/q/index.d.ts",
+        "./typings/index.d.ts",
+        "./typings/modules/chai/index.d.ts",
+        "./typings/modules/debug/index.d.ts",
+        "./typings/modules/webgme/index.d.ts"
+    ],
+    "atom": {
+        "rewriteTsconfig": true
+    }
+}

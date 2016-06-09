@@ -6,25 +6,23 @@
  https://www.stevefenton.co.uk/2013/01/complex-typescript-definitions-made-easy/
  http://immortals.isis.vanderbilt.edu:3000/docs/source/PluginConfig.html
  */
-/// <reference path="typings/main/ambient/plugin/plubinconfig/index.d.ts" />
 
-import PluginConfig = require("plugin/pluginconfig");
-import PluginBase = require("plugin/PluginBase");
-import newserialization = require("common/core/users/newserialization");
+// import PluginConfig = require('./plugin/PluginConfig');
+// import PluginBase = require("plugin/PluginBase");
+// import newserialization = require("common/core/users/newserialization");
 
-import FlatSerializer = require('serialize/FlatSerializer');
-import CyjsSerializer = require('serialize/CyjsSerializer');
-import BlobMetadata = require('blob/BlobMetadata');
-import Util = require('blob/util');
+// import FlatSerializer = require('serialize/FlatSerializer');
+// import CyjsSerializer = require('serialize/CyjsSerializer');
+// import BlobMetadata = require('blob/BlobMetadata');
+// import Util = require('blob/util');
 import Q = require("q");
+import gme = require('webgme');
 
-"use strict;"
-
-class Push extends PluginBase {
+class Push extends gme.PluginBase {
 
   constructor() {
     super();
-  }
+  };
 
   /**
    * Gets the name of the push.
@@ -50,9 +48,9 @@ class Push extends PluginBase {
    * @public
    */
   getDescription() : string {
-    return `Example of how to push a data-model from webgme.
-The active node (i.e. open node on the canvas) will be the starting point,
-expect when importing a project.`;
+    return "Example of how to push a data-model from webgme. " +
+          "The active node (i.e. open node on the canvas) will be the starting point, " +
+          "expect when importing a project.";
   };
   /**
    * Gets the configuration structure for the foo.
@@ -131,47 +129,47 @@ expect when importing a project.`;
     // Use self to access core, project, result, logger etc from
     // PluginBase.
     // These are all instantiated at this point.
-    let config = this.getCurrentConfig();
+    let config = this.getConfigStructure();
 
     this.logger.info('serialize the model in the requested manner');
     switch (config.typedVersion) {
       case 'json-tree:1.0.0':
         this.serializeTreeJson100(config, mainHandler,
-          function(jsonStr) {
+          function(jsonStr: string) {
             this.deliver(config, mainHandler, jsonStr);
           });
         return;
       case 'json-flat:1.0.0':
         this.serializeFlatJson100(config, mainHandler,
-          function(jsonStr) {
+          function(jsonStr: string) {
             this.deliver(config, mainHandler, jsonStr);
           });
         return;
       case 'json-cytoscape:1.0.0':
         this.serializeCytoscapeJson100(config, mainHandler,
-          function(jsonStr) {
+          function(jsonStr: string) {
             this.deliver(config, mainHandler, jsonStr);
           });
         return;
       default:
-        this.result.setSuccess(false);
-        mainHandler("Unknown serialization type ", this.result);
+        PluginBase.result.setSuccess(false);
+        mainHandler("Unknown serialization type ", PluginBase.result);
         return;
     }
 
-    this.result.setSuccess(false);
-    mainHandler("could not push data model", this.result);
+    //PluginBase.result.setSuccess(false);
+    //mainHandler("could not push data model", PluginBase.result);
   };
 
   /**
   Pushing the current data-model into a JSON structure.
   */
-  serializeFlatJson100 (config, mainHandler, deliveryFn):void {
+  serializeFlatJson100 (config: any, mainHandler: any, deliveryFn: any ):void {
       let jsonStr: string;
 
       // produce a js-object
-      FlatSerializer.export(this.core, this.activeNode,
-        function(err, jsonObject) {
+      FlatSerializer.export(PluginBase.core, PluginBase.activeNode,
+        function(err: any, jsonObject: any) {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -181,12 +179,12 @@ expect when importing a project.`;
         });
     };
 
-  serializeCytoscapeJson100 (config, mainHandler, deliveryFn): void {
+  serializeCytoscapeJson100 (config: any, mainHandler: any, deliveryFn: any): void {
       let jsonStr: string;
 
       // produce a js-object
       CyjsSerializer.export(this.core, this.activeNode,
-        function(err, jsonObject) {
+        function(err: any, jsonObject: any) {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -198,12 +196,12 @@ expect when importing a project.`;
   /**
   Pushing the current data-model into a JSON structure.
   */
-  serializeTreeJson100 (config, mainHandler, deliveryFn): void {
+  serializeTreeJson100 (config: any, mainHandler: any, deliveryFn: any): void {
       let jsonStr: string;
 
       // produce a js-object
       newserialization.export(this.core, this.activeNode,
-        function(err, jsonObject) {
+        function(err: any, jsonObject: any) {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -213,15 +211,15 @@ expect when importing a project.`;
         });
     };
 
-  deliver (config, mainHandler, payload): void {
-      let isProject = this.core.getPath(this.activeNode) === '';
+  deliver (config:any, mainHandler: any, payload: any): void {
+      let isProject = PluginBase.core.getPath(PluginBase.activeNode) === '';
       let pushedFileName: string;
-      let artifact;
+      let artifact: any;
 
     switch (config.deliveryMode) {
       case 'file':
         if (!config.fileName) {
-          mainHandler(new Error('No file provided.'), this.result);
+          mainHandler(new Error('No file provided.'), PluginBase.result);
           return;
         }
         pushedFileName = config.fileName;

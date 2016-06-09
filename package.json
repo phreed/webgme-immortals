@@ -14,7 +14,7 @@
   "dependencies": {
     "cytoscape": "^2.6.3",
     "jassa-core": "^0.6.0",
-    "webgme_sample": "phreed/webgme#verify",
+    "q": "1.4.1",
     "webgme": "^2.0.0"
   },
   "devDependencies": {
@@ -22,6 +22,7 @@
     "rimraf": "^2.4.0",
     "chai": "^3.0.0",
     "typescript": "^1.8.10",
-    "typings": "latest"
+    "typings": "latest",
+    "ts-node": "latest"
   }
 }

@@ -3,4 +3,6 @@ server*.log
 blob-local-storage/
 .nrepl-*
 npm-debug.log*
+dist/
+typings/
 

@@ -25,21 +25,6 @@ define([
   'use strict';
 
   /**
-  Provide for true prototypal-inheritance
-  http://javascript.crockford.com/prototypal.html
-  New objects can then be created from
-  existing objects.
-  newObject = Object.create(oldObject);
-  */
-  if (typeof Object.create !== 'function') {
-      Object.create = function (o) {
-          function F() {}
-          F.prototype = o;
-          return new F();
-      };
-  }
-
-  /**
    * Initializes a new instance of push.
    * @class
    * @augments {PluginBase}
@@ -189,8 +174,8 @@ define([
         return;
     }
 
-    self.result.setSuccess(false);
-    mainHandler("could not push data model", self.result);
+    // self.result.setSuccess(false);
+    // mainHandler("could not push data model", self.result);
   };
 
   /**
@@ -282,6 +267,7 @@ define([
                 mainHandler(null, self.result);
               });
           });
+          break;
         }
       }
   /* Then end of the module */
