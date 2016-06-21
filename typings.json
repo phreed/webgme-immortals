@@ -1,9 +1,8 @@
 {
-  "dependencies": {
-    "chai": "registry:npm/chai#3.5.0+20160415060238",
-    "debug": "registry:npm/debug#2.0.0+20160511151334"
-  },
+  "name": "webgme-immortals",
+  "dependencies": {},
   "globalDependencies": {
-    "q": "registry:dt/q#0.0.0+20160417152954"
+    "q": "registry:dt/q#0.0.0+20160613154756",
+    "webgme": "github:phreed/typed-npm-webgme"
   }
 }

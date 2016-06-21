@@ -5,8 +5,8 @@
         "outDir": "./dist/",
         "sourceMap": true,
         "noImplicitAny": true,
-        "module": "Amd",
-        "moduleResolution": "classic",
+        "module": "amd",
+        "moduleResolution": "node",
         "removeComments": false,
         "target": "es3",
         "watch": true,
@@ -19,13 +19,10 @@
         "!./node_modules/**/*.ts"
     ],
     "files": [
-        "./config.ts",
         "./src/plugins/push/push.ts",
         "./typings/globals/q/index.d.ts",
-        "./typings/index.d.ts",
-        "./typings/modules/chai/index.d.ts",
-        "./typings/modules/debug/index.d.ts",
-        "./typings/modules/webgme/index.d.ts"
+        "./typings/globals/webgme/index.d.ts",
+        "./typings/index.d.ts"
     ],
     "atom": {
         "rewriteTsconfig": true

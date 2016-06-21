@@ -14,15 +14,17 @@
   "dependencies": {
     "cytoscape": "^2.6.3",
     "jassa-core": "^0.6.0",
-    "q": "1.4.1",
-    "webgme": "^2.0.0"
+    "jquery": "latest",
+    "q": "^1.4.1",
+    "requirejs": "^2.2.0",
+    "webgme": "^2.1.0"
   },
   "devDependencies": {
     "mocha": "^2.2.5",
     "rimraf": "^2.4.0",
     "chai": "^3.0.0",
     "typescript": "^1.8.10",
-    "typings": "latest",
+    "typings": "^1.0.5",
     "ts-node": "latest"
   }
 }

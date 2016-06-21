@@ -24,4 +24,7 @@ if (error_files.length > 0) error_files[0].options.filename = '/tmp/server-info.
 config.authentication.enable = true;
 config.authentication.logOutUrl = '/login';
 
+config.requirejsPaths["PluginBase"] = 'plugin/PluginBase';
+config.requirejsPaths["PluginConfig"] = 'plugin/PluginConfig';
+
 module.exports = config;
