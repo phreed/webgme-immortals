@@ -20,6 +20,9 @@
     ],
     "files": [
         "./src/plugins/push/push.ts",
+        "./src/serialize/CyjsSerializer.d.ts",
+        "./src/serialize/FlatSerializer.d.ts",
+        "./src/serialize/NewSerializer.ts",
         "./typings/globals/q/index.d.ts",
         "./typings/globals/webgme/index.d.ts",
         "./typings/index.d.ts"

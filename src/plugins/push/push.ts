@@ -10,7 +10,8 @@
 import PluginBase from 'plugin/PluginBase';
 import PluginConfig from 'plugin/PluginConfig';
 import * as q from 'q';
-import NewSerializer from 'common/core/users/newserialization';
+import * as webgmeV1 from 'webgme/v1';
+import NewSerializer from '../../serialize/NewSerializer';
 import FlatSerializer from 'serialize/FlatSerializer';
 import CyjsSerializer from 'serialize/CyjsSerializer';
 import BlobMetadata from 'blob/BlobMetadata';
@@ -79,53 +80,49 @@ class Push extends PluginBase {
     }];
   };
 
-  main(mainHandler: any) : void {
-    let self = this;
-    let config = self.getCurrentConfig();
+  main(mainHandler: PluginJS.Callback) : void {
+    let config = this.getCurrentConfig();
 
-    self.logger.info('serialize the model in the requested manner');
+    this.logger.info('serialize the model in the requested manner');
     let typedVersion = config['typedVersion'];
     switch (typedVersion) {
       case 'json-tree:1.0.0':
-        self.serializeTreeJson100(config, mainHandler,
+        this.serializeTreeJson100(config, mainHandler,
           function(jsonStr: string) {
-            self.deliver(config, mainHandler, jsonStr);
+            this.deliver(config, mainHandler, jsonStr);
           });
         return;
       case 'json-flat:1.0.0':
-        self.serializeFlatJson100(config, mainHandler,
+        this.serializeFlatJson100(config, mainHandler,
           function(jsonStr: string) {
-            self.deliver(config, mainHandler, jsonStr);
+            this.deliver(config, mainHandler, jsonStr);
           });
         return;
       case 'json-cytoscape:1.0.0':
-        self.serializeCytoscapeJson100(config, mainHandler,
+        this.serializeCytoscapeJson100(config, mainHandler,
           function(jsonStr: string) {
-            self.deliver(config, mainHandler, jsonStr);
+            this.deliver(config, mainHandler, jsonStr);
           });
         return;
       default:
-        self.result.setSuccess(false);
-        mainHandler("Unknown serialization type ", self.result);
+        this.result.setSuccess(false);
+        mainHandler(new Error("Unknown serialization type "), this.result);
         return;
     }
-
-    // self.result.setSuccess(false);
-    // mainHandler("could not push data model", self.result);
   };
 
 
   serializeFlatJson100(
     config: PluginConfig,
-    mainHandler: PluginJS.Callback, // does this have a specific signature?
+    mainHandler: PluginJS.Callback,
     deliveryFn: DeliveryFunction
   ) {
       var jsonStr: string;
-      // produce a js-object
+      // an asynchronous call
       FlatSerializer.export(
         this.core,
         this.activeNode,
-        function(err: Error, jsonObject: {nodes: any} ) {
+        function(err: Error, jsonObject: webgmeV1.JsonObj ) {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -140,12 +137,10 @@ class Push extends PluginBase {
     mainHandler: any,
     deliveryFn: DeliveryFunction) {
       var jsonStr:string;
-
-      // produce a js-object
       CyjsSerializer.export(
         this.core,
         this.activeNode,
-        function(err: Error, jsonObject) {
+        function(err: Error, jsonObject: webgmeV1.JsonObj) {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -162,12 +157,10 @@ class Push extends PluginBase {
     mainHandler: any,
     deliveryFn: DeliveryFunction) {
       var jsonStr: string;
-
-      // produce a js-object
       NewSerializer.export(
         this.core,
         this.activeNode,
-        function(err: Error, jsonObject) {
+        function(err: Error, jsonObject: webgmeV1.JsonObj) {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -177,19 +170,21 @@ class Push extends PluginBase {
         });
     };
 
+  /**
+   A function to deliver the serialized object properly.
+  */
   deliver(
     config: PluginConfig,
     mainHandler: PluginJS.Callback,
-    payload) {
+    payload: string) {
       var isProject = this.core.getPath(this.activeNode) === '';
       var pushedFileName: string;
-      var artifact;
+      var artifact: any;
 
     switch (config['deliveryMode']) {
       case 'file':
-        if (!config.fileName) {
-          mainHandler(new Error('No file provided.'),
-                      self.result);
+        if (!config.hasOwnProperty('fileName')) {
+          mainHandler(new Error('No file name provided.'), this.result);
           return;
         }
         pushedFileName = config['fileName'];
@@ -202,7 +197,7 @@ class Push extends PluginBase {
               return;
             }
             artifact.save(
-              function(err, hash) {
+              function(err: Error, hash: PluginJS.Hash) {
                 if (err) {
                   mainHandler(err, this.result);
                   return;
