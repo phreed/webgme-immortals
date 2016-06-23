@@ -3,11 +3,14 @@
 In the following "I" represents the configuration used by
 the author of this document.
 "You" should feel free to change "I"'s settings.
-I run the following commands to install on Ubuntu.
+I run the following commands to install the prerequisites on Ubuntu.
 ```bash
   sudo apt-get install mongodb-server
+  sudo apt-get install mongodb-clients
   sudo apt-get install git
-
+```
+Clone the repository into an appropriate place and build the application.
+```bash
   mkdir -p ~/projects/brass
   cd ~/projects/brass
   git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
@@ -18,7 +21,9 @@ I run the following commands to install on Ubuntu.
   nvm use v4.2.4
 
   npm install
-
+```
+If you want to run the application to see if it works.
+```bash
   webgme start
 ```
 
@@ -26,8 +31,10 @@ webGME and its derivatives are node.js applications which
 use mongodb as the backing store and git for version-control.
 Development and operation are possible on MS-Windows and Mac-OSX.
 The following instructions are for Ubuntu 16.04 (which I use).
+Note that mongodb-clients is not necessary but it can be useful.
 ```bash
   sudo apt-get install mongodb-server
+  sudo apt-get install mongodb-clients
   sudo apt-get install git
 ```
 Clone the webgme-immortals project into an appropriate place.
@@ -101,29 +108,25 @@ Fire it up!
 
 
 #### systemd (Ubuntu >=16.04)
-
+The recommended way to run webgme as a service is with systemd.
+The scripts presume that the project has been cloned into
+'/home/brass/projects/brass/webgme_immortals'.
+If that is not the case then
+the 'init/webgme.service' and 'init/webgme_immortals.sh'
+files will need to be adjusted.
+The following commands need to be run as root.
 
 ```bash
+PROJ_DIR=/home/brass/projects/brass/webgme-immortals
 SYSTEMD_DIR=/lib/systemd/system
-mkdir -p $SYSTEMD_DIR
-cp webgme.service  $SYSTEMD_DIR
-cp webgme.socket $SYSTEMD_DIR
-
-# ENV_DIR=/etc/default/webgme/
-ENV_DIR=~/.config/webgme/
-mkdir -p $ENV_DIR
-# cp webgme_immortals.env $ENV_DIR
+mkdir -p ${SYSTEMD_DIR}
+cp ${PROJ_DIR}/webgme.service ${SYSTEMD_DIR}
+cp ${PROJ_DIR}/webgme.socket ${SYSTEMD_DIR}
 
 systemctl --system daemon-reload
 
 systemctl --system enable webgme.socket
 systemctl --system start webgme.socket
-# systemctl status webgme.socket
-
-# SHARE_DIR=/usr/share/webgme
-SHARE_DIR=~/.config/webgme
-mkdir -p $SHARE_DIR
-# cp webgme_immortals.sh $SHARE_DIR
 
 systemctl --system enable webgme.service
 systemctl --system start webgme.service

@@ -17,10 +17,10 @@ StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=webgme
 SyslogLevel=debug
-User=nobody
+User=brass
 # Group=nobody
-WorkingDirectory=/home/fred/projects/brass/webgme-immortals
-ExecStart=/bin/sh /home/fred/projects/brass/webgme-immortals/init/webgme_immortals.sh
+WorkingDirectory=/home/brass/projects/brass/webgme-immortals
+ExecStart=/bin/sh /home/brass/projects/brass/webgme-immortals/init/webgme_immortals.sh
 
 
 # man systemd.special

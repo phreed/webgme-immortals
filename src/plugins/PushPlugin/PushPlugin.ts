@@ -21,12 +21,12 @@ interface DeliveryFunction {
   (json: string): void;
 }
 
-class Push extends PluginBase {
+class PushPlugin extends PluginBase {
   constructor() {
      super();
   }
 
-  getName(): string { return 'push'; }
+  getName(): string { return 'Push'; }
   getVersion(): string { return '0.1.0'; }
   getDescription() {
     return 'Example of how to push a data-model from webgme.\n' +

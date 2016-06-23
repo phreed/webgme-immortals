@@ -24,7 +24,7 @@ define([
    * @classdesc This class represents the plugin pull.
    * @constructor
    */
-  var pull = function() {
+  var PullPlugin = function() {
     // Call base class' constructor.
     PluginBase.call(this);
   };

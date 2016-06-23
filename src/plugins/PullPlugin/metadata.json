@@ -1,0 +1,47 @@
+{
+  "id": "PullPlugin",
+  "name": "Pull Plugin",
+  "version": "0.1.0",
+  "description": "Pull the model from an alternate repository.",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cloud"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": true,
+  "configStructure": [{
+    "name": "mode",
+    "displayName": "Mode file or websocket",
+    "description": "Are we importing a file or making an extract from the super model?",
+    "value": "file",
+    "valueType": "string",
+    "valueItems": [
+      "file",
+      "websocket"
+    ]
+  }, {
+    "name": "hostAddr",
+    "displayName": "graph db host IP address or name",
+    "regex": "^[a-zA-Z]+$",
+    "regexMessage": "Name can only contain English characters!",
+    "description": "What is the ip address or name of the host for the graph database multi-model.",
+    "value": "127.0.0.1",
+    "valueType": "string",
+    "readOnly": false
+  }, {
+    "name": "query",
+    "displayName": "extract sub-model",
+    "description": "Model extraction from system Multi-Model.",
+    "value": "",
+    "valueType": "string",
+    "readOnly": false
+  }, {
+    "name": "file",
+    "displayName": "graph model",
+    "description": "click and drag file .",
+    "value": "default_graph.json",
+    "valueType": "asset",
+    "readOnly": false
+  }]
+}

@@ -19,7 +19,7 @@
         "!./node_modules/**/*.ts"
     ],
     "files": [
-        "./src/plugins/push/push.ts",
+        "./src/plugins/PushPlugin/PushPlugin.ts",
         "./src/serialize/CyjsSerializer.d.ts",
         "./src/serialize/FlatSerializer.d.ts",
         "./src/serialize/NewSerializer.ts",
