@@ -26,63 +26,9 @@ class PushPlugin extends PluginBase {
      super();
   }
 
-  getName(): string { return 'Push'; }
-  getVersion(): string { return '0.1.0'; }
-  getDescription() {
-    return 'Example of how to push a data-model from webgme.\n' +
-      'The active node (i.e. open node on the canvas) will be the starting point, ' +
-      'expect when importing a project.';
-  };
-  getConfigStructure() {
-    return [{
-      name: 'deliveryMode',
-      displayName: 'Mode file or websocket',
-      description: '',
-      value: 'file',
-      valueType: 'string',
-      valueItems: [
-        'file',
-        'websocket'
-      ]
-    }, {
-      name: 'typedVersion',
-      displayName: 'TypedVersion',
-      description: 'Specify the type and version to be used.',
-      value: 'json-cytoscape:1.0.0',
-      valueType: 'string',
-      valueItems: [
-        'json-flat:1.0.0',
-        'json-cytoscape:1.0.0'
-      ]
-    }, {
-      name: 'hostAddr',
-      displayName: 'graph db host IP address or name',
-      // regex: '^[a-zA-Z]+$',
-      // regexMessage: 'Name can only contain English characters!',
-      description: 'What is the ip address or name of the host for the ' + 'graph database mega-model.',
-      value: '127.0.0.1',
-      valueType: 'string',
-      readOnly: false
-    }, {
-      name: 'query',
-      displayName: 'extract sub-model',
-      description: 'Model extraction from system Multi-Model.',
-      value: '',
-      valueType: 'string',
-      readOnly: false
-    }, {
-      name: 'fileName',
-      displayName: 'graph model file name',
-      description: 'click and drag file .',
-      value: 'default_graph.json',
-      valueType: 'string',
-      readOnly: false
-    }];
-  };
-
   main(mainHandler: PluginJS.Callback) : void {
     let config = this.getCurrentConfig();
-
+    console.error("the main PushPlugin function is running");
     this.logger.info('serialize the model in the requested manner');
     let typedVersion = config['typedVersion'];
     switch (typedVersion) {

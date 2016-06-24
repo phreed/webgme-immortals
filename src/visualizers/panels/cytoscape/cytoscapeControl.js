@@ -10,7 +10,7 @@ define(['js/Constants',
     'js/RegistryKeys',
     'js/Utils/PreferencesHelper',
     './cytoscape.Constants',
-    'cytoscape/cytoscape.min'
+    'cytoscape'
 ], function(CONSTANTS,
     GMEConcepts,
     nodePropertyNames,

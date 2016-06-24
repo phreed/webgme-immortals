@@ -1,11 +1,11 @@
 {
-  "id": "PushPlugin",
-  "name": "Push Plugin",
-  "version": "0.1.1",
-  "description": "Push the model to an alternate repository. \n Example of how to push a data-model from webgme.\nThe active node (i.e. open node on the canvas) will be the starting point, expect when importing a project.",
+  "id": "StreamingPlugin",
+  "name": "Streaming Plugin",
+  "version": "0.1.0",
+  "description": "This is a external store synchronizer, it posts topics via zeromq",
   "icon": {
-    "src": "",
-    "class": "fa fa-cloud"
+    "class": "glyphicon glyphicon-cog",
+    "src": ""
   },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
@@ -13,13 +13,14 @@
   "configStructure": [
     {
       "name": "deliveryMode",
-      "displayName": "Mode file or websocket",
+      "displayName": "Mode file, websocket, or broker",
       "description": "",
       "value": "file",
       "valueType": "string",
       "valueItems": [
         "file",
-        "websocket"
+        "websocket",
+        "broker"
       ]
     }, {
       "name": "typedVersion",

@@ -7,7 +7,14 @@
 # The home directory for the user under which this will be run
 #
 echo `pwd`
-export HOME_DIR=/home/fred
+if [ -s /home/fred ]; then
+  export HOME_DIR="/home/fred";
+elif [ -s /home/brass ]; then
+  export HOME_DIR="/home/brass";
+else
+  echo "no appropriate home directory";
+  exit 2
+fi
 
 # Used by node to select the appropriate configuration file
 export NODE_ENV=immortals

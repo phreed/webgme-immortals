@@ -4,17 +4,17 @@
     "decorators": {},
     "layouts": {},
     "plugins": {
-      "checkout": {
-        "src": "src/plugins/checkout",
-        "test": "test/plugins/checkout"
+      "PullPlugin": {
+        "src": "src/plugins/PullPlugin",
+        "test": "test/plugins/PullPlugin"
       },
-      "checkin": {
-        "src": "src/plugins/checkin",
-        "test": "test/plugins/checkin"
+      "PushPlugin": {
+        "src": "dist/plugins/PushPlugin",
+        "test": "test/plugins/PushPlugin"
       },
-      "foo": {
-        "src": "src/plugins/foo",
-        "test": "test/plugins/foo"
+      "StreamingPlugin": {
+        "src": "src/plugins/StreamingPlugin",
+        "test": "test/plugins/StreamingPlugin"
       }
     },
     "seeds": {
