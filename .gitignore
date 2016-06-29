@@ -6,4 +6,5 @@ blob-local-storage/
 npm-debug.log*
 dist/
 typings/
+*.js.map
 

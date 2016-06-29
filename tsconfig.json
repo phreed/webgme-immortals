@@ -2,7 +2,7 @@
     "compileOnSave": true,
     "buildOnSave": false,
     "compilerOptions": {
-        "outDir": "./dist/",
+        "outDir": "./src/",
         "sourceMap": true,
         "noImplicitAny": true,
         "module": "amd",

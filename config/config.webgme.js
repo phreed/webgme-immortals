@@ -8,8 +8,7 @@ var config = require('webgme/config/config.default'),
 
 
 // The paths can be loaded from the webgme-setup.json
-console.log(config.plugin.basePaths);
-config.plugin.basePaths.push('src/plugins','dist/plugins');
+config.plugin.basePaths.push('src/plugins');
 config.seedProjects.basePaths.push('src/seeds/immortals');
 
 config.visualization.panelPaths.push('src/visualizers/panels');

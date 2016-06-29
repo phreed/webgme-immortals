@@ -13,6 +13,8 @@ var config = require('./config.default');
 config.client.log.level = 'debug'
 config.debug = true;
 config.server.port = 3000;
+console.log(config.plugin.basePaths);
+// config.plugin.basePaths.push('dist/plugins');
 
 // configure the logger
 console.log(config.server);

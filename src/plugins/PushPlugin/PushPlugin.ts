@@ -5,6 +5,8 @@
  Copyright Fred Eisele 2015
  https://www.stevefenton.co.uk/2013/01/complex-typescript-definitions-made-easy/
  http://immortals.isis.vanderbilt.edu:3000/docs/source/PluginConfig.html
+
+ The metadata.json needs to be copied as well.
  */
 
 import PluginBase from 'plugin/PluginBase';
@@ -56,7 +58,6 @@ class PushPlugin extends PluginBase {
         return;
     }
   };
-
 
   serializeFlatJson100(
     config: PluginConfig,
