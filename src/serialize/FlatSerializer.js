@@ -6,8 +6,8 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert', 'common/util/canon'],
-function (ASSERT, CANON) {
+define(["require", "exports",'common/util/assert', 'common/util/canon'],
+function (require, exports, ASSERT, CANON) {
 
     'use strict';
 
@@ -1323,6 +1323,14 @@ function (ASSERT, CANON) {
             }, 10);
         });
     }
+    var FlatSerializer = (function () {
+      function FlatSerializer() {}
+      FlatSerializer.export = exportLibrary;
+      FlatSerializer.import = importLibrary;
+      return FlatSerializer;
+    }());
+    exports.__esModule = true;
+    exports["default"] = FlatSerializer;
 
     return {
         export: exportLibrary,

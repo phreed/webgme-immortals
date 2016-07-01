@@ -25,7 +25,7 @@
       "name": "typedVersion",
       "displayName": "TypedVersion",
       "description": "Specify the type and version to be used.",
-      "value": "json-flat:1.0.0",
+      "value": "json-tree:1.0.0",
       "valueType": "string",
       "valueItems": [
         "json-tree:1.0.0",

@@ -4,6 +4,7 @@
     "compilerOptions": {
         "outDir": "./src/",
         "sourceMap": true,
+        "declaration": true,
         "noImplicitAny": true,
         "module": "amd",
         "moduleResolution": "node",
@@ -19,9 +20,12 @@
         "!./node_modules/**/*.ts"
     ],
     "files": [
+        "./src/plugins/PushPlugin/PushPlugin.d.ts",
         "./src/plugins/PushPlugin/PushPlugin.ts",
+        "./src/plugins/PushPlugin/text.d.ts",
         "./src/serialize/CyjsSerializer.d.ts",
         "./src/serialize/FlatSerializer.d.ts",
+        "./src/serialize/NewSerializer.d.ts",
         "./src/serialize/NewSerializer.ts",
         "./typings/globals/q/index.d.ts",
         "./typings/globals/webgme/index.d.ts",

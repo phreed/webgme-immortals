@@ -5,12 +5,13 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define(["require", "exports", 'plugin/PluginBase', '../../serialize/NewSerializer', 'serialize/FlatSerializer', 'serialize/CyjsSerializer'], function (require, exports, PluginBase_1, NewSerializer_1, FlatSerializer_1, CyjsSerializer_1) {
+define(["require", "exports", 'plugin/PluginBase', 'serialize/NewSerializer', 'serialize/FlatSerializer', 'serialize/CyjsSerializer', 'text!./metadata.json'], function (require, exports, PluginBase, NewSerializer_1, FlatSerializer_1, CyjsSerializer_1, MetaDataStr) {
     "use strict";
     var PushPlugin = (function (_super) {
         __extends(PushPlugin, _super);
         function PushPlugin() {
             _super.call(this);
+            this.pluginMetadata = JSON.parse(MetaDataStr);
         }
         PushPlugin.prototype.main = function (mainHandler) {
             var config = this.getCurrentConfig();
@@ -39,7 +40,6 @@ define(["require", "exports", 'plugin/PluginBase', '../../serialize/NewSerialize
                     return;
             }
         };
-        ;
         PushPlugin.prototype.serializeFlatJson100 = function (config, mainHandler, deliveryFn) {
             var jsonStr;
             // an asynchronous call
@@ -52,7 +52,6 @@ define(["require", "exports", 'plugin/PluginBase', '../../serialize/NewSerialize
                 deliveryFn(jsonStr);
             });
         };
-        ;
         PushPlugin.prototype.serializeCytoscapeJson100 = function (config, mainHandler, deliveryFn) {
             var jsonStr;
             CyjsSerializer_1["default"].export(this.core, this.activeNode, function (err, jsonObject) {
@@ -64,7 +63,6 @@ define(["require", "exports", 'plugin/PluginBase', '../../serialize/NewSerialize
                 deliveryFn(jsonStr);
             });
         };
-        ;
         /**
         Pushing the current data-model into a JSON structure.
         */
@@ -79,7 +77,6 @@ define(["require", "exports", 'plugin/PluginBase', '../../serialize/NewSerialize
                 deliveryFn(jsonStr);
             });
         };
-        ;
         /**
          A function to deliver the serialized object properly.
         */
@@ -115,6 +112,7 @@ define(["require", "exports", 'plugin/PluginBase', '../../serialize/NewSerialize
             }
         };
         return PushPlugin;
-    }(PluginBase_1["default"]));
+    }(PluginBase));
+    return PushPlugin;
 });
 //# sourceMappingURL=PushPlugin.js.map

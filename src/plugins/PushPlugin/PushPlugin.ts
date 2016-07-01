@@ -9,23 +9,28 @@
  The metadata.json needs to be copied as well.
  */
 
-import PluginBase from 'plugin/PluginBase';
-import PluginConfig from 'plugin/PluginConfig';
+import PluginBase = require('plugin/PluginBase');
+import PluginConfig = require('plugin/PluginConfig');
+import Util = require('blob/util');
+
 import * as q from 'q';
 import * as webgmeV1 from 'webgme/v1';
-import NewSerializer from '../../serialize/NewSerializer';
+import NewSerializer from 'serialize/NewSerializer';
 import FlatSerializer from 'serialize/FlatSerializer';
 import CyjsSerializer from 'serialize/CyjsSerializer';
 import BlobMetadata from 'blob/BlobMetadata';
-import Util from 'blob/util';
+import MetaDataStr = require('text!./metadata.json');
 
 interface DeliveryFunction {
   (json: string): void;
 }
 
 class PushPlugin extends PluginBase {
+  pluginMetadata: any;
+
   constructor() {
      super();
+     this.pluginMetadata = JSON.parse(MetaDataStr);
   }
 
   main(mainHandler: PluginJS.Callback) : void {
@@ -57,13 +62,12 @@ class PushPlugin extends PluginBase {
         mainHandler(new Error("Unknown serialization type "), this.result);
         return;
     }
-  };
+  }
 
-  serializeFlatJson100(
-    config: PluginConfig,
+  private serializeFlatJson100(
+    config: PluginJS.Config,
     mainHandler: PluginJS.Callback,
-    deliveryFn: DeliveryFunction
-  ) {
+    deliveryFn: DeliveryFunction):void  {
       var jsonStr: string;
       // an asynchronous call
       FlatSerializer.export(
@@ -77,10 +81,10 @@ class PushPlugin extends PluginBase {
           jsonStr = JSON.stringify(jsonObject.nodes, null, 4);
           deliveryFn(jsonStr)
         });
-    };
+    }
 
-  serializeCytoscapeJson100(
-    config: PluginConfig,
+  private serializeCytoscapeJson100(
+    config: PluginJS.Config,
     mainHandler: any,
     deliveryFn: DeliveryFunction) {
       var jsonStr:string;
@@ -95,14 +99,14 @@ class PushPlugin extends PluginBase {
           jsonStr = JSON.stringify(jsonObject, null, 4);
           deliveryFn(jsonStr)
         });
-    };
+    }
   /**
   Pushing the current data-model into a JSON structure.
   */
-  serializeTreeJson100 (
-    config: PluginConfig,
+  private serializeTreeJson100 (
+    config: PluginJS.Config,
     mainHandler: any,
-    deliveryFn: DeliveryFunction) {
+    deliveryFn: DeliveryFunction): void {
       var jsonStr: string;
       NewSerializer.export(
         this.core,
@@ -115,15 +119,15 @@ class PushPlugin extends PluginBase {
           jsonStr = JSON.stringify(jsonObject, null, 4);
           deliveryFn(jsonStr)
         });
-    };
+    }
 
   /**
    A function to deliver the serialized object properly.
   */
   deliver(
-    config: PluginConfig,
+    config: PluginJS.Config,
     mainHandler: PluginJS.Callback,
-    payload: string) {
+    payload: string): void {
       var isProject = this.core.getPath(this.activeNode) === '';
       var pushedFileName: string;
       var artifact: any;
@@ -158,3 +162,5 @@ class PushPlugin extends PluginBase {
         }
       }
 }
+// the following returns the plugin class function
+export = PushPlugin;

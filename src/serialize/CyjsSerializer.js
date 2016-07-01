@@ -6,8 +6,8 @@
  * @author phreed
  */
 
-define(['common/util/assert', 'common/util/canon'],
-  function(ASSERT, CANON) {
+define(["require", "exports", 'common/util/assert', 'common/util/canon'],
+  function(require, exports, ASSERT, CANON) {
 
     'use strict';
 
@@ -486,6 +486,15 @@ define(['common/util/assert', 'common/util/canon'],
         }
       }, 10);
     }
+
+    var CyjsSerializer = (function () {
+      function CyjsSerializer() {}
+      CyjsSerializer.export = exportMegaModel;
+      // CyjsSerializer.import = importLibrary;
+      return CyjsSerializer;
+    }());
+    exports.__esModule = true;
+    exports["default"] = CyjsSerializer;
 
     return {
       export: exportMegaModel

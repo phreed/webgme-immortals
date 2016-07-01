@@ -59,5 +59,7 @@ config.authentication.enable = true;
 config.authentication.logOutUrl = '/login';
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
+config.requirejsPaths["serialize"] = './src/serialize/';
+config.requirejsPaths["text"] = './src/'
 
 module.exports = config;
