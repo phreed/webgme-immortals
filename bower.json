@@ -1,0 +1,19 @@
+{
+  "name"     : "webgme-immortals",
+  "version"  : "0.1.0",
+  "homepage" : "https://webgme.org/",
+  "authors": [
+    {
+      "name"     : "Fred Eisele",
+      "email"    : "fredrick.eisele@gmail.com"
+    }
+  ],
+  "description" : "A editor for immortals models)",
+  "license"     : "MIT",
+  "keywords": [
+    "depencency", "component", "mission", "graph",
+    "network", "java"
+  ],
+  "main": [],
+  "ignore"      : []
+}

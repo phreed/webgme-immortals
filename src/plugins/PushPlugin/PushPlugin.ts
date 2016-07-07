@@ -83,6 +83,7 @@ class PushPlugin extends PluginBase {
         });
     }
 
+
   private serializeCytoscapeJson100(
     config: PluginJS.Config,
     mainHandler: any,
