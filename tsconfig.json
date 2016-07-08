@@ -23,6 +23,7 @@
         "./src/plugins/PushPlugin/PushPlugin.d.ts",
         "./src/plugins/PushPlugin/PushPlugin.ts",
         "./src/plugins/PushPlugin/text.d.ts",
+        "./src/plugins/StreamingPlugin/StreamingPlugin.ts",
         "./src/serialize/CyjsSerializer.d.ts",
         "./src/serialize/FlatSerializer.d.ts",
         "./src/serialize/NewSerializer.d.ts",
