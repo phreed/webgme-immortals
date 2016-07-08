@@ -41,19 +41,19 @@ class PushPlugin extends PluginBase {
     switch (typedVersion) {
       case 'json-tree:1.0.0':
         this.serializeTreeJson100(config, mainHandler,
-          function(jsonStr: string) {
+          (jsonStr: string) => {
             this.deliver(config, mainHandler, jsonStr);
           });
         return;
       case 'json-flat:1.0.0':
         this.serializeFlatJson100(config, mainHandler,
-          function(jsonStr: string) {
+          (jsonStr: string): void => {
             this.deliver(config, mainHandler, jsonStr);
           });
         return;
       case 'json-cytoscape:1.0.0':
         this.serializeCytoscapeJson100(config, mainHandler,
-          function(jsonStr: string) {
+          (jsonStr: string) => {
             this.deliver(config, mainHandler, jsonStr);
           });
         return;
@@ -73,7 +73,7 @@ class PushPlugin extends PluginBase {
       FlatSerializer.export(
         this.core,
         this.activeNode,
-        function(err: Error, jsonObject: webgmeV1.JsonObj ) {
+        (err: Error, jsonObject: webgmeV1.JsonObj ) => {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -92,7 +92,7 @@ class PushPlugin extends PluginBase {
       CyjsSerializer.export(
         this.core,
         this.activeNode,
-        function(err: Error, jsonObject: webgmeV1.JsonObj) {
+        (err: Error, jsonObject: webgmeV1.JsonObj) => {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -112,7 +112,7 @@ class PushPlugin extends PluginBase {
       NewSerializer.export(
         this.core,
         this.activeNode,
-        function(err: Error, jsonObject: webgmeV1.JsonObj) {
+        (err: Error, jsonObject: webgmeV1.JsonObj) => {
           if (err) {
             mainHandler(err, this.result);
             return;
@@ -143,13 +143,13 @@ class PushPlugin extends PluginBase {
         artifact = this.blobClient.createArtifact('pushed');
         this.logger.debug('Exported: ', pushedFileName);
         artifact.addFile(pushedFileName, payload,
-          function(err: Error) {
+          (err: Error) => {
             if (err) {
               mainHandler(err, this.result);
               return;
             }
             artifact.save(
-              function(err: Error, hash: PluginJS.Hash) {
+              (err: Error, hash: PluginJS.Hash) => {
                 if (err) {
                   mainHandler(err, this.result);
                   return;

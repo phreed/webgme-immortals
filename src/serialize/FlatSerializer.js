@@ -3,12 +3,11 @@
 
 /**
  * this module implements the node-by-node serialization
- * @author kecso / https://github.com/kecso
+ * @author phreed / https://github.com/phreed
  */
 
 define(["require", "exports",'common/util/assert', 'common/util/canon'],
 function (require, exports, ASSERT, CANON) {
-
     'use strict';
 
     function exportLibrary(core, libraryRoot, callback) {
@@ -1331,9 +1330,4 @@ function (require, exports, ASSERT, CANON) {
     }());
     exports.__esModule = true;
     exports["default"] = FlatSerializer;
-
-    return {
-        export: exportLibrary,
-        import: importLibrary
-    };
 });
