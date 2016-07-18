@@ -1,8 +1,10 @@
 {
   "name": "webgme-immortals",
   "dependencies": {},
+  "devDependencies": {},
   "globalDependencies": {
     "q": "registry:dt/q#0.0.0+20160613154756",
     "webgme": "github:phreed/typed-npm-webgme"
-  }
+  },
+  "globalDevDependencies": {}
 }

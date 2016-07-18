@@ -18,43 +18,46 @@ class StreamingPlugin extends PluginBase {
     super();
     this.pluginMetadata = JSON.parse(MetaDataStr);
   }
-    /**
-     * Main function for the plugin to execute. This will perform the execution.
-     * Notes:
-     * - Always log with the provided logger.[error,warning,info,debug].
-     * - Do NOT put any user interaction logic UI, etc. inside this method.
-     * - callback always has to be called even if error happened.
-     *
-     * @param {function(string, plugin.PluginResult)} callback - the result callback
-     */
-    main(callback: PluginJS.Callback): void {
-        let config = this.getCurrentConfig();
 
-        console.log("main is running");
-        // Using the logger.
-        this.logger.debug('This is a debug message.');
-        this.logger.info('This is an info message.');
-        this.logger.warn('This is a warning message.');
-        this.logger.error('This is an error message.');
+  /**
+    Main function for the plugin to execute. This will perform the execution.
+    Notes:
+   - Always log with the provided logger.[error,warning,info,debug].
+    - Do NOT put any user interaction logic UI, etc. inside this method.
+    - callback always has to be called even if error happened.
 
-        // Using the coreAPI to make changes.
-        let nodeObject = this.activeNode;
-
-        this.core.setAttribute(nodeObject, 'name', 'IMMoRTALS ROOT');
-        this.core.setRegistry(nodeObject, 'position', {x: 70, y: 70});
-
-        // This will save the changes. If you don't want to save;
-        // exclude self.save and call callback directly from this scope.
-        this.save('streaming plugin updated model.')
-            .then(() => {
-                this.result.setSuccess(true);
-                callback(null, this.result);
-            })
-            .catch((err: Error) => {
-                // Result success is false at invocation.
-                callback(null, this.result);
-            });
+    @param {function(string, plugin.PluginResult)} callback - the result callback
+   */
+  main(callback: PluginJS.Callback): void {
+    let config = this.getCurrentConfig();
+    if (!config.hasOwnProperty('fileName')) {
+      callback(new Error('No file name provided.'), this.result);
     }
-}
+    let artifact = this.blobClient.createArtifact('serialized');
+    artifact.addFile(config['fileName']);
+    /**
+    Visit the node and perform the function.
+    */
+    this.core.traverse(this.rootNode, { excludeRoot: true },
+      (node: Node, finishFn: PluginJS.VoidCallback)=> {
+        let core = this.core;
+        let metaNode = core.getBaseType(node);
+        let nodeName = core.getAttribute(node, 'name');
+        // Library-roots do not have a meta-type.
+        let metaName = metaNode ? core.getAttribute(metaNode, 'name') : ':LibraryRoot:';
 
-export = StreamingPlugin;
+        console.log(nodeName, 'at', core.getPath(node), 'is of meta type', metaName);
+        finishFn();
+      },
+      (err: Error):void => {
+        if (err) {
+          this.logger.error('This is an error message.');
+          // Something went wrong!
+          // Handle the error and return.
+        } else {
+          console.log('At this point we have successfully visited all nodes.');
+        }
+      });
+  }}
+
+  export = StreamingPlugin;

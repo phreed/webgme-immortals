@@ -14,12 +14,13 @@ import PluginConfig = require('plugin/PluginConfig');
 import Util = require('blob/util');
 
 import * as q from 'q';
-import * as webgmeV1 from 'webgme/v1';
 import NewSerializer from 'serialize/NewSerializer';
 import FlatSerializer from 'serialize/FlatSerializer';
 import CyjsSerializer from 'serialize/CyjsSerializer';
+import * as webgmeV1 from 'webgme/v1';
 import BlobMetadata from 'blob/BlobMetadata';
 import MetaDataStr = require('text!./metadata.json');
+
 
 interface DeliveryFunction {
   (json: string): void;
@@ -29,11 +30,11 @@ class PushPlugin extends PluginBase {
   pluginMetadata: any;
 
   constructor() {
-     super();
-     this.pluginMetadata = JSON.parse(MetaDataStr);
+    super();
+    this.pluginMetadata = JSON.parse(MetaDataStr);
   }
 
-  main(mainHandler: PluginJS.Callback) : void {
+  main(mainHandler: PluginJS.Callback): void {
     let config = this.getCurrentConfig();
     console.error("the main PushPlugin function is running");
     this.logger.info('serialize the model in the requested manner');
@@ -65,73 +66,73 @@ class PushPlugin extends PluginBase {
   }
 
   private serializeFlatJson100(
-    config: PluginJS.Config,
+    config: PluginJS.GmeConfig,
     mainHandler: PluginJS.Callback,
-    deliveryFn: DeliveryFunction):void  {
-      var jsonStr: string;
-      // an asynchronous call
-      FlatSerializer.export(
-        this.core,
-        this.activeNode,
-        (err: Error, jsonObject: webgmeV1.JsonObj ) => {
-          if (err) {
-            mainHandler(err, this.result);
-            return;
-          }
-          jsonStr = JSON.stringify(jsonObject.nodes, null, 4);
-          deliveryFn(jsonStr)
-        });
-    }
+    deliveryFn: DeliveryFunction): void {
+    var jsonStr: string;
+    // an asynchronous call
+    FlatSerializer.export(
+      this.core,
+      this.activeNode,
+      (err: Error, jsonObject: webgmeV1.JsonObj) => {
+        if (err) {
+          mainHandler(err, this.result);
+          return;
+        }
+        jsonStr = JSON.stringify(jsonObject.nodes, null, 4);
+        deliveryFn(jsonStr)
+      });
+  }
 
 
   private serializeCytoscapeJson100(
-    config: PluginJS.Config,
+    config: PluginJS.GmeConfig,
     mainHandler: any,
     deliveryFn: DeliveryFunction) {
-      var jsonStr:string;
-      CyjsSerializer.export(
-        this.core,
-        this.activeNode,
-        (err: Error, jsonObject: webgmeV1.JsonObj) => {
-          if (err) {
-            mainHandler(err, this.result);
-            return;
-          }
-          jsonStr = JSON.stringify(jsonObject, null, 4);
-          deliveryFn(jsonStr)
-        });
-    }
+    var jsonStr: string;
+    CyjsSerializer.export(
+      this.core,
+      this.activeNode,
+      (err: Error, jsonObject: webgmeV1.JsonObj) => {
+        if (err) {
+          mainHandler(err, this.result);
+          return;
+        }
+        jsonStr = JSON.stringify(jsonObject, null, 4);
+        deliveryFn(jsonStr)
+      });
+  }
   /**
   Pushing the current data-model into a JSON structure.
   */
-  private serializeTreeJson100 (
-    config: PluginJS.Config,
+  private serializeTreeJson100(
+    config: PluginJS.GmeConfig,
     mainHandler: any,
     deliveryFn: DeliveryFunction): void {
-      var jsonStr: string;
-      NewSerializer.export(
-        this.core,
-        this.activeNode,
-        (err: Error, jsonObject: webgmeV1.JsonObj) => {
-          if (err) {
-            mainHandler(err, this.result);
-            return;
-          }
-          jsonStr = JSON.stringify(jsonObject, null, 4);
-          deliveryFn(jsonStr)
-        });
-    }
+    var jsonStr: string;
+    NewSerializer.export(
+      this.core,
+      this.activeNode,
+      (err: Error, jsonObject: webgmeV1.JsonObj) => {
+        if (err) {
+          mainHandler(err, this.result);
+          return;
+        }
+        jsonStr = JSON.stringify(jsonObject, null, 4);
+        deliveryFn(jsonStr)
+      });
+  }
 
   /**
    A function to deliver the serialized object properly.
   */
   deliver(
-    config: PluginJS.Config,
+    config: PluginJS.GmeConfig,
     mainHandler: PluginJS.Callback,
     payload: string): void {
-      var isProject = this.core.getPath(this.activeNode) === '';
-      var pushedFileName: string;
-      var artifact: any;
+    var isProject = this.core.getPath(this.activeNode) === '';
+    var pushedFileName: string;
+    var artifact: any;
 
     switch (config['deliveryMode']) {
       case 'file':
@@ -149,7 +150,7 @@ class PushPlugin extends PluginBase {
               return;
             }
             artifact.save(
-              (err: Error, hash: PluginJS.Hash) => {
+              (err: Error, hash: PluginJS.ObjectHash) => {
                 if (err) {
                   mainHandler(err, this.result);
                   return;
@@ -159,9 +160,9 @@ class PushPlugin extends PluginBase {
                 mainHandler(null, this.result);
               });
           });
-          break;
-        }
-      }
+        break;
+    }
+  }
 }
 // the following returns the plugin class function
 export = PushPlugin;

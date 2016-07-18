@@ -1,38 +1,42 @@
 {
-    "compileOnSave": true,
-    "buildOnSave": false,
-    "compilerOptions": {
-        "outDir": "./src/",
-        "sourceMap": true,
-        "declaration": true,
-        "noImplicitAny": true,
-        "module": "amd",
-        "moduleResolution": "node",
-        "removeComments": false,
-        "target": "es3",
-        "watch": true,
-        "allowJs": true,
-        "pretty": true,
-        "noFallthroughCasesInSwitch": true
-    },
-    "filesGlob": [
-        "./**/*.ts",
-        "!./node_modules/**/*.ts"
-    ],
-    "files": [
-        "./src/plugins/PushPlugin/PushPlugin.d.ts",
-        "./src/plugins/PushPlugin/PushPlugin.ts",
-        "./src/plugins/PushPlugin/text.d.ts",
-        "./src/plugins/StreamingPlugin/StreamingPlugin.ts",
-        "./src/serialize/CyjsSerializer.d.ts",
-        "./src/serialize/FlatSerializer.d.ts",
-        "./src/serialize/NewSerializer.d.ts",
-        "./src/serialize/NewSerializer.ts",
-        "./typings/globals/q/index.d.ts",
-        "./typings/globals/webgme/index.d.ts",
-        "./typings/index.d.ts"
-    ],
-    "atom": {
-        "rewriteTsconfig": true
-    }
+  "atom": {
+    "rewriteTsconfig": true
+  },
+  "compileOnSave": true,
+  "buildOnSave": false,
+  "compilerOptions": {
+    "outDir": "./src/",
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitAny": true,
+    "module": "amd",
+    "moduleResolution": "node",
+    "removeComments": false,
+    "target": "es3",
+    "watch": true,
+    "allowJs": true,
+    "pretty": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "filesGlob": [
+    "./**/*.ts",
+    "!./node_modules/**/*.ts"
+  ],
+  "exclude": [
+    "typings"
+  ],
+  "files": [
+    "./src/plugins/PushPlugin/PushPlugin.d.ts",
+    "./src/plugins/PushPlugin/PushPlugin.ts",
+    "./src/plugins/PushPlugin/text.d.ts",
+    "./src/plugins/StreamingPlugin/StreamingPlugin.d.ts",
+    "./src/plugins/StreamingPlugin/StreamingPlugin.ts",
+    "./src/serialize/CyjsSerializer.d.ts",
+    "./src/serialize/FlatSerializer.d.ts",
+    "./src/serialize/NewSerializer.d.ts",
+    "./src/serialize/NewSerializer.ts",
+    "./typings/globals/q/index.d.ts",
+    "./typings/globals/webgme/index.d.ts",
+    "./typings/index.d.ts"
+  ]
 }

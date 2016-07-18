@@ -1,10 +1,11 @@
 
+import PluginBase = require('plugin/PluginBase');
 
 declare module 'serialize/FlatSerializer' {
   export default class FlatSerializer {
     constructor();
-    static export(core: any, libraryRoot: any, callback: any): void;
-    static import(core: any, originalLibraryRoot: any,
+    static export(core: PluginJS.Core, libraryRoot: any, callback: any): void;
+    static import(core: PluginJS.Core, originalLibraryRoot: any,
       updatedJsonLibrary: any, callback: any): void;
   }
 }

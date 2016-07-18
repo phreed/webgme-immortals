@@ -14,37 +14,40 @@ define(["require", "exports", 'plugin/PluginBase', 'text!./metadata.json'], func
             this.pluginMetadata = JSON.parse(MetaDataStr);
         }
         /**
-         * Main function for the plugin to execute. This will perform the execution.
-         * Notes:
-         * - Always log with the provided logger.[error,warning,info,debug].
-         * - Do NOT put any user interaction logic UI, etc. inside this method.
-         * - callback always has to be called even if error happened.
-         *
-         * @param {function(string, plugin.PluginResult)} callback - the result callback
+          Main function for the plugin to execute. This will perform the execution.
+          Notes:
+         - Always log with the provided logger.[error,warning,info,debug].
+          - Do NOT put any user interaction logic UI, etc. inside this method.
+          - callback always has to be called even if error happened.
+      
+          @param {function(string, plugin.PluginResult)} callback - the result callback
          */
         StreamingPlugin.prototype.main = function (callback) {
             var _this = this;
             var config = this.getCurrentConfig();
-            console.log("main is running");
-            // Using the logger.
-            this.logger.debug('This is a debug message.');
-            this.logger.info('This is an info message.');
-            this.logger.warn('This is a warning message.');
-            this.logger.error('This is an error message.');
-            // Using the coreAPI to make changes.
-            var nodeObject = this.activeNode;
-            this.core.setAttribute(nodeObject, 'name', 'IMMoRTALS ROOT');
-            this.core.setRegistry(nodeObject, 'position', { x: 70, y: 70 });
-            // This will save the changes. If you don't want to save;
-            // exclude self.save and call callback directly from this scope.
-            this.save('streaming plugin updated model.')
-                .then(function () {
-                _this.result.setSuccess(true);
-                callback(null, _this.result);
-            })
-                .catch(function (err) {
-                // Result success is false at invocation.
-                callback(null, _this.result);
+            if (!config.hasOwnProperty('fileName')) {
+                callback(new Error('No file name provided.'), this.result);
+            }
+            var artifact = this.blobClient.createArtifact('serialized');
+            artifact.addFile(config['fileName']);
+            /**
+            Visit the node and perform the function.
+            */
+            this.core.traverse(this.rootNode, { excludeRoot: true }, function (node, finishFn) {
+                var core = _this.core;
+                var metaNode = core.getBaseType(node);
+                var nodeName = core.getAttribute(node, 'name');
+                // Library-roots do not have a meta-type.
+                var metaName = metaNode ? core.getAttribute(metaNode, 'name') : ':LibraryRoot:';
+                console.log(nodeName, 'at', core.getPath(node), 'is of meta type', metaName);
+                finishFn();
+            }, function (err) {
+                if (err) {
+                    _this.logger.error('This is an error message.');
+                }
+                else {
+                    console.log('At this point we have successfully visited all nodes.');
+                }
             });
         };
         return StreamingPlugin;
