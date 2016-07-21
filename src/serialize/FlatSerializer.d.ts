@@ -1,5 +1,5 @@
 
-import PluginBase = require('plugin/PluginBase');
+
 
 declare module 'serialize/FlatSerializer' {
   export default class FlatSerializer {

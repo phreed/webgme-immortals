@@ -35,6 +35,9 @@
     "./src/serialize/FlatSerializer.d.ts",
     "./src/serialize/NewSerializer.d.ts",
     "./src/serialize/NewSerializer.ts",
+    "./src/src/plugins/PushPlugin/PushPlugin.d.ts",
+    "./src/src/plugins/StreamingPlugin/StreamingPlugin.d.ts",
+    "./src/src/serialize/NewSerializer.d.ts",
     "./typings/globals/q/index.d.ts",
     "./typings/globals/webgme/index.d.ts",
     "./typings/index.d.ts"

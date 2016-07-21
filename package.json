@@ -17,7 +17,7 @@
     "jquery": "latest",
     "q": "^1.4.1",
     "requirejs": "^2.2.0",
-    "webgme": "^2.2.0"
+    "webgme": "^2.2.1"
   },
   "devDependencies": {
     "mocha": "^2.2.5",
