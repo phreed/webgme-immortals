@@ -46,13 +46,14 @@ class StreamingPlugin extends PluginBase {
   main(mainHandler: PluginJS.Callback): void {
     let core = this.core;
     let config = this.getCurrentConfig();
-    if (!config.hasOwnProperty('fileName')) {
+    let configDictionary:any = config;
+    if (!configDictionary.hasOwnProperty('fileName')) {
       mainHandler(new Error('No file name provided.'), this.result);
     }
     let recorder = () => {
       let payload: BlobJS.ObjectBlob;
       let artifact = this.blobClient.createArtifact('serialized');
-      artifact.addFile(config['fileName'], payload,
+      artifact.addFile(configDictionary['fileName'], payload,
         (err: Error) => {
           if (err) {
             mainHandler(err, this.result);

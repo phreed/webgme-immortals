@@ -1,6 +1,7 @@
 {
   "atom": {
-    "rewriteTsconfig": true
+    "rewriteTsconfig": true,
+    "formatOnSave": true
   },
   "compileOnSave": true,
   "buildOnSave": true,
@@ -21,7 +22,8 @@
   "filesGlob": [
     "./typings/index.d.ts",
     "./src-ts/**/*.ts",
-    "./src/**/*.ts"
+    "./src/**/*.ts",
+    "./serializer/**/*.ts"
   ],
   "exclude": [
     "./node_modules/**/*.ts",
@@ -32,8 +34,8 @@
     "./src-ts/plugins/PushPlugin/PushPlugin.ts",
     "./src-ts/plugins/PushPlugin/text.d.ts",
     "./src-ts/plugins/StreamingPlugin/StreamingPlugin.ts",
-    "./src-ts/serializer/NewSerializer.ts",
     "./src/serialize/CyjsSerializer.d.ts",
-    "./src/serialize/FlatSerializer.d.ts"
+    "./src/serialize/FlatSerializer.d.ts",
+    "./serializer/NewSerializer.ts"
   ]
 }
