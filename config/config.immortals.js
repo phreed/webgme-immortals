@@ -16,7 +16,8 @@ config.client.log.level = 'debug'
 config.debug = true;
 config.server.port = 3000;
 console.log(config.plugin.basePaths);
-// config.plugin.basePaths.push('dist/plugins');
+config.plugin.basePaths.push('gen/plugins');
+
 
 // configure the logger
 console.log(config.server);
@@ -64,7 +65,7 @@ config.authentication.logInUrl = '/profile/login';
 config.authentication.logOutUrl = '/profile/login';
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
-config.requirejsPaths["serialize"] = './src/serialize/';
-config.requirejsPaths["text"] = './src/'
+config.requirejsPaths["serialize"] = './src/serialize/'; // ,'./gen/serialize/'];
+config.requirejsPaths["text"] = './src/'; // ,'./gen/'];
 
 module.exports = config;
