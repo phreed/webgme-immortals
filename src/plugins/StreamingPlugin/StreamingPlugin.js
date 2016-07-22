@@ -7,6 +7,18 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 define(["require", "exports", 'plugin/PluginBase', 'text!./metadata.json'], function (require, exports, PluginBase, MetaDataStr) {
     "use strict";
+    var REF_PREFIX = '#//';
+    var POINTER_SET_DIV = '-';
+    var CONTAINMENT_PREFIX = '';
+    var ROOT_NAME = 'ROOT';
+    var NS_URI = 'www.webgme.org';
+    var DATA_TYPE_MAP = {
+        string: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString',
+        float: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat',
+        integer: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt',
+        boolean: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean',
+        asset: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString'
+    };
     var StreamingPlugin = (function (_super) {
         __extends(StreamingPlugin, _super);
         function StreamingPlugin() {
@@ -22,32 +34,101 @@ define(["require", "exports", 'plugin/PluginBase', 'text!./metadata.json'], func
       
           @param {function(string, plugin.PluginResult)} callback - the result callback
          */
-        StreamingPlugin.prototype.main = function (callback) {
+        StreamingPlugin.prototype.main = function (mainHandler) {
             var _this = this;
+            var core = this.core;
             var config = this.getCurrentConfig();
             if (!config.hasOwnProperty('fileName')) {
-                callback(new Error('No file name provided.'), this.result);
+                mainHandler(new Error('No file name provided.'), this.result);
             }
-            var artifact = this.blobClient.createArtifact('serialized');
-            artifact.addFile(config['fileName']);
+            var recorder = function () {
+                var payload;
+                var artifact = _this.blobClient.createArtifact('serialized');
+                artifact.addFile(config['fileName'], payload, function (err) {
+                    if (err) {
+                        mainHandler(err, _this.result);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
+                        if (err) {
+                            mainHandler(err, _this.result);
+                            return;
+                        }
+                        _this.result.addArtifact(hash);
+                        _this.result.setSuccess(true);
+                        mainHandler(null, _this.result);
+                    });
+                });
+            };
+            /**
+            Visitor function.
+            */
+            var languageName = core.getAttribute(this.rootNode, 'name');
+            var data = {
+                '@xmi:version': '2.0',
+                '@xmlns:xmi': 'http://www.omg.org/XMI',
+                '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+            };
+            var fcoName = core.getAttribute(core.getFCO(this.rootNode), 'name');
+            var path2data = {};
+            data['@xmlns:' + languageName] = NS_URI;
+            data['@xsi:schemaLocation'] = NS_URI + ' ' + languageName + '.ecore';
+            path2data[''] = data;
+            function visitFn(node, nextFn) {
+                var _this = this;
+                var core = this.core;
+                var deferred = Q.defer();
+                // let nodeName = core.getAttribute(node, 'name');
+                var parent = core.getParent(node);
+                var parentData = path2data[core.getPath(parent)];
+                var metaNode = core.getBaseType(node);
+                // metaNode ?
+                var metaName = core.getAttribute(metaNode, 'name') || ':LibraryRoot:';
+                var containRel = CONTAINMENT_PREFIX + core.getAttribute(metaNode, 'name');
+                var nodeData = { '@xsi:type': languageName + ':' + containRel };
+                var baseNode = core.getBase(node);
+                var promises = [];
+                var nodePath = core.getPath(node);
+                path2data[nodePath] = nodeData;
+                parentData[containRel] = parentData[containRel] || [];
+                parentData[containRel].push(nodeData);
+                nodeData['@_id'] = core.getGuid(node);
+                core.getAttributeNames(node).forEach(function (attrName) {
+                    nodeData['@' + attrName] = core.getAttribute(node, attrName);
+                });
+                // get Pointers
+                core.getPointerNames(node).forEach(function (ptrName) {
+                    var targetPath = core.getPointerPath(node, ptrName);
+                    if (targetPath) {
+                        promises.push(core.loadByPath(_this.rootNode, targetPath)
+                            .then(function (targetNode) {
+                            if (ptrName === 'base') {
+                                nodeData['@' + ptrName + POINTER_SET_DIV + fcoName]
+                                    = core.getGuid(targetNode);
+                            }
+                            else {
+                                var targetMetaNode = core.getBaseType(targetNode);
+                                var targetMetaName = core.getAttribute(targetMetaNode, 'name');
+                                nodeData['@' + ptrName + POINTER_SET_DIV + targetMetaName]
+                                    = core.getGuid(targetNode);
+                            }
+                        }));
+                    }
+                });
+                // get Sets
+                Q.all(promises)
+                    .then(deferred.resolve)
+                    .catch(deferred.reject);
+                return deferred.promise.nodeify(nextFn);
+            }
             /**
             Visit the node and perform the function.
             */
-            this.core.traverse(this.rootNode, { excludeRoot: true }, function (node, finishFn) {
-                var core = _this.core;
-                var metaNode = core.getBaseType(node);
-                var nodeName = core.getAttribute(node, 'name');
-                // Library-roots do not have a meta-type.
-                var metaName = metaNode ? core.getAttribute(metaNode, 'name') : ':LibraryRoot:';
-                console.log(nodeName, 'at', core.getPath(node), 'is of meta type', metaName);
-                finishFn();
-            }, function (err) {
-                if (err) {
-                    _this.logger.error('This is an error message.');
-                }
-                else {
-                    console.log('At this point we have successfully visited all nodes.');
-                }
+            this.core
+                .traverse(this.rootNode, { excludeRoot: true }, visitFn)
+                .then(function () {
+                console.log("DATA: " + data);
+                return data;
             });
         };
         return StreamingPlugin;

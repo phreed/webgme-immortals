@@ -1,9 +1,9 @@
 {
   "atom": {
-    "rewriteTsconfig": true
+    "rewriteTsconfig": false
   },
   "compileOnSave": true,
-  "buildOnSave": false,
+  "buildOnSave": true,
   "compilerOptions": {
     "outDir": "./",
     "sourceMap": true,
@@ -14,7 +14,6 @@
     "removeComments": false,
     "target": "es3",
     "watch": true,
-    "allowJs": true,
     "pretty": true,
     "noFallthroughCasesInSwitch": true
   },

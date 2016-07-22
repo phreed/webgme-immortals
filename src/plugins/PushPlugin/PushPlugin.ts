@@ -38,7 +38,7 @@ class PushPlugin extends PluginBase {
     let config = this.getCurrentConfig();
     console.error("the main PushPlugin function is running");
     this.logger.info('serialize the model in the requested manner');
-    let typedVersion = config['typedVersion'];
+    let typedVersion: string = String(config['typedVersion']);
     switch (typedVersion) {
       case 'json-tree:1.0.0':
         this.serializeTreeJson100(config, mainHandler,
@@ -133,8 +133,8 @@ class PushPlugin extends PluginBase {
     var isProject = this.core.getPath(this.activeNode) === '';
     var pushedFileName: string;
     var artifact: any;
-
-    switch (config['deliveryMode']) {
+    let deliveryMode: string = String(config['deliveryMode']);
+    switch (deliveryMode) {
       case 'file':
         if (!config.hasOwnProperty('fileName')) {
           mainHandler(new Error('No file name provided.'), this.result);
