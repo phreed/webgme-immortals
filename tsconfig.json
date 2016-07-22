@@ -15,19 +15,25 @@
     "target": "es3",
     "watch": true,
     "pretty": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": "."
   },
   "filesGlob": [
+    "./typings/index.d.ts",
     "./src-ts/**/*.ts",
-    "!./node_modules/**/*.ts"
+    "./src/**/*.ts"
   ],
   "exclude": [
-    "typings"
+    "./node_modules/**/*.ts",
+    "./**/*.spec.ts"
   ],
   "files": [
+    "./typings/index.d.ts",
     "./src-ts/plugins/PushPlugin/PushPlugin.ts",
     "./src-ts/plugins/PushPlugin/text.d.ts",
     "./src-ts/plugins/StreamingPlugin/StreamingPlugin.ts",
-    "./src-ts/serialize/NewSerializer.ts"
+    "./src-ts/serializer/NewSerializer.ts",
+    "./src/serialize/CyjsSerializer.d.ts",
+    "./src/serialize/FlatSerializer.d.ts"
   ]
 }

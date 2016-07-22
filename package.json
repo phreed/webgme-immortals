@@ -3,6 +3,9 @@
   "author": "Fred Eisele",
   "version": "1.0.0",
   "license": "MIT",
+  "files": [
+    "typings.json"
+  ],
   "repository": {
     "type": "git",
     "url": "git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git"
@@ -44,6 +47,8 @@
     "users": "node ./node_modules/webgme/src/bin/usermanager.js",
     "clean_up": "node ./node_modules/webgme/src/bin/clean_up.js",
     "stats": "node ./node_modules/webgme/src/bin/storage_stats.js",
+    "build": "find ./gen ! -name 'metadata.json' -type f -exec rm -f {} + && find ./gen -type d -empty -delete && tsc",
+    "prepublish": "typings install && npm run build",
     "typings": "typings install github:phreed/typed-npm-webgme -SG",
     "restart": "sudo systemctl --system restart webgme.service"
   }

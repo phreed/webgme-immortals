@@ -14,9 +14,9 @@ import PluginConfig = require('plugin/PluginConfig');
 import Util = require('blob/util');
 
 import * as q from 'q';
-import NewSerializer from 'serialize/NewSerializer';
 import FlatSerializer from 'serialize/FlatSerializer';
 import CyjsSerializer from 'serialize/CyjsSerializer';
+import NewSerializer from 'serializer/NewSerializer';
 import * as webgmeV1 from 'webgme/v1';
 import BlobMetadata from 'blob/BlobMetadata';
 import MetaDataStr = require('text!./metadata.json');

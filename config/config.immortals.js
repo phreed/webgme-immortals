@@ -15,9 +15,6 @@ var path = require('path');
 config.client.log.level = 'debug'
 config.debug = true;
 config.server.port = 3000;
-console.log(config.plugin.basePaths);
-config.plugin.basePaths.push('gen/plugins');
-
 
 // configure the logger
 console.log(config.server);
@@ -63,9 +60,5 @@ config.authentication.jwt.privateKey = path.join(__dirname, '../..', 'token_keys
 config.authentication.jwt.publicKey = path.join(__dirname, '../..', 'token_keys', 'public_key');
 config.authentication.logInUrl = '/profile/login';
 config.authentication.logOutUrl = '/profile/login';
-
-config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
-config.requirejsPaths["serialize"] = './src/serialize/'; // ,'./gen/serialize/'];
-config.requirejsPaths["text"] = './src/'; // ,'./gen/'];
 
 module.exports = config;

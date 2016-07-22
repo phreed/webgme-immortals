@@ -74,13 +74,13 @@ class StreamingPlugin extends PluginBase {
     Visitor function.
     */
     let languageName = core.getAttribute(this.rootNode, 'name');
-    let data = {
+    let data : PluginJS.Dictionary = {
       '@xmi:version': '2.0',
       '@xmlns:xmi': 'http://www.omg.org/XMI',
       '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
     };
     let fcoName = core.getAttribute(core.getFCO(this.rootNode), 'name');
-    let path2data = {};
+    let path2data : PluginJS.Dictionary = {};
 
     data['@xmlns:' + languageName] = NS_URI;
     data['@xsi:schemaLocation'] = NS_URI + ' ' + languageName + '.ecore';
@@ -96,7 +96,7 @@ class StreamingPlugin extends PluginBase {
       // metaNode ?
       let metaName = core.getAttribute(metaNode, 'name') || ':LibraryRoot:';
       let containRel = CONTAINMENT_PREFIX + core.getAttribute(metaNode, 'name');
-      let nodeData = { '@xsi:type': languageName + ':' + containRel };
+      let nodeData: PluginJS.Dictionary = { '@xsi:type': languageName + ':' + containRel };
       let baseNode = core.getBase(node);
       let promises: any[] = [];
       let nodePath = core.getPath(node);
