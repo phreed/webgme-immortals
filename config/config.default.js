@@ -22,7 +22,7 @@ config.requirejsPaths["style"] = './style/';
 
 config.visualization.extraCss = ['style/immortals.css'];
 
-config.plugin.basePaths.push('gen/plugins');
+config.plugin.basePaths.push('./gen/plugins');
 console.log(config.plugin.basePaths);
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';

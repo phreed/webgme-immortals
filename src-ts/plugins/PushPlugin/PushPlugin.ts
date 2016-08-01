@@ -21,7 +21,6 @@ import * as webgmeV1 from 'webgme/v1';
 import BlobMetadata from 'blob/BlobMetadata';
 import MetaDataStr = require('text!./metadata.json');
 
-
 interface DeliveryFunction {
     (json: string): void;
 }

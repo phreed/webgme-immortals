@@ -17,25 +17,32 @@
     "watch": true,
     "pretty": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "rootDirs": [
+      "./src-ts",
+      "./src",
+      "./gen"
+    ],
+    "paths": {
+      "*": [
+        "*",
+        "src/*",
+        "src-ts/*",
+        "gen/*"
+      ]
+    }
   },
   "filesGlob": [
-    "./typings/index.d.ts",
-    "./src-ts/**/*.ts",
-    "./src/**/*.ts",
-    "./serializer/**/*.ts"
-  ],
-  "exclude": [
-    "./node_modules/**/*.ts",
-    "./**/*.spec.ts"
+    "typings/index.d.ts",
+    "src-ts/**/*.ts",
+    "!node_modules/**",
+    "!**/*.spec.ts"
   ],
   "files": [
-    "./typings/index.d.ts",
-    "./src-ts/plugins/PushPlugin/PushPlugin.ts",
-    "./src-ts/plugins/PushPlugin/text.d.ts",
-    "./src-ts/plugins/StreamingPlugin/StreamingPlugin.ts",
-    "./src/serialize/CyjsSerializer.d.ts",
-    "./src/serialize/FlatSerializer.d.ts",
-    "./serializer/NewSerializer.ts"
+    "typings/index.d.ts",
+    "src-ts/plugins/PushPlugin/PushPlugin.ts",
+    "src-ts/plugins/PushPlugin/text.d.ts",
+    "src-ts/plugins/StreamingPlugin/StreamingPlugin.ts",
+    "src-ts/serializer/NewSerializer.ts"
   ]
 }
