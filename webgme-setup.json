@@ -5,15 +5,15 @@
     "layouts": {},
     "plugins": {
       "PullPlugin": {
-        "src": "src/plugins/PullPlugin",
+        "src": "src/js/plugins/PullPlugin",
         "test": "test/plugins/PullPlugin"
       },
       "PushPlugin": {
-        "src": "dist/plugins/PushPlugin",
+        "src": "src/ts/plugins/PushPlugin",
         "test": "test/plugins/PushPlugin"
       },
       "StreamingPlugin": {
-        "src": "src/plugins/StreamingPlugin",
+        "src": "src/ts/plugins/StreamingPlugin",
         "test": "test/plugins/StreamingPlugin"
       }
     },
@@ -26,9 +26,9 @@
       "cytoscape": {
         "src": "panels/cytoscape/cytoscapePanel",
         "title": "cytoscape",
-        "panel": "src/visualizers/panels/cytoscape",
+        "panel": "src/js/visualizers/panels/cytoscape",
         "secondary": false,
-        "widget": "src/visualizers/widgets/cytoscape"
+        "widget": "src/js/visualizers/widgets/cytoscape"
       }
     }
   },

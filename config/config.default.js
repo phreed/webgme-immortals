@@ -22,13 +22,16 @@ config.requirejsPaths["style"] = './style/';
 
 config.visualization.extraCss = ['style/immortals.css'];
 
-config.plugin.basePaths.push('./gen/plugins');
+config.plugin.basePaths.push('./gen/plugins','./src/ts','./src/js');
 console.log(config.plugin.basePaths);
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
-config.requirejsPaths["serialize"] = './src/serialize/';
-config.requirejsPaths["serializer"] = './gen/serializer/';
-config.requirejsPaths["text"] = './src/'; // ,'./gen/'];
+config.requirejsPaths["serialize"] = './src/js/serialize/';
+// see
+// config.requirejsPaths["serializer"] = './gen/serializer/';
+config.requirejsPaths["serializer"] = ['gen/serializer/','src/ts/serializer/'];
+config.requirejsPaths["text"] = './src/','./gen/';
+//config.requirejsPaths["text"] = ['./src/','./gen/'];
 
 validateConfig(config);
 module.exports = config;

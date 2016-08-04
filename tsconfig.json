@@ -19,30 +19,30 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "rootDirs": [
-      "./src-ts",
-      "./src",
+      "./src/ts",
+      "./src/js",
       "./gen"
     ],
     "paths": {
       "*": [
         "*",
-        "src/*",
-        "src-ts/*",
-        "gen/*"
+        "./src/js/*",
+        "./src/ts/*",
+        "./gen/*"
       ]
     }
   },
   "filesGlob": [
-    "typings/index.d.ts",
-    "src-ts/**/*.ts",
-    "!node_modules/**",
-    "!**/*.spec.ts"
+    "./typings/index.d.ts",
+    "./src/ts/**/*.ts",
+    "!./node_modules/**",
+    "!./**/*.spec.ts"
   ],
   "files": [
-    "typings/index.d.ts",
-    "src-ts/plugins/PushPlugin/PushPlugin.ts",
-    "src-ts/plugins/PushPlugin/text.d.ts",
-    "src-ts/plugins/StreamingPlugin/StreamingPlugin.ts",
-    "src-ts/serializer/NewSerializer.ts"
+    "./typings/index.d.ts",
+    "./src/ts/plugins/PushPlugin/PushPlugin.ts",
+    "./src/ts/plugins/PushPlugin/text.d.ts",
+    "./src/ts/plugins/StreamingPlugin/StreamingPlugin.ts",
+    "./src/ts/serializer/NewSerializer.ts"
   ]
 }

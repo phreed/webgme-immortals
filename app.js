@@ -17,6 +17,7 @@ myServer.start(function () {
 //var gmeConfig = require('./config'),
 //    webgme = require('webgme'),
 //    myServer;
+
 /*
 import webgme = require('webgme');
 
