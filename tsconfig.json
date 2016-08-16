@@ -13,7 +13,7 @@
     "module": "amd",
     "moduleResolution": "node",
     "removeComments": false,
-    "target": "es3",
+    "target": "es6",
     "watch": true,
     "pretty": true,
     "noFallthroughCasesInSwitch": true,

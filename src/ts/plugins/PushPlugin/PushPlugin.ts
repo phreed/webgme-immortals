@@ -8,12 +8,11 @@
 
  The metadata.json needs to be copied as well.
  */
-
+import Promise = require('bluebird');
 import PluginBase = require('plugin/PluginBase');
 import PluginConfig = require('plugin/PluginConfig');
 import Util = require('blob/util');
 
-import * as q from 'q';
 import FlatSerializer from 'serialize/FlatSerializer';
 import CyjsSerializer from 'serialize/CyjsSerializer';
 import NewSerializer from 'serializer/NewSerializer';
@@ -33,103 +32,52 @@ class PushPlugin extends PluginBase {
         this.pluginMetadata = JSON.parse(MetaDataStr);
     }
 
-    main(mainHandler: PluginJS.Callback): void {
+    public main(mainHandler: PluginJS.Callback): void {
         let config = this.getCurrentConfig();
         console.error("the main PushPlugin function is running");
         this.logger.info('serialize the model in the requested manner');
         let configDictionary: any = config;
 
-        switch (configDictionary['typedVersion']) {
-            case 'json-tree:1.0.0':
-                this.serializeTreeJson100(config, mainHandler,
-                    (jsonStr: string) => {
-                        this.deliver(config, mainHandler, jsonStr);
-                    });
-                return;
-            case 'json-flat:1.0.0':
-                this.serializeFlatJson100(config, mainHandler,
-                    (jsonStr: string): void => {
-                        this.deliver(config, mainHandler, jsonStr);
-                    });
-                return;
-            case 'json-cytoscape:1.0.0':
-                this.serializeCytoscapeJson100(config, mainHandler,
-                    (jsonStr: string) => {
-                        this.deliver(config, mainHandler, jsonStr);
-                    });
-                return;
-            default:
-                this.result.setSuccess(false);
-                mainHandler(new Error("Unknown serialization type "), this.result);
-                return;
-        }
-    }
+        /**
+        Push the current data-model into a JSON structure.
+        */
+        Promise
+            .try(() => {
+                switch (configDictionary['typedVersion']) {
+                    case 'json-tree:1.0.0':
+                        let nsExport = Promise.promisify(NewSerializer.export);
+                        return nsExport(this.core, this.activeNode);
 
-    private serializeFlatJson100(
-        config: PluginJS.GmeConfig,
-        mainHandler: PluginJS.Callback,
-        deliveryFn: DeliveryFunction): void {
-        var jsonStr: string;
-        // an asynchronous call
-        FlatSerializer.export(
-            this.core,
-            this.activeNode,
-            (err: Error, jsonObject: webgmeV1.JsonObj) => {
-                if (err) {
-                    mainHandler(err, this.result);
-                    return;
-                }
-                jsonStr = JSON.stringify(jsonObject.nodes, null, 4);
-                deliveryFn(jsonStr)
-            });
-    }
+                    case 'json-flat:1.0.0':
+                        let fsExport = Promise.promisify(FlatSerializer.export);
+                        return fsExport(this.core, this.activeNode);
 
+                    case 'json-cytoscape:1.0.0':
+                        let cyExport = Promise.promisify(CyjsSerializer.export);
+                        return cyExport(this.core, this.activeNode);
 
-    private serializeCytoscapeJson100(
-        config: PluginJS.GmeConfig,
-        mainHandler: any,
-        deliveryFn: DeliveryFunction) {
-        var jsonStr: string;
-        CyjsSerializer.export(
-            this.core,
-            this.activeNode,
-            (err: Error, jsonObject: webgmeV1.JsonObj) => {
-                if (err) {
-                    mainHandler(err, this.result);
-                    return;
+                    default:
+                        return Promise.reject(new Error("no serializer matches typed version"));
                 }
-                jsonStr = JSON.stringify(jsonObject, null, 4);
-                deliveryFn(jsonStr)
-            });
-    }
-    /**
-    Pushing the current data-model into a JSON structure.
-    */
-    private serializeTreeJson100(
-        config: PluginJS.GmeConfig,
-        mainHandler: any,
-        deliveryFn: DeliveryFunction): void {
-        var jsonStr: string;
-        NewSerializer.export(
-            this.core,
-            this.activeNode,
-            (err: Error, jsonObject: webgmeV1.JsonObj) => {
-                if (err) {
-                    mainHandler(err, this.result);
-                    return;
-                }
-                jsonStr = JSON.stringify(jsonObject, null, 4);
-                deliveryFn(jsonStr)
+            })
+            .then((jsonObject) => {
+                return JSON.stringify(jsonObject, null, 4);
+            })
+            .then((jsonStr: string) => {
+                return this.deliver(config, jsonStr);
+            })
+            .then(() => {
+                mainHandler(null, this.result);
+            })
+            .catch((err) => {
+                mainHandler(err, this.result);
             });
     }
 
     /**
      A function to deliver the serialized object properly.
     */
-    deliver(
-        config: PluginJS.GmeConfig,
-        mainHandler: PluginJS.Callback,
-        payload: string): void {
+    private deliver = (config: PluginJS.GmeConfig, payload: string): Promise<Object> => {
         var isProject = this.core.getPath(this.activeNode) === '';
         var pushedFileName: string;
         var artifact: any;
@@ -138,31 +86,27 @@ class PushPlugin extends PluginBase {
         switch (configDictionary['deliveryMode']) {
             case 'file':
                 if (!config.hasOwnProperty('fileName')) {
-                    mainHandler(new Error('No file name provided.'), this.result);
-                    return;
+                    return Promise.reject(new Error('No file name provided.'));
                 }
-
-                pushedFileName = configDictionary['fileName'];
-                artifact = this.blobClient.createArtifact('pushed');
-                this.logger.debug('Exported: ', pushedFileName);
-                artifact.addFile(pushedFileName, payload,
-                    (err: Error) => {
-                        if (err) {
-                            mainHandler(err, this.result);
-                            return;
-                        }
-                        artifact.save(
-                            (err: Error, hash: PluginJS.ObjectHash) => {
-                                if (err) {
-                                    mainHandler(err, this.result);
-                                    return;
-                                }
-                                this.result.addArtifact(hash);
-                                this.result.setSuccess(true);
-                                mainHandler(null, this.result);
-                            });
+                return Promise
+                    .try(() => {
+                        return this.blobClient.createArtifact('pushed');
+                    })
+                    .then((artifact) => {
+                        let pushedFileName = configDictionary['fileName'];
+                        this.logger.debug('Exporting: ', pushedFileName);
+                        return [artifact, artifact.addFile(pushedFileName, payload)];
+                    })
+                    .spread((artifact: PluginJS.Artifact, hash: PluginJS.Hash) => {
+                        return artifact.save();
+                    })
+                    .then((hash: PluginJS.Hash) => {
+                        this.result.addArtifact(hash);
+                        this.result.setSuccess(true);
+                        return Promise.resolve(this.result);
                     });
-                break;
+            default:
+                return Promise.reject(new Error('unknown delivery mode'));
         }
     }
 }

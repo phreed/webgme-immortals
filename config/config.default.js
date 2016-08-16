@@ -10,7 +10,7 @@ var config = require('./config.webgme'),
 // See config.immortals.js for server settings.
 
 config.plugin.allowBrowserExecution = true;
-config.plugin.allowServerExecution = false;
+config.plugin.allowServerExecution = true;
 
 config.seedProjects.enable = true;
 config.seedProjects.allowDuplication = true;
@@ -26,11 +26,12 @@ config.plugin.basePaths.push('./gen/plugins','./src/ts','./src/js');
 console.log(config.plugin.basePaths);
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
+config.requirejsPaths["bluebird"] = './bower_components/bluebird/js/browser/bluebird';
 config.requirejsPaths["serialize"] = './src/js/serialize/';
 // see
-// config.requirejsPaths["serializer"] = './gen/serializer/';
-config.requirejsPaths["serializer"] = ['gen/serializer/','src/ts/serializer/'];
-config.requirejsPaths["text"] = './src/','./gen/';
+config.requirejsPaths["serializer"] = './gen/serializer/';
+// config.requirejsPaths["serializer"] = ['gen/serializer/','src/ts/serializer/'];
+config.requirejsPaths["text"] = './src/';
 //config.requirejsPaths["text"] = ['./src/','./gen/'];
 
 validateConfig(config);

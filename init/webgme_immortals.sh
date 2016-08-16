@@ -28,5 +28,10 @@ export GME_DIR=$HOME_DIR/projects/brass/webgme-immortals
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 cd $GME_DIR
 
-nvm use --delete-prefix v4.2.4
+echo "running nvm"
+nvm use v4.4.7
+echo "running node"
 node app.js
+
+echo "webgme started"
+
