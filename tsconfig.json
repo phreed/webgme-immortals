@@ -43,6 +43,7 @@
     "./src/ts/plugins/PushPlugin/PushPlugin.ts",
     "./src/ts/plugins/PushPlugin/text.d.ts",
     "./src/ts/plugins/StreamingPlugin/StreamingPlugin.ts",
-    "./src/ts/serializer/NewSerializer.ts"
+    "./src/ts/serializer/NewSerializer.ts",
+    "./src/ts/utility.ts"
   ]
 }

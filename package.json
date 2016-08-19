@@ -11,28 +11,6 @@
     "url": "git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git"
   },
   "scripts": {
-    "start": "node app.js",
-    "test": "node ./node_modules/mocha/bin/mocha --recursive test"
-  },
-  "dependencies": {
-    "cytoscape": "^2.6.3",
-    "jassa-core": "^0.6.0",
-    "jquery": "latest",
-    "requirejs": "^2.1.20",
-    "webgme": "^2.3.1",
-    "asyncawait" : "^0.7.4",
-    "bluebird" : "^3.4.1"
-  },
-  "devDependencies": {
-    "mocha": "^2.2.5",
-    "rimraf": "^2.4.0",
-    "chai": "^3.0.0",
-    "typescript": "^2.0.0",
-    "typings": "^1.0.5",
-    "ts-node": "^1.2.2",
-    "bower": "^1.7.7"
-  },
-  "scripts": {
     "docs": "./node_modules/bin/jsdoc -c jsdoc_conf.json",
     "start": "node ./node_modules/webgme/src/bin/start_server.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
@@ -49,9 +27,28 @@
     "users": "node ./node_modules/webgme/src/bin/usermanager.js",
     "clean_up": "node ./node_modules/webgme/src/bin/clean_up.js",
     "stats": "node ./node_modules/webgme/src/bin/storage_stats.js",
-    "build": "find ./gen ! -name 'metadata.json' -type f -exec rm -f {} + && find ./gen -type d -empty -delete",
+    "gitclean": "find ./gen ! -name 'metadata.json' -type f -exec rm -f {} + && find ./gen -type d -empty -delete",
     "prepublish": "typings install && npm run build",
     "typings": "typings install github:phreed/typed-npm-webgme -SG",
     "restart": "sudo systemctl --system restart webgme.service"
+  },
+  "dependencies": {
+    "asyncawait": "^0.7.4",
+    "bluebird": "^3.4.1",
+    "cytoscape": "^2.6.3",
+    "jassa-core": "^0.6.0",
+    "jquery": "latest",
+    "requirejs": "^2.1.20",
+    "underscore": "^1.8.3",
+    "webgme": "^2.3.1"
+  },
+  "devDependencies": {
+    "mocha": "^2.2.5",
+    "rimraf": "^2.4.0",
+    "chai": "^3.0.0",
+    "typescript": "^2.0.0",
+    "typings": "^1.0.5",
+    "ts-node": "^1.2.2",
+    "bower": "^1.7.7"
   }
 }

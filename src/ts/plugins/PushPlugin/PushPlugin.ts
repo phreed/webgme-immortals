@@ -97,10 +97,10 @@ class PushPlugin extends PluginBase {
                         this.logger.debug('Exporting: ', pushedFileName);
                         return [artifact, artifact.addFile(pushedFileName, payload)];
                     })
-                    .spread((artifact: PluginJS.Artifact, hash: PluginJS.Hash) => {
+                    .spread((artifact: PluginJS.Artifact, hash: PluginJS.MetadataHash) => {
                         return artifact.save();
                     })
-                    .then((hash: PluginJS.Hash) => {
+                    .then((hash: PluginJS.MetadataHash) => {
                         this.result.addArtifact(hash);
                         this.result.setSuccess(true);
                         return Promise.resolve(this.result);
