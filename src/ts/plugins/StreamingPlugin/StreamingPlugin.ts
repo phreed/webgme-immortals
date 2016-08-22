@@ -173,15 +173,15 @@ class StreamingPlugin extends PluginBase {
                 nodeData['@' + attrName] = core.getAttribute(node, attrName);
             });
 
-            // get Pointers
             Promise
                 .try(() => {
+                    // get pointers
                     return core.getPointerNames(node);
                 })
                 .map((ptrName: string) => {
                     let targetPath = core.getPointerPath(node, ptrName);
                     if (!targetPath) return;
-                    Promise
+                    return Promise
                         .try(() => {
                             return core.loadByPath(this.rootNode, targetPath);
                         })
@@ -195,7 +195,34 @@ class StreamingPlugin extends PluginBase {
                                 nodeData['@' + ptrName + POINTER_SET_DIV + targetMetaName]
                                     = core.getGuid(targetNode);
                             }
+                        });
+                });
+
+            Promise
+                .try(() => {
+                    // get sets
+                    return core.getSetNames(node);
+                })
+                .map((setName: string) => {
+                    return Promise
+                        .try(() => {
+                            return core.getMemberPaths(node, setName);
                         })
+                        .map((memberPath: string) => {
+                            return Promise
+                                .try(() => {
+                                    return core.loadByPath(this.rootNode, memberPath);
+                                })
+                                .then((memberNode: Node) => {
+                                    let memberMetaNode = core.getBaseType(memberNode);
+                                    let memberMetaName = core.getAttribute(memberMetaNode, 'name');
+                                    let setAttr = '@' + setName + POINTER_SET_DIV + memberMetaName;
+
+                                    nodeData[setAttr] = typeof nodeData[setAttr] === 'string'
+                                        ? nodeData[setAttr] + ' ' + core.getGuid(memberNode)
+                                        : core.getGuid(memberNode);
+                                });
+                        });
                 });
             done();
         };
