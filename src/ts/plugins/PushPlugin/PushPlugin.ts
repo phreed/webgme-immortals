@@ -32,7 +32,7 @@ class PushPlugin extends PluginBase {
         this.pluginMetadata = JSON.parse(MetaDataStr);
     }
 
-    public main(mainHandler: PluginJS.Callback): void {
+    public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
         console.error("the main PushPlugin function is running");
         this.logger.info('serialize the model in the requested manner');

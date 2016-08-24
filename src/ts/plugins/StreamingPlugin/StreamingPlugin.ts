@@ -14,7 +14,9 @@ import MetaDataStr = require('text!./metadata.json');
 
 import Promise = require('bluebird');
 import _ = require('underscore');
-import { amRunningOnServer } from 'utility';
+import { amRunningOnServer } from '../../utility/exenv';
+import { attrToString, pathToString } from '../../utility/gmeString';
+
 // import async = require('asyncawait/async');
 // import await = require('asyncawait/await');
 // import fs = require('fs');
@@ -52,7 +54,7 @@ class StreamingPlugin extends PluginBase {
     *
     * @param {PluginJS.Callback} mainHandler [description]
     */
-    public main(mainHandler: PluginJS.Callback): void {
+    public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
         console.error("the StreamingPlugin function main is running");
         this.logger.info('serialize the model in the requested manner');
@@ -63,7 +65,23 @@ class StreamingPlugin extends PluginBase {
         */
         Promise
             .try(() => {
-                return this.getSchemaTree(this.core, this.rootNode, this.META);
+                switch (configDictionary['typedVersion']) {
+                    case 'json-schema-tree:1.0.0':
+                        return this.getSchemaTree(this.core, this.rootNode, this.META);
+
+                    case 'json-schema-flat:1.0.0':
+                        return this.getSchemaEdges(this.core, this.rootNode, this.META);
+
+                    case 'json-model-tree:1.0.0':
+                        return this.getModelTree(this.core, this.rootNode, this.META);
+
+                    case 'json-model-flat:1.0.0':
+                        return this.getModelEdges(this.core, this.rootNode, this.META);
+
+                    default:
+                        return Promise.reject(new Error("no serializer matches typed version"));
+                }
+
             })
             .then((jsonObject) => {
                 return JSON.stringify(jsonObject, null, 4);
@@ -81,8 +99,10 @@ class StreamingPlugin extends PluginBase {
 
     /**
      A function to deliver the serialized object properly.
+
+    * @param {}
     */
-    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<Object> => {
+    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
         var isProject = this.core.getPath(this.activeNode) === '';
         var pushedFileName: string;
         var artifact: any;
@@ -110,6 +130,35 @@ class StreamingPlugin extends PluginBase {
             });
     }
 
+    private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        if (!config.hasOwnProperty('uri')) {
+            return Promise.reject(new Error('No uri provided.'));
+        }
+        return Promise
+            .try(() => {
+                return this.blobClient.createArtifact('pushed');
+            })
+            .then((artifact) => {
+                let pushedFileName = config['uri'];
+                this.logger.debug('Exporting: ', pushedFileName);
+                return [artifact, artifact.addFile(pushedFileName, payload)];
+            })
+            .spread((artifact: PluginJS.Artifact, hash: PluginJS.MetadataHash) => {
+                return artifact.save();
+            })
+            .then((hash: PluginJS.MetadataHash) => {
+                this.result.addArtifact(hash);
+                this.result.setSuccess(true);
+                return Promise.resolve(this.result);
+            });
+    }
+
+    getSchemaTree = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): void => {
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get schema tree with : ' + fcoName + ' : ' + languageName);
+    }
     /**
      * Get the schema from the nodes having meta rules.
      * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
@@ -119,25 +168,20 @@ class StreamingPlugin extends PluginBase {
      * @param {Node}              rootNode    [description]
      * @param {PluginJS.Callback} mainHandler [description]
      */
-    getSchemaTree = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node) => {
-        let config = this.getCurrentConfig();
-        let configDictionary: any = config;
+    getModelTree = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): PluginJS.Dictionary => {
+        let config: PluginJS.GmeConfig = this.getCurrentConfig();
+        let configDictionary: PluginJS.Dictionary = config;
 
         /**
-        * Visitor function.
+        * Visitor function store.
         */
-
-        let fcoName = core.getAttribute(core.getFCO(this.rootNode), 'name');
-        let languageName = core.getAttribute(this.rootNode, 'name');
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get model tree : ' + languageName + ' : ' + fcoName);
         let data: PluginJS.Dictionary = {
-            '@xmi:version': '2.0',
-            '@xmlns:xmi': 'http://www.omg.org/XMI',
-            '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+            'version': '0.0.1'
         };
-        data['@xmlns:' + languageName] = NS_URI;
-        data['@xsi:schemaLocation'] = NS_URI + ' ' + languageName + '.ecore';
-
         /**
          * A dictionary: look up nodes based on their path name.
          */
@@ -157,7 +201,7 @@ class StreamingPlugin extends PluginBase {
                 ? ':LibraryRoot:'
                 : core.getAttribute(core.getBaseType(node), 'name');
             let containRel = CONTAINMENT_PREFIX + metaName;
-            let nodeData: PluginJS.Dictionary = { '@xsi:type': languageName + ':' + containRel };
+            let nodeData: PluginJS.Dictionary = { 'type': languageName + ':' + containRel };
             let baseNode = core.getBase(node);
             let nodePath = core.getPath(node);
             path2data[nodePath] = nodeData;
@@ -168,9 +212,9 @@ class StreamingPlugin extends PluginBase {
             parentData[containRel] = parentData[containRel] || [];
             parentData[containRel].push(nodeData);
 
-            nodeData['@_id'] = core.getGuid(node);
+            nodeData['id'] = core.getGuid(node);
             core.getAttributeNames(node).forEach((attrName: string) => {
-                nodeData['@' + attrName] = core.getAttribute(node, attrName);
+                nodeData[attrName] = core.getAttribute(node, attrName);
             });
 
             Promise
@@ -179,7 +223,7 @@ class StreamingPlugin extends PluginBase {
                     return core.getPointerNames(node);
                 })
                 .map((ptrName: string) => {
-                    let targetPath = core.getPointerPath(node, ptrName);
+                    let targetPath = pathToString(core.getPointerPath(node, ptrName));
                     if (!targetPath) return;
                     return Promise
                         .try(() => {
@@ -187,12 +231,12 @@ class StreamingPlugin extends PluginBase {
                         })
                         .then((targetNode: Node) => {
                             if (ptrName === 'base') {
-                                nodeData['@' + ptrName + POINTER_SET_DIV + fcoName]
+                                nodeData[ptrName + POINTER_SET_DIV + fcoName]
                                     = core.getGuid(targetNode);
                             } else {
                                 let targetMetaNode = core.getBaseType(targetNode);
                                 let targetMetaName = core.getAttribute(targetMetaNode, 'name');
-                                nodeData['@' + ptrName + POINTER_SET_DIV + targetMetaName]
+                                nodeData[ptrName + POINTER_SET_DIV + targetMetaName]
                                     = core.getGuid(targetNode);
                             }
                         });
@@ -216,7 +260,7 @@ class StreamingPlugin extends PluginBase {
                                 .then((memberNode: Node) => {
                                     let memberMetaNode = core.getBaseType(memberNode);
                                     let memberMetaName = core.getAttribute(memberMetaNode, 'name');
-                                    let setAttr = '@' + setName + POINTER_SET_DIV + memberMetaName;
+                                    let setAttr = setName + POINTER_SET_DIV + memberMetaName;
 
                                     nodeData[setAttr] = typeof nodeData[setAttr] === 'string'
                                         ? nodeData[setAttr] + ' ' + core.getGuid(memberNode)
@@ -235,7 +279,7 @@ class StreamingPlugin extends PluginBase {
         * https://github.com/webgme/xmi-tools/blob/master/src/plugins/XMIExporter/XMIExporter.js#L430
         */
         return Promise
-            .try<void>(() => {
+            .try(() => {
                 return core.traverse(this.rootNode, { excludeRoot: true }, visitFn);
             })
             .then(() => {
@@ -245,6 +289,12 @@ class StreamingPlugin extends PluginBase {
     }
 
 
+    getSchemaEdges = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): void => {
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get schema edges : ' + languageName + ' : ' + fcoName);
+    }
     /**
      * Get the schema from the nodes having meta rules.
      * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
@@ -254,28 +304,21 @@ class StreamingPlugin extends PluginBase {
      * @param {Node}              rootNode    [description]
      * @param {PluginJS.Callback} mainHandler [description]
      */
-    getSchemaEdges = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node) => {
+    getModelEdges = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): PluginJS.Dictionary => {
         let config = this.getCurrentConfig();
         let configDictionary: any = config;
 
-        /**
-        * Visitor function.
-        */
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get model edges : ' + languageName + ' : ' + fcoName);
 
-        let fcoName = core.getAttribute(core.getFCO(this.rootNode), 'name');
-        let languageName = core.getAttribute(this.rootNode, 'name');
         let data: PluginJS.Dictionary = {
-            '@xmi:version': '2.0',
-            '@xmlns:xmi': 'http://www.omg.org/XMI',
-            '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+            'version': '0.0.1'
         };
-        data['@xmlns:' + languageName] = NS_URI;
-        data['@xsi:schemaLocation'] = NS_URI + ' ' + languageName + '.ecore';
+        data[languageName] = fcoName;
 
-        /**
-         * A dictionary: look up nodes based on their path name.
-         */
+        this.logger.info('A dictionary: look up nodes based on their path name.');
         let path2data: PluginJS.Dictionary = { '': data };
 
         /**
@@ -286,26 +329,34 @@ class StreamingPlugin extends PluginBase {
          */
         let visitFn = (node: Node, done: PluginJS.VoidFn): void => {
             let core = this.core;
-            // let nodeName = core.getAttribute(node, 'name');
+            let nodeNameAttr = core.getAttribute(node, 'name');
+            if (typeof nodeNameAttr !== 'string') { done(); return; }
+            let nodeName: string = nodeNameAttr;
+            this.logger.info('visitor function with : ' + nodeName);
 
-            let metaName = (core.isLibraryRoot(node))
-                ? ':LibraryRoot:'
-                : core.getAttribute(core.getBaseType(node), 'name');
-            let containRel = CONTAINMENT_PREFIX + metaName;
-            let nodeData: PluginJS.Dictionary = { '@xsi:type': languageName + ':' + containRel };
-            let baseNode = core.getBase(node);
-            let nodePath = core.getPath(node);
+            let metaName: string;
+            if (core.isLibraryRoot(node)) {
+                metaName = ':LibraryRoot:';
+            } else {
+                let metaNameAttr = core.getAttribute(core.getBaseType(node), 'name');
+                if (typeof metaNameAttr !== 'string') { done(); return; }
+                metaName = metaNameAttr;
+            }
+            let baseNode: PluginJS.Node = core.getBase(node);
+            let nodePath: string = core.getPath(node);
+            let containRel = metaName;
+            let nodeData: PluginJS.Dictionary = { 'type': languageName + ':' + containRel };
             path2data[nodePath] = nodeData;
 
-            let parent = core.getParent(node);
-            let parentPath = core.getPath(parent);
-            let parentData = path2data[parentPath];
+            let parent: PluginJS.Node = core.getParent(node);
+            let parentPath: string = core.getPath(parent);
+            let parentData: PluginJS.Dictionary = path2data[parentPath];
             parentData[containRel] = parentData[containRel] || [];
             parentData[containRel].push(nodeData);
 
-            nodeData['@_id'] = core.getGuid(node);
+            nodeData['id'] = core.getGuid(node);
             core.getAttributeNames(node).forEach((attrName: string) => {
-                nodeData['@' + attrName] = core.getAttribute(node, attrName);
+                nodeData[attrName] = core.getAttribute(node, attrName);
             });
 
             // get Pointers
@@ -314,7 +365,7 @@ class StreamingPlugin extends PluginBase {
                     return core.getPointerNames(node);
                 })
                 .map((ptrName: string) => {
-                    let targetPath = core.getPointerPath(node, ptrName);
+                    let targetPath = pathToString(core.getPointerPath(node, ptrName));
                     if (!targetPath) return;
                     Promise
                         .try(() => {
@@ -322,12 +373,12 @@ class StreamingPlugin extends PluginBase {
                         })
                         .then((targetNode: Node) => {
                             if (ptrName === 'base') {
-                                nodeData['@' + ptrName + POINTER_SET_DIV + fcoName]
+                                nodeData[ptrName + POINTER_SET_DIV + fcoName]
                                     = core.getGuid(targetNode);
                             } else {
                                 let targetMetaNode = core.getBaseType(targetNode);
                                 let targetMetaName = core.getAttribute(targetMetaNode, 'name');
-                                nodeData['@' + ptrName + POINTER_SET_DIV + targetMetaName]
+                                nodeData[ptrName + POINTER_SET_DIV + targetMetaName]
                                     = core.getGuid(targetNode);
                             }
                         })
@@ -347,7 +398,6 @@ class StreamingPlugin extends PluginBase {
                 return core.traverse(this.rootNode, { excludeRoot: true }, visitFn);
             })
             .then(() => {
-                console.log("DATA: " + data);
                 return data;
             });
     }

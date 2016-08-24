@@ -1,6 +1,5 @@
 {
   "atom": {
-    "rewriteTsconfig": true,
     "formatOnSave": true
   },
   "compileOnSave": true,
@@ -10,6 +9,8 @@
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
     "module": "amd",
     "moduleResolution": "node",
     "removeComments": false,
@@ -32,18 +33,14 @@
       ]
     }
   },
-  "filesGlob": [
-    "./typings/index.d.ts",
+  "include": [
     "./src/ts/**/*.ts",
-    "!./node_modules/**",
-    "!./**/*.spec.ts"
+    "./typings/index.d.ts"
   ],
-  "files": [
-    "./typings/index.d.ts",
-    "./src/ts/plugins/PushPlugin/PushPlugin.ts",
-    "./src/ts/plugins/PushPlugin/text.d.ts",
-    "./src/ts/plugins/StreamingPlugin/StreamingPlugin.ts",
-    "./src/ts/serializer/NewSerializer.ts",
-    "./src/ts/utility.ts"
+  "exclude": [
+    "node_modules",
+    "bower_components",
+    "jspm_packages",
+    "**/*.spec.ts"
   ]
 }
