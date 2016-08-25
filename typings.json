@@ -4,7 +4,9 @@
   "devDependencies": {},
   "globalDependencies": {
     "bluebird": "registry:dt/bluebird",
-    "webgme": "github:phreed/typings"
+    "underscore": "registry:dt/underscore#1.7.0+20160805164035",
+    "webgme": "github:phreed/typings",
+    "n3": "file:typings-src/n3.d.ts"
   },
   "globalDevDependencies": {}
 }

@@ -26,7 +26,7 @@ config.plugin.basePaths.push('./gen/plugins','./src/ts','./src/js');
 console.log(config.plugin.basePaths);
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
-config.requirejsPaths["bluebird"] = './bower_components/bluebird/js/browser/bluebird';
+config.requirejsPaths["bluebird"] = './node_modules/bluebird/js/browser/bluebird';
 config.requirejsPaths["serialize"] = './src/js/serialize/';
 // see
 config.requirejsPaths["serializer"] = './gen/serializer/';

@@ -6,8 +6,6 @@
  * A plugin that inherits from the PluginBase.
  * To see source code documentation about available
  * properties and methods visit %host%/docs/source/PluginBase.html.
- https://github.com/webgme/xmi-tools/blob/master/src/plugins/XMIExporter/XMIExporter.js#L430
-
  */
 
 import PluginBase = require('plugin/PluginBase');
@@ -15,6 +13,11 @@ import PluginConfig = require('plugin/PluginConfig');
 import MetaDataStr = require('text!./metadata.json');
 
 import Promise = require('bluebird');
+import _ = require('underscore');
+import { amRunningOnServer } from '../../utility/exenv';
+import { attrToString, pathToString } from '../../utility/gmeString';
+import { writeRdfTtlString } from '../../utility/rdf';
+
 // import async = require('asyncawait/async');
 // import await = require('asyncawait/await');
 // import fs = require('fs');
@@ -52,215 +55,361 @@ class StreamingPlugin extends PluginBase {
     *
     * @param {PluginJS.Callback} mainHandler [description]
     */
-    main(mainHandler: PluginJS.Callback): void {
-        // Use self to access core, project, result, logger etc from PluginBase.
-        // These are all instantiated at this point.
-        this.getSchema(this.core, this.rootNode, this.META)
-            .then((schema: Object) => {
-                var languageName = this.core.getAttribute(this.rootNode, 'name');
-                return Promise.all([
-                    this.writeFile(languageName + '.json', schema)
-                ]);
+    public main(mainHandler: PluginJS.ResultCallback): void {
+        let config = this.getCurrentConfig();
+        console.error("the StreamingPlugin function main is running");
+        this.logger.info('serialize the model in the requested manner');
+        let configDictionary: any = config;
+
+        /**
+        Push the current data-model into a JSON structure.
+        */
+        Promise
+            .try(() => {
+                switch (configDictionary['schematicVersion']) {
+                    case 'json-schema-tree:1.0.0':
+                        return this.getSchemaTree(this.core, this.rootNode, this.META);
+
+                    case 'json-schema-flat:1.0.0':
+                        return this.getSchemaEdges(this.core, this.rootNode, this.META);
+
+                    case 'json-model-tree:1.0.0':
+                        return this.getModelTree(this.core, this.rootNode, this.META);
+
+                    case 'json-model-flat:1.0.0':
+                        return this.getModelEdges(this.core, this.rootNode, this.META);
+
+                    default:
+                        return Promise.reject(new Error("no serializer matches typed version"));
+                }
+
+            })
+            .then((jsonObject) => {
+                switch (configDictionary['syntacticVersion']) {
+                    case 'json-tree:1.0.0':
+                        return JSON.stringify(jsonObject, null, 4);
+
+                    case 'json-ttl:1.0.0': jsonObject
+                        return writeRdfTtlString(jsonObject);
+
+                    default:
+                        return Promise.reject(new Error("no output writer matches typed version"));
+                }
+            })
+            .then((jsonStr: string) => {
+                return this.deliverFile(config, jsonStr);
             })
             .then(() => {
-                this.result.setSuccess(true);
                 mainHandler(null, this.result);
             })
-            .catch((err: Error) => {
-                this.logger.error(err.stack);
+            .catch((err) => {
                 mainHandler(err, this.result);
             });
-    };
+    }
 
     /**
-     * Save the content to the filename indicated.
-     *
-     * @param  {string} fName   [description]
-     * @param  {any}    content [description]
-     * @return {[type]}         [description]
-     */
-    writeFile = (fName: string, content: any) => {
-        if (typeof window === 'undefined' && process.env.WRITE_FILES) {
-            let fs = require('fs');
-            return Promise.try(() => {
-                fs.writeFile(fName, content);
-            });
-        }
-        return this.blobClient.putFile(fName, content)
-            .then((metaModelHash) => {
-                this.result.addArtifact(content);
-            });
-    };
-    /**
-     * Post the content to the url indicated.
-     *
-     * @param  {string} url     [description]
-     * @param  {any}    content [description]
-     * @return {[type]}         [description]
-     */
-    writeUrl = (url: string, content: any) => {
-        if (typeof window === 'undefined' && process.env.WRITE_FILES) {
-            let fs = require('fs');
-            return Promise.try(() => {
-                fs.writeFile(url, content);
-            });
-        }
-        return this.blobClient.putFile(url, content)
-            .then((metaModelHash) => {
-                this.result.addArtifact(content);
-            });
-    };
-    /**
-     * Write the content to the stream indicated.
-     *
-     * @param  {string} ostream     [description]
-     * @param  {any}    content [description]
-     * @return {[type]}         [description]
-     */
-    writeStream = (stream: string, content: any) => {
-        if (typeof window === 'undefined' && process.env.WRITE_FILES) {
-            let fs = require('fs');
-            return Promise.try(() => {
-                return fs.writeFile(stream, content);
-            });
-        }
-        return Promise.try(() => {
-            return this.blobClient.putFile(stream, content);
-        })
-            .then((metaModelHash: any) => {
-                return this.result.addArtifact(metaModelHash);
-            });
-    };
+     A function to deliver the serialized object properly.
 
+    * @param {}
+    */
+    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        var isProject = this.core.getPath(this.activeNode) === '';
+        var pushedFileName: string;
+        var artifact: any;
+        let configDictionary: any = config;
+
+        if (!config.hasOwnProperty('fileName')) {
+            return Promise.reject(new Error('No file name provided.'));
+        }
+        return Promise
+            .try(() => {
+                return this.blobClient.createArtifact('pushed');
+            })
+            .then((artifact) => {
+                let pushedFileName = configDictionary['fileName'];
+                this.logger.debug('Exporting: ', pushedFileName);
+                return [artifact, artifact.addFile(pushedFileName, payload)];
+            })
+            .spread((artifact: PluginJS.Artifact, hash: PluginJS.MetadataHash) => {
+                return artifact.save();
+            })
+            .then((hash: PluginJS.MetadataHash) => {
+                this.result.addArtifact(hash);
+                this.result.setSuccess(true);
+                return Promise.resolve(this.result);
+            });
+    }
+
+    private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        if (!config.hasOwnProperty('uri')) {
+            return Promise.reject(new Error('No uri provided.'));
+        }
+        return Promise
+            .try(() => {
+                return this.blobClient.createArtifact('pushed');
+            })
+            .then((artifact) => {
+                let pushedFileName = config['uri'];
+                this.logger.debug('Exporting: ', pushedFileName);
+                return [artifact, artifact.addFile(pushedFileName, payload)];
+            })
+            .spread((artifact: PluginJS.Artifact, hash: PluginJS.MetadataHash) => {
+                return artifact.save();
+            })
+            .then((hash: PluginJS.MetadataHash) => {
+                this.result.addArtifact(hash);
+                this.result.setSuccess(true);
+                return Promise.resolve(this.result);
+            });
+    }
+
+    getSchemaTree = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): void => {
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get schema tree with : ' + fcoName + ' : ' + languageName);
+    }
     /**
      * Get the schema from the nodes having meta rules.
      * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
+     * This function makes extensive use of a dictionary to build up a tree.
+     *
      * @param {PluginJS.Core}     core        [description]
      * @param {Node}              rootNode    [description]
      * @param {PluginJS.Callback} mainHandler [description]
      */
-    getSchema = (core: PluginJS.Core, rootNode: PluginJS.Node, metaNode: Node): Promise<Object> => {
-        let config = this.getCurrentConfig();
-        let configDictionary: any = config;
-        if (!configDictionary.hasOwnProperty('fileName')) {
-            return Promise.reject(new Error('No file name provided.'));
-        }
-        let recorder = () => {
-            let payload: BlobJS.ObjectBlob;
-            Promise
-                .try(() => {
-                    return this.blobClient.createArtifact('serialized');
-                })
-                .then((artifact) => {
-                    Promise
-                        .try(() => {
-                            return artifact.addFile(configDictionary['fileName'], payload);
-                        })
-                        .then((file) => {
-                            return artifact.save();
-                        })
-                        .then((hash) => {
-                            this.result.addArtifact(hash);
-                            this.result.setSuccess(true);
-                            return Promise.resolve(this.result);
-                        })
-                        .catch((err: Error) => {
-                            return Promise.reject(new Error('could not add file to artifact'));
-                        });
-                })
-                .catch((err: Error) => {
-                    return Promise.reject(new Error('could not create artifact'));
-                });
-        };
+    getModelTree = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): PluginJS.Dictionary => {
+        let config: PluginJS.GmeConfig = this.getCurrentConfig();
+        let configDictionary: PluginJS.Dictionary = config;
+
         /**
-        * Visitor function.
+        * Visitor function store.
         */
-
-        let fcoName = core.getAttribute(core.getFCO(this.rootNode), 'name');
-
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get model tree : ' + languageName + ' : ' + fcoName);
         let data: PluginJS.Dictionary = {
-            '@xmi:version': '2.0',
-            '@xmlns:xmi': 'http://www.omg.org/XMI',
-            '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+            'version': '0.0.1'
         };
-        let languageName = core.getAttribute(this.rootNode, 'name');
-        data['@xmlns:' + languageName] = NS_URI;
-        data['@xsi:schemaLocation'] = NS_URI + ' ' + languageName + '.ecore';
-
         /**
-         * A dictionary to look up nodes based on their path name.
-         * @type {PluginJS.Dictionary}
+         * A dictionary: look up nodes based on their path name.
          */
         let path2data: PluginJS.Dictionary = { '': data };
 
-        let visitFn = (node: Node, nextFn: PluginJS.VoidCallback): Promise<Object> => {
+        /**
+         * The base node makes reference to inheritance.
+         * The parent node makes reference to containment.
+         * The traverse function follows the containment tree.
+         * @type {[type]}
+         */
+        let visitFn = (node: Node, done: PluginJS.VoidFn): void => {
             let core = this.core;
-            let deferred = Promise.defer();
             // let nodeName = core.getAttribute(node, 'name');
 
             let metaName = (core.isLibraryRoot(node))
                 ? ':LibraryRoot:'
                 : core.getAttribute(core.getBaseType(node), 'name');
             let containRel = CONTAINMENT_PREFIX + metaName;
-            let nodeData: PluginJS.Dictionary = { '@xsi:type': languageName + ':' + containRel };
+            let nodeData: PluginJS.Dictionary = { 'type': languageName + ':' + containRel };
             let baseNode = core.getBase(node);
-            let promises: any[] = [];
             let nodePath = core.getPath(node);
+            path2data[nodePath] = nodeData;
 
             let parent = core.getParent(node);
             let parentPath = core.getPath(parent);
             let parentData = path2data[parentPath];
-            path2data[nodePath] = nodeData;
             parentData[containRel] = parentData[containRel] || [];
             parentData[containRel].push(nodeData);
 
-            nodeData['@_id'] = core.getGuid(node);
+            nodeData['id'] = core.getGuid(node);
             core.getAttributeNames(node).forEach((attrName: string) => {
-                nodeData['@' + attrName] = core.getAttribute(node, attrName);
+                nodeData[attrName] = core.getAttribute(node, attrName);
             });
 
+            Promise
+                .try(() => {
+                    // get pointers
+                    return core.getPointerNames(node);
+                })
+                .map((ptrName: string) => {
+                    let targetPath = pathToString(core.getPointerPath(node, ptrName));
+                    if (!targetPath) return;
+                    return Promise
+                        .try(() => {
+                            return core.loadByPath(this.rootNode, targetPath);
+                        })
+                        .then((targetNode: Node) => {
+                            if (ptrName === 'base') {
+                                nodeData[ptrName + POINTER_SET_DIV + fcoName]
+                                    = core.getGuid(targetNode);
+                            } else {
+                                let targetMetaNode = core.getBaseType(targetNode);
+                                let targetMetaName = core.getAttribute(targetMetaNode, 'name');
+                                nodeData[ptrName + POINTER_SET_DIV + targetMetaName]
+                                    = core.getGuid(targetNode);
+                            }
+                        });
+                });
 
-            // get Pointers
-            core.getPointerNames(node).forEach((ptrName: string) => {
-                let targetPath = core.getPointerPath(node, ptrName);
-                if (targetPath) {
-                    promises.push(
-                        core.loadByPath(this.rootNode, targetPath)
-                            .then((targetNode: Node) => {
-                                if (ptrName === 'base') {
-                                    nodeData['@' + ptrName + POINTER_SET_DIV + fcoName]
-                                        = core.getGuid(targetNode);
-                                } else {
-                                    let targetMetaNode = core.getBaseType(targetNode);
-                                    let targetMetaName = core.getAttribute(targetMetaNode, 'name');
-                                    nodeData['@' + ptrName + POINTER_SET_DIV + targetMetaName]
-                                        = core.getGuid(targetNode);
-                                }
-                            })
-                    );
-                }
-            });
+            Promise
+                .try(() => {
+                    // get sets
+                    return core.getSetNames(node);
+                })
+                .map((setName: string) => {
+                    return Promise
+                        .try(() => {
+                            return core.getMemberPaths(node, setName);
+                        })
+                        .map((memberPath: string) => {
+                            return Promise
+                                .try(() => {
+                                    return core.loadByPath(this.rootNode, memberPath);
+                                })
+                                .then((memberNode: Node) => {
+                                    let memberMetaNode = core.getBaseType(memberNode);
+                                    let memberMetaName = core.getAttribute(memberMetaNode, 'name');
+                                    let setAttr = setName + POINTER_SET_DIV + memberMetaName;
 
-            // get Sets
-
-            Promise.all(promises)
-                .then(deferred.resolve)
-                .catch(deferred.reject);
-            return deferred.promise.nodeify(nextFn);
-        }
+                                    nodeData[setAttr] = typeof nodeData[setAttr] === 'string'
+                                        ? nodeData[setAttr] + ' ' + core.getGuid(memberNode)
+                                        : core.getGuid(memberNode);
+                                });
+                        });
+                });
+            done();
+        };
 
         /**
-        Visit the node and perform the function.
+        * Visit the node and perform the function.
+        * Documentation for traverse.
+        * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
+        * Related example using traverse.
+        * https://github.com/webgme/xmi-tools/blob/master/src/plugins/XMIExporter/XMIExporter.js#L430
         */
-        Promise
+        return Promise
             .try(() => {
                 return core.traverse(this.rootNode, { excludeRoot: true }, visitFn);
             })
-            .then((data) => {
+            .then(() => {
                 console.log("DATA: " + data);
                 return data;
+            });
+    }
+
+
+    getSchemaEdges = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): void => {
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get schema edges : ' + languageName + ' : ' + fcoName);
+    }
+    /**
+     * Get the schema from the nodes having meta rules.
+     * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
+     * This function makes extensive use of a dictionary to build tuples.
+     *
+     * @param {PluginJS.Core}     core        [description]
+     * @param {Node}              rootNode    [description]
+     * @param {PluginJS.Callback} mainHandler [description]
+     */
+    getModelEdges = (core: PluginJS.Core,
+        rootNode: PluginJS.Node, metaNode: Node): PluginJS.Dictionary => {
+        let config = this.getCurrentConfig();
+        let configDictionary: any = config;
+
+        let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
+        let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
+        this.logger.info('get model edges : ' + languageName + ' : ' + fcoName);
+
+        let data: PluginJS.Dictionary = {
+            'version': '0.0.1'
+        };
+        data[languageName] = fcoName;
+
+        this.logger.info('A dictionary: look up nodes based on their path name.');
+        let path2data: PluginJS.Dictionary = { '': data };
+
+        /**
+         * The base node makes reference to inheritance.
+         * The parent node makes reference to containment.
+         * The traverse function follows the containment tree.
+         * @type {[type]}
+         */
+        let visitFn = (node: Node, done: PluginJS.VoidFn): void => {
+            let core = this.core;
+            let nodeNameAttr = core.getAttribute(node, 'name');
+            if (typeof nodeNameAttr !== 'string') { done(); return; }
+            let nodeName: string = nodeNameAttr;
+            this.logger.info('visitor function with : ' + nodeName);
+
+            let metaName: string;
+            if (core.isLibraryRoot(node)) {
+                metaName = ':LibraryRoot:';
+            } else {
+                let metaNameAttr = core.getAttribute(core.getBaseType(node), 'name');
+                if (typeof metaNameAttr !== 'string') { done(); return; }
+                metaName = metaNameAttr;
+            }
+            let baseNode: PluginJS.Node = core.getBase(node);
+            let nodePath: string = core.getPath(node);
+            let containRel = metaName;
+            let nodeData: PluginJS.Dictionary = { 'type': languageName + ':' + containRel };
+            path2data[nodePath] = nodeData;
+
+            let parent: PluginJS.Node = core.getParent(node);
+            let parentPath: string = core.getPath(parent);
+            let parentData: PluginJS.Dictionary = path2data[parentPath];
+            parentData[containRel] = parentData[containRel] || [];
+            parentData[containRel].push(nodeData);
+
+            nodeData['id'] = core.getGuid(node);
+            core.getAttributeNames(node).forEach((attrName: string) => {
+                nodeData[attrName] = core.getAttribute(node, attrName);
+            });
+
+            // get Pointers
+            Promise
+                .try(() => {
+                    return core.getPointerNames(node);
+                })
+                .map((ptrName: string) => {
+                    let targetPath = pathToString(core.getPointerPath(node, ptrName));
+                    if (!targetPath) return;
+                    Promise
+                        .try(() => {
+                            return core.loadByPath(this.rootNode, targetPath);
+                        })
+                        .then((targetNode: Node) => {
+                            if (ptrName === 'base') {
+                                nodeData[ptrName + POINTER_SET_DIV + fcoName]
+                                    = core.getGuid(targetNode);
+                            } else {
+                                let targetMetaNode = core.getBaseType(targetNode);
+                                let targetMetaName = core.getAttribute(targetMetaNode, 'name');
+                                nodeData[ptrName + POINTER_SET_DIV + targetMetaName]
+                                    = core.getGuid(targetNode);
+                            }
+                        })
+                });
+            done();
+        };
+
+        /**
+        * Visit the node and perform the function.
+        * Documentation for traverse.
+        * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
+        * Related example using traverse.
+        * https://github.com/webgme/xmi-tools/blob/master/src/plugins/XMIExporter/XMIExporter.js#L430
+        */
+        return Promise
+            .try<void>(() => {
+                return core.traverse(this.rootNode, { excludeRoot: true }, visitFn);
             })
-            .catch();
+            .then(() => {
+                return data;
+            });
     }
 }
 

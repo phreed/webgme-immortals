@@ -27,7 +27,7 @@
     "users": "node ./node_modules/webgme/src/bin/usermanager.js",
     "clean_up": "node ./node_modules/webgme/src/bin/clean_up.js",
     "stats": "node ./node_modules/webgme/src/bin/storage_stats.js",
-    "build": "find ./gen ! -name 'metadata.json' -type f -exec rm -f {} + && find ./gen -type d -empty -delete",
+    "gitclean": "find ./gen ! -name 'metadata.json' -type f -exec rm -f {} + && find ./gen -type d -empty -delete",
     "prepublish": "typings install && npm run build",
     "typings": "typings install github:phreed/typed-npm-webgme -SG",
     "restart": "sudo systemctl --system restart webgme.service"
@@ -36,10 +36,11 @@
     "asyncawait": "^0.7.4",
     "bluebird": "^3.4.1",
     "cytoscape": "^2.6.3",
-    "jassa-core": "^0.6.0",
     "jquery": "latest",
-    "requirejs": "^2.1.20",
     "typings": "^1.3.2",
+    "n3": "^0.5.0",
+    "requirejs": "^2.1.20",
+    "underscore": "^1.8.3",
     "webgme": "^2.3.1"
   },
   "devDependencies": {

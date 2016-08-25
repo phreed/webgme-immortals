@@ -32,7 +32,7 @@ class PushPlugin extends PluginBase {
         this.pluginMetadata = JSON.parse(MetaDataStr);
     }
 
-    public main(mainHandler: PluginJS.Callback): void {
+    public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
         console.error("the main PushPlugin function is running");
         this.logger.info('serialize the model in the requested manner');
@@ -43,7 +43,7 @@ class PushPlugin extends PluginBase {
         */
         Promise
             .try(() => {
-                switch (configDictionary['typedVersion']) {
+                switch (configDictionary['schematicVersion']) {
                     case 'json-tree:1.0.0':
                         let nsExport = Promise.promisify(NewSerializer.export);
                         return nsExport(this.core, this.activeNode);
@@ -97,10 +97,10 @@ class PushPlugin extends PluginBase {
                         this.logger.debug('Exporting: ', pushedFileName);
                         return [artifact, artifact.addFile(pushedFileName, payload)];
                     })
-                    .spread((artifact: PluginJS.Artifact, hash: PluginJS.Hash) => {
+                    .spread((artifact: PluginJS.Artifact, hash: PluginJS.MetadataHash) => {
                         return artifact.save();
                     })
-                    .then((hash: PluginJS.Hash) => {
+                    .then((hash: PluginJS.MetadataHash) => {
                         this.result.addArtifact(hash);
                         this.result.setSuccess(true);
                         return Promise.resolve(this.result);
