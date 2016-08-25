@@ -16,6 +16,7 @@ import Promise = require('bluebird');
 import _ = require('underscore');
 import { amRunningOnServer } from '../../utility/exenv';
 import { attrToString, pathToString } from '../../utility/gmeString';
+import { writeRdfTtlString } from '../../utility/rdf';
 
 // import async = require('asyncawait/async');
 // import await = require('asyncawait/await');
@@ -65,7 +66,7 @@ class StreamingPlugin extends PluginBase {
         */
         Promise
             .try(() => {
-                switch (configDictionary['typedVersion']) {
+                switch (configDictionary['schematicVersion']) {
                     case 'json-schema-tree:1.0.0':
                         return this.getSchemaTree(this.core, this.rootNode, this.META);
 
@@ -84,7 +85,16 @@ class StreamingPlugin extends PluginBase {
 
             })
             .then((jsonObject) => {
-                return JSON.stringify(jsonObject, null, 4);
+                switch (configDictionary['syntacticVersion']) {
+                    case 'json-tree:1.0.0':
+                        return JSON.stringify(jsonObject, null, 4);
+
+                    case 'json-ttl:1.0.0': jsonObject
+                        return writeRdfTtlString(jsonObject);
+
+                    default:
+                        return Promise.reject(new Error("no output writer matches typed version"));
+                }
             })
             .then((jsonStr: string) => {
                 return this.deliverFile(config, jsonStr);

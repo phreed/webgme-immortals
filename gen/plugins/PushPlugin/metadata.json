@@ -22,8 +22,8 @@
         "websocket"
       ]
     }, {
-      "name": "typedVersion",
-      "displayName": "TypedVersion",
+      "name": "schematicVersion",
+      "displayName": "SchematicVersion",
       "description": "Specify the type and version to be used.",
       "value": "json-tree:1.0.0",
       "valueType": "string",

@@ -10,51 +10,60 @@
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "writeAccessRequired": true,
-  "configStructure": [
-    {
-      "name": "deliveryMode",
-      "displayName": "Mode file, websocket, or broker",
-      "description": "",
-      "value": "file",
-      "valueType": "string",
-      "valueItems": [
-        "file",
-        "websocket",
-        "broker"
-      ]
-    }, {
-      "name": "typedVersion",
-      "displayName": "TypedVersion",
-      "description": "Specify the type and version to be used.",
-      "value": "json-flat:1.0.0",
-      "valueType": "string",
-      "valueItems": [
-        "json-tree:1.0.0",
-        "json-flat:1.0.0",
-        "json-cytoscape:1.0.0"
-      ]
-    }, {
-      "name": "hostAddr",
-      "displayName": "graph db host IP address or name",
-      "regex": "^[0-9a-zA-Z]+$",
-      "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore!",
-      "description": "What is the ip address or name of the host for the graph database mega-model.",
-      "value": "localhost",
-      "valueType": "string",
-      "readOnly": false
-    }, {
-      "name": "query",
-      "displayName": "extract sub-model",
-      "description": "Model extraction from system Multi-Model.",
-      "value": "",
-      "valueType": "string",
-      "readOnly": false
-    }, {
-      "name": "fileName",
-      "displayName": "graph model file name",
-      "description": "click and drag file .",
-      "value": "default_graph.json",
-      "valueType": "string",
-      "readOnly": false
-    }]
+  "configStructure": [{
+    "name": "deliveryMode",
+    "displayName": "Mode file, websocket, or broker",
+    "description": "",
+    "value": "file",
+    "valueType": "string",
+    "valueItems": [
+      "file",
+      "websocket",
+      "broker"
+    ]
+  }, {
+    "name": "schematicVersion",
+    "displayName": "SchematicVersion",
+    "description": "Specify the type and version to be used.",
+    "value": "json-flat:1.0.0",
+    "valueType": "string",
+    "valueItems": [
+      "json-tree:1.0.0",
+      "json-flat:1.0.0",
+      "json-cytoscape:1.0.0"
+    ]
+  }, {
+    "name": "syntacticVersion",
+    "displayName": "syntacticVersion",
+    "description": "Specify the type and version to be used for output.",
+    "value": "json-ttl:1.0.0",
+    "valueType": "string",
+    "valueItems": [
+      "json-tree:1.0.0",
+      "json-ttl:1.0.0"
+    ]
+  }, {
+    "name": "hostAddr",
+    "displayName": "graph db host IP address or name",
+    "regex": "^[0-9a-zA-Z]+$",
+    "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore!",
+    "description": "What is the ip address or name of the host for the graph database mega-model.",
+    "value": "localhost",
+    "valueType": "string",
+    "readOnly": false
+  }, {
+    "name": "query",
+    "displayName": "extract sub-model",
+    "description": "Model extraction from system Multi-Model.",
+    "value": "",
+    "valueType": "string",
+    "readOnly": false
+  }, {
+    "name": "fileName",
+    "displayName": "graph model file name",
+    "description": "click and drag file .",
+    "value": "default_graph.json",
+    "valueType": "string",
+    "readOnly": false
+  }]
 }

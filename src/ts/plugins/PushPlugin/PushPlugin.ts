@@ -43,7 +43,7 @@ class PushPlugin extends PluginBase {
         */
         Promise
             .try(() => {
-                switch (configDictionary['typedVersion']) {
+                switch (configDictionary['schematicVersion']) {
                     case 'json-tree:1.0.0':
                         let nsExport = Promise.promisify(NewSerializer.export);
                         return nsExport(this.core, this.activeNode);
