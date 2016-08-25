@@ -3,8 +3,8 @@
   "dependencies": {},
   "devDependencies": {},
   "globalDependencies": {
-    "webgme": "github:phreed/typed-npm-webgme",
-    "bluebird": "registry:dt/bluebird"
+    "bluebird": "registry:dt/bluebird",
+    "webgme": "github:phreed/typings"
   },
   "globalDevDependencies": {}
 }

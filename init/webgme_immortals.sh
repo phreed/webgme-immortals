@@ -9,8 +9,8 @@
 echo `pwd`
 if [ -s /home/fred ]; then
   export HOME_DIR="/home/fred";
-elif [ -s /home/brass ]; then
-  export HOME_DIR="/home/brass";
+elif [ -s /isis/home/brass ]; then
+  export HOME_DIR="/isis/home/brass";
 else
   echo "no appropriate home directory";
   exit 2
@@ -29,7 +29,7 @@ export GME_DIR=$HOME_DIR/projects/brass/webgme-immortals
 cd $GME_DIR
 
 echo "running nvm"
-nvm use v4.4.7
+nvm use v6.4.0
 echo "running node"
 node app.js
 
