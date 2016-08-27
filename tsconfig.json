@@ -5,6 +5,15 @@
   "compileOnSave": true,
   "buildOnSave": true,
   "compilerOptions": {
+    "typeRoots": [
+      "node_modules",
+      "node_modules/@types",
+      "@types"
+    ],
+    "types": [
+      "webgme",
+      "plugin/PluginBase"
+    ],
     "outDir": "./gen",
     "sourceMap": true,
     "declaration": true,
@@ -35,7 +44,8 @@
   },
   "include": [
     "./src/ts/**/*.ts",
-    "./typings/index.d.ts"
+    "node_modules/@types/node/index.d.ts",
+    "node_modules/@types/webgme/index.d.ts"
   ],
   "exclude": [
     "node_modules",

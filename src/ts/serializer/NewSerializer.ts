@@ -1,12 +1,12 @@
 export default class NewSerializer {
-  constructor() {
-  }
-  static export(core: PluginJS.Core, libraryRoot: any, callback: any): void {
-    console.error("export JSON library with NewSerializer: not implemented");
-    throw new Error("export JSON library with NewSerializer: not implemented");
-  }
-  static import(core: PluginJS.Core, originalLibraryRoot: any,
-    updatedJsonLibrary: any, callback: any): void {
+    constructor() {
+    }
+    static export(core: PluginJS.Core, libraryRoot: any, callback: any): void {
+        console.error("export JSON library with NewSerializer: not implemented");
+        throw new Error("export JSON library with NewSerializer: not implemented");
+    }
+    static import(core: PluginJS.Core, originalLibraryRoot: any,
+        updatedJsonLibrary: any, callback: any): void {
         console.error("import JSON library with NewSerializer: not implemented");
         throw new Error("import JSON library with NewSerializer: not implemented");
     }

@@ -1,5 +1,4 @@
 
-import PluginBase = require('plugin/PluginBase');
 
 export function attrToString(attr: PluginJS.OutAttr): string {
     if (typeof attr !== 'string') {

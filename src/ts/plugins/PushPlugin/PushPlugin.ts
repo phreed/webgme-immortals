@@ -1,3 +1,4 @@
+
 /*globals define*/
 /*jshint node:true, browser:true*/
 
@@ -9,8 +10,10 @@
  The metadata.json needs to be copied as well.
  */
 import Promise = require('bluebird');
-import PluginBase = require('plugin/PluginBase');
+import http = require('https');
+
 import PluginConfig = require('plugin/PluginConfig');
+import PluginBase = require('plugin/PluginBase');
 import Util = require('blob/util');
 
 import FlatSerializer from 'serialize/FlatSerializer';
@@ -34,8 +37,7 @@ class PushPlugin extends PluginBase {
 
     public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
-        console.error("the main PushPlugin function is running");
-        this.logger.info('serialize the model in the requested manner');
+        this.sendNotification("The X push plugin function is running");
         let configDictionary: any = config;
 
         /**
@@ -67,9 +69,11 @@ class PushPlugin extends PluginBase {
                 return this.deliver(config, jsonStr);
             })
             .then(() => {
+                this.sendNotification("The push plugin has completed successfully.");
                 mainHandler(null, this.result);
             })
-            .catch((err) => {
+            .catch((err: Error) => {
+                this.sendNotification('The push plugin has failed: ' + err.message);
                 mainHandler(err, this.result);
             });
     }

@@ -1,19 +1,18 @@
-/*globals define*/
-/*jshint node:true, browser:true*/
 
 /**
- *
  * A plugin that inherits from the PluginBase.
  * To see source code documentation about available
  * properties and methods visit %host%/docs/source/PluginBase.html.
  */
 
-import PluginBase = require('plugin/PluginBase');
-import PluginConfig = require('plugin/PluginConfig');
-import MetaDataStr = require('text!./metadata.json');
-
 import Promise = require('bluebird');
 import _ = require('underscore');
+import http = require('https');
+
+import PluginConfig = require('plugin/PluginConfig');
+import PluginBase = require('plugin/PluginBase');
+import MetaDataStr = require('text!./metadata.json');
+
 import { amRunningOnServer } from '../../utility/exenv';
 import { attrToString, pathToString } from '../../utility/gmeString';
 import { writeRdfTtlString } from '../../utility/rdf';
@@ -30,13 +29,7 @@ const POINTER_SET_DIV = '-';
 const CONTAINMENT_PREFIX = '';
 const ROOT_NAME = 'ROOT';
 const NS_URI = 'www.webgme.org';
-const DATA_TYPE_MAP = {
-    string: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString',
-    float: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat',
-    integer: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt',
-    boolean: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean',
-    asset: 'ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString',
-};
+
 
 class StreamingPlugin extends PluginBase {
     pluginMetadata: any;
@@ -57,8 +50,7 @@ class StreamingPlugin extends PluginBase {
     */
     public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
-        console.error("the StreamingPlugin function main is running");
-        this.logger.info('serialize the model in the requested manner');
+        this.sendNotification("This streaming plugin function is running");
         let configDictionary: any = config;
 
         /**
@@ -100,9 +92,11 @@ class StreamingPlugin extends PluginBase {
                 return this.deliverFile(config, jsonStr);
             })
             .then(() => {
+                this.sendNotification("The streaming plugin has completed successfully.");
                 mainHandler(null, this.result);
             })
-            .catch((err) => {
+            .catch((err: Error) => {
+                this.sendNotification('The streaming plugin has failed: ' + err.message);
                 mainHandler(err, this.result);
             });
     }
