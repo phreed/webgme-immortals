@@ -1,4 +1,3 @@
-
 /*globals define*/
 /*jshint node:true, browser:true*/
 
@@ -10,7 +9,6 @@
  The metadata.json needs to be copied as well.
  */
 import Promise = require('bluebird');
-import http = require('https');
 
 import PluginConfig = require('plugin/PluginConfig');
 import PluginBase = require('plugin/PluginBase');
@@ -37,7 +35,7 @@ class PushPlugin extends PluginBase {
 
     public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
-        this.sendNotification("The X push plugin function is running");
+        this.sendNotification("The push plugin function is running: " + new Date(Date.now()).toTimeString());
         let configDictionary: any = config;
 
         /**

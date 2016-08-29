@@ -13,7 +13,6 @@ import PluginConfig = require('plugin/PluginConfig');
 import PluginBase = require('plugin/PluginBase');
 import MetaDataStr = require('text!./metadata.json');
 
-import { amRunningOnServer } from '../../utility/exenv';
 import { attrToString, pathToString } from '../../utility/gmeString';
 import { writeRdfTtlString } from '../../utility/rdf';
 
@@ -50,7 +49,7 @@ class StreamingPlugin extends PluginBase {
     */
     public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
-        this.sendNotification("This streaming plugin function is running");
+        this.sendNotification("This streaming plugin function is running: " + new Date(Date.now()).toTimeString());
         let configDictionary: any = config;
 
         /**
@@ -138,12 +137,13 @@ class StreamingPlugin extends PluginBase {
         if (!config.hasOwnProperty('uri')) {
             return Promise.reject(new Error('No uri provided.'));
         }
+        let configDictionary: any = config
         return Promise
             .try(() => {
                 return this.blobClient.createArtifact('pushed');
             })
             .then((artifact) => {
-                let pushedFileName = config['uri'];
+                let pushedFileName = configDictionary['uri'];
                 this.logger.debug('Exporting: ', pushedFileName);
                 return [artifact, artifact.addFile(pushedFileName, payload)];
             })
