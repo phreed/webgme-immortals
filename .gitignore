@@ -7,7 +7,6 @@ npm-debug.log*
 dist/
 typings/
 *.js.map
-gen/**/*.ts
-gen/**/*.js
+gen/
 
 

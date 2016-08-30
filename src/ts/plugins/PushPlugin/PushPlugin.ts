@@ -2,8 +2,8 @@
 /*jshint node:true, browser:true*/
 
 /**
- Copyright Fred Eisele 2015
- https://www.stevefenton.co.uk/2013/01/complex-typescript-definitions-made-easy/
+ Copyright Fred Eisele 2016
+ 
  http://immortals.isis.vanderbilt.edu:3000/docs/source/PluginConfig.html
 
  The metadata.json needs to be copied as well.

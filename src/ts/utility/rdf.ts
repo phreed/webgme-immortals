@@ -1,29 +1,37 @@
 
 
-import { Writer } from 'n3';
+import {Writer as N3} from 'n3';
 
 /**
  * [writeRdfTtlString description]
  * @param  {PluginJS.Dictionary | void}        attr [description]
  * @return {string}                   [description]
  */
-export function writeRdfTtlString(attr: PluginJS.Dictionary | void): string {
-    let writer: Writer = new Writer(
-        {
-            format: 'N-Triples',
-            prefixes: { c: 'http://example.org/cartoons#' }
-        });
-    writer.addTriple('http://example.org/cartoons#Tom',
-        'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
-        'http://example.org/cartoons#Cat');
-    writer.addTriple({
-        subject: 'http://example.org/cartoons#Tom',
-        predicate: 'http://example.org/cartoons#name',
-        object: '"Tom"'
-    });
-    writer.end((error, result) => { console.log(result); });
+export class RdfSerializer {
+    writer: N3.WriterImpl;
 
-    return "result";
+    private constructor(fd: any) {
+        this.writer = Writer(fd,
+            {
+                format: 'N-Triples',
+                prefixes: { b: 'http://darpa.mil/immortals/ontology/r1.0.0/#' }
+            });
+    }
+
+    write(attr: PluginJS.Dictionary | void): void {
+        
+        this.writer.addTriple({
+            subject: 'http://example.org/cartoons#Tom',
+            predicate: 'http://example.org/cartoons#name',
+            object: '"Tom"'
+        });
+    }
+
+    close() {
+        this.writer.end((error, result) => { 
+            console.log(result); 
+        });
+    }
 }
 
 /**

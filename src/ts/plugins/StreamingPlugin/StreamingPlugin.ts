@@ -13,8 +13,8 @@ import PluginConfig = require('plugin/PluginConfig');
 import PluginBase = require('plugin/PluginBase');
 import MetaDataStr = require('text!./metadata.json');
 
-import { attrToString, pathToString } from '../../utility/gmeString';
-import { writeRdfTtlString } from '../../utility/rdf';
+import { attrToString, pathToString } from 'utility/gmeString';
+import { RdfSerializer } from 'utility/rdf';
 
 // import async = require('asyncawait/async');
 // import await = require('asyncawait/await');

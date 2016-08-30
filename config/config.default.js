@@ -27,9 +27,14 @@ console.log(config.plugin.basePaths);
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
 config.requirejsPaths["bluebird"] = './node_modules/bluebird/js/browser/bluebird';
+// config.requirejsPaths["n3"] = './node_modules/n3/N3';
+config.requirejsPaths["n3"] = 'node_modules/n3/browser/n3-browserify';
+
+
 config.requirejsPaths["serialize"] = './src/js/serialize/';
 // see
 config.requirejsPaths["serializer"] = './gen/serializer/';
+config.requirejsPaths["utility"] = './gen/utility/';
 // config.requirejsPaths["serializer"] = ['gen/serializer/','src/ts/serializer/'];
 config.requirejsPaths["text"] = './src/';
 //config.requirejsPaths["text"] = ['./src/','./gen/'];
