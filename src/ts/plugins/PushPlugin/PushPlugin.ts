@@ -44,15 +44,15 @@ class PushPlugin extends PluginBase {
         Promise
             .try(() => {
                 switch (configDictionary['schematicVersion']) {
-                    case 'json-tree:1.0.0':
+                    case 'tree:1.0.0':
                         let nsExport = Promise.promisify(NewSerializer.export);
                         return nsExport(this.core, this.activeNode);
 
-                    case 'json-flat:1.0.0':
+                    case 'flat:1.0.0':
                         let fsExport = Promise.promisify(FlatSerializer.export);
                         return fsExport(this.core, this.activeNode);
 
-                    case 'json-cytoscape:1.0.0':
+                    case 'cytoscape:1.0.0':
                         let cyExport = Promise.promisify(CyjsSerializer.export);
                         return cyExport(this.core, this.activeNode);
 
@@ -64,7 +64,13 @@ class PushPlugin extends PluginBase {
                 return JSON.stringify(jsonObject, null, 4);
             })
             .then((jsonStr: string) => {
-                return this.deliver(config, jsonStr);
+                switch (configDictionary['deliveryMode']) {
+                    case 'file':
+                        return this.deliverFile(config, jsonStr);
+
+                    default:
+                        return Promise.reject(new Error('unknown delivery mode'));
+                }
             })
             .then(() => {
                 this.sendNotification("The push plugin has completed successfully.");
@@ -79,37 +85,35 @@ class PushPlugin extends PluginBase {
     /**
      A function to deliver the serialized object properly.
     */
-    private deliver = (config: PluginJS.GmeConfig, payload: string): Promise<Object> => {
-        var isProject = this.core.getPath(this.activeNode) === '';
-        var pushedFileName: string;
-        var artifact: any;
+    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
         let configDictionary: any = config;
 
-        switch (configDictionary['deliveryMode']) {
-            case 'file':
-                if (!config.hasOwnProperty('fileName')) {
-                    return Promise.reject(new Error('No file name provided.'));
-                }
+        if (!config.hasOwnProperty('fileName')) {
+            return Promise.reject(new Error('No file name provided.'));
+        }
+        return Promise
+            .try(() => {
+                this.sendNotification("creating artifact");
+                return this.blobClient.createArtifact('pushed');
+            })
+            .then((artifact) => {
+                let pushedFileName = configDictionary['fileName'];
+                this.sendNotification('adding: ' + pushedFileName);
                 return Promise
                     .try(() => {
-                        return this.blobClient.createArtifact('pushed');
+                        return artifact.addFile(pushedFileName, payload);
                     })
-                    .then((artifact) => {
-                        let pushedFileName = configDictionary['fileName'];
-                        this.logger.debug('Exporting: ', pushedFileName);
-                        return [artifact, artifact.addFile(pushedFileName, payload)];
-                    })
-                    .spread((artifact: PluginJS.Artifact, hash: PluginJS.MetadataHash) => {
+                    .then((hash: PluginJS.MetadataHash) => {
+                        this.sendNotification("saving artifact");
                         return artifact.save();
                     })
                     .then((hash: PluginJS.MetadataHash) => {
+                        this.sendNotification('add artifact');
                         this.result.addArtifact(hash);
                         this.result.setSuccess(true);
                         return Promise.resolve(this.result);
-                    });
-            default:
-                return Promise.reject(new Error('unknown delivery mode'));
-        }
+                    })
+            });
     }
 }
 // the following returns the plugin class function

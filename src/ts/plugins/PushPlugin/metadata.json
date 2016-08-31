@@ -12,48 +12,55 @@
   "writeAccessRequired": true,
   "configStructure": [
     {
+      "name": "schematicVersion",
+      "displayName": "Schematic Version",
+      "description": "Specify the type and version of the subgraph.",
+      "value": "tree:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "tree:1.0.0",
+        "flat:1.0.0",
+        "cytoscape:1.0.0"
+      ]
+    },
+    {
       "name": "deliveryMode",
-      "displayName": "Mode file or websocket",
-      "description": "",
+      "displayName": "Delivery Mode",
+      "description": "The mechanism to use to deliver the serialization.",
       "value": "file",
       "valueType": "string",
       "valueItems": [
         "file",
-        "websocket"
+        "websocket",
+        "rest",
+        "stream"
       ]
-    }, {
-      "name": "schematicVersion",
-      "displayName": "SchematicVersion",
-      "description": "Specify the type and version to be used.",
-      "value": "json-tree:1.0.0",
-      "valueType": "string",
-      "valueItems": [
-        "json-tree:1.0.0",
-        "json-flat:1.0.0",
-        "json-cytoscape:1.0.0"
-      ]
-    }, {
+    },
+    {
       "name": "hostAddr",
-      "displayName": "graph db host IP address or name",
+      "displayName": "Host IP address or name for delivery modes which have one.",
       "regex": "^[0-9a-zA-Z\\.-_]+$|^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
       "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore. It may also be a four part dotted address.",
       "description": "What is the ip address or name of the host for the graph database mega-model.",
       "value": "localhost",
       "valueType": "string",
       "readOnly": false
-    }, {
-      "name": "query",
-      "displayName": "extract sub-model",
-      "description": "Model extraction from system Multi-Model.",
-      "value": "",
-      "valueType": "string",
-      "readOnly": false
-    }, {
+    },
+    {
       "name": "fileName",
       "displayName": "graph model file name",
       "description": "click and drag file .",
       "value": "default_graph.json",
       "valueType": "string",
       "readOnly": false
-    }]
+    },
+    {
+      "name": "query",
+      "displayName": "extract sub-model",
+      "description": "Model extraction from system Multi-Model.",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
 }

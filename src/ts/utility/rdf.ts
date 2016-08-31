@@ -1,6 +1,6 @@
 
 
-import {Writer as N3} from 'n3';
+import {Writer} from 'n3';
 
 /**
  * [writeRdfTtlString description]
@@ -8,9 +8,10 @@ import {Writer as N3} from 'n3';
  * @return {string}                   [description]
  */
 export class RdfSerializer {
-    writer: N3.WriterImpl;
+    writer: N3.Output;
 
-    private constructor(fd: any) {
+    constructor(fd: any) {
+       
         this.writer = Writer(fd,
             {
                 format: 'N-Triples',
@@ -19,7 +20,6 @@ export class RdfSerializer {
     }
 
     write(attr: PluginJS.Dictionary | void): void {
-        
         this.writer.addTriple({
             subject: 'http://example.org/cartoons#Tom',
             predicate: 'http://example.org/cartoons#name',
