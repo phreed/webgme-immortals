@@ -14,9 +14,7 @@ declare namespace N3 {
         object: string
     }
 
-    class WriterImpl {
-        constructor(options: any);
-
+    interface Output { 
         addTriple(subject: string, predicate: string, object: string): void;
         addTriple(triple: Triple): void;
         end(err: ErrorCallback): void;
@@ -26,8 +24,14 @@ declare namespace N3 {
         format?: string,
         prefixes?: any
     }
-    function Writer(options: Options): WriterImpl;
-    function Writer(fd: any, options: Options): WriterImpl;
+    function Writer(options: Options): Output;
+    function Writer(fd: any, options: Options): Output;
+
+    interface StoreOutput extends Output {
+        find(subject: string, predicate: string, object: string): Triple;
+    }
+    function Store(): StoreOutput;
+
 }
 
 declare module "n3" {

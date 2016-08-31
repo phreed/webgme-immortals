@@ -84,7 +84,6 @@ class StreamingPlugin extends PluginBase {
                 switch (configDictionary['syntacticVersion']) {
                     case 'json:1.0.0':
                         let jsonStr = JSON.stringify(jsonObject, null, 4);
-
                         if (jsonStr == null) {
                             return Promise.reject(new Error("no payload produced"));
                         }
@@ -121,85 +120,16 @@ class StreamingPlugin extends PluginBase {
             });
     }
 
-    /**
-     A function to deliver the serialized object properly.
-
-    * @param {}
-    */
-    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
-        this.sendNotification("deliver as file in artifact " + payload);
-        let configDictionary: any = config;
-
-        if (!configDictionary.hasOwnProperty('fileName')) {
-            return Promise.reject(new Error('No file name provided.'));
-        }
-        this.sendNotification("config has property");
-
-        return Promise
-            .try(() => {
-                return this.blobClient.createArtifact('stream');
-            })
-            .then((artifact) => {
-                this.sendNotification('artifact created');
-                let pushedFileName = configDictionary['fileName'];
-                return Promise
-                    .try(() => {
-                        this.sendNotification('adding: ' + pushedFileName);
-                        return artifact.addFile(pushedFileName, payload);
-                    })
-                    .then((hash: PluginJS.MetadataHash) => {
-                        this.sendNotification('saving: ' + hash);
-                        return artifact.save();
-                    })
-                    .then((hash: PluginJS.MetadataHash) => {
-                        this.sendNotification('adding artifact: ' + hash);
-                        this.result.addArtifact(hash);
-                        this.result.setSuccess(true);
-                        this.sendNotification('resolution');
-                        return Promise.resolve(this.result);
-                    })
-            })
-            .catch((err: Error) => {
-                this.sendNotification("problem in file delivery: " + err.message);
-                return Promise.reject(err.message);
-            })
-    }
-
-    private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
-        this.sendNotification("deliver URI");
-        if (!config.hasOwnProperty('uri')) {
-            return Promise.reject(new Error('No uri provided.'));
-        }
-        let configDictionary: any = config;
-        return Promise
-            .try(() => {
-                return this.blobClient.createArtifact('pushed');
-            })
-            .then((artifact) => {
-                let pushedFileName = configDictionary['uri'];
-                this.logger.debug('Exporting: ', pushedFileName);
-                return Promise
-                    .try(() => {
-                        return artifact.addFile(pushedFileName, payload);
-                    })
-                    .then((hash: PluginJS.MetadataHash) => {
-                        return artifact.save();
-                    })
-                    .then((hash: PluginJS.MetadataHash) => {
-                        this.result.addArtifact(hash);
-                        this.result.setSuccess(true);
-                        return Promise.resolve(this.result);
-                    })
-            });
-    }
-
     getSchemaTree = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node): void => {
+        rootNode: PluginJS.Node, metaNode: Node): Promise<string> => {
         this.sendNotification("get schema tree");
         let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
         let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
         this.logger.info('get schema tree with : ' + fcoName + ' : ' + languageName);
+        return Promise
+            .reject(new Error('get schema tree is not implemented'));
     }
+
     /**
      * Get the schema from the nodes having meta rules.
      * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
@@ -243,7 +173,7 @@ class StreamingPlugin extends PluginBase {
                 ? ':LibraryRoot:'
                 : core.getAttribute(core.getBaseType(node), 'name');
             let containRel = CONTAINMENT_PREFIX + metaName;
-            let nodeData: PluginJS.Dictionary = { 'type': languageName + ':' + containRel };
+            let nodeData: PluginJS.Dictionary = { 'lang': languageName + ':' + containRel };
             let baseNode = core.getBase(node);
             let nodePath = core.getPath(node);
             path2data[nodePath] = nodeData;
@@ -332,11 +262,13 @@ class StreamingPlugin extends PluginBase {
 
 
     getSchemaEdges = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node): void => {
+        rootNode: PluginJS.Node, metaNode: Node): Promise<string> => {
         this.sendNotification("get schema edges");
         let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), 'name'));
         let languageName: string = attrToString(core.getAttribute(this.rootNode, 'name'));
         this.logger.info('get schema edges : ' + languageName + ' : ' + fcoName);
+        return Promise
+            .reject(new Error('get schema edges is not implemented'));
     }
     /**
      * Get the schema from the nodes having meta rules.
@@ -358,9 +290,15 @@ class StreamingPlugin extends PluginBase {
         this.logger.info('get model edges : ' + languageName + ' : ' + fcoName);
 
         let data: PluginJS.Dictionary = {
-            'version': '0.0.1'
+            'version': '0.0.1',
+            'pointers': {}, 'sets': {}, 'base': null,
+            'attributes': {
+                name: languageName,
+                type: {name: fcoName}
+            },
+            'children': {}
         };
-        data[languageName] = fcoName;
+        let nodeGuidMap: PluginJS.Dictionary = {};
 
         this.logger.info('A dictionary: look up nodes based on their path name.');
         let path2data: PluginJS.Dictionary = { '': data };
@@ -389,19 +327,38 @@ class StreamingPlugin extends PluginBase {
             let baseNode: PluginJS.Node = core.getBase(node);
             let nodePath: string = core.getPath(node);
             let containRel = metaName;
-            let nodeData: PluginJS.Dictionary = { 'type': languageName + ':' + containRel };
+            let nodeData: PluginJS.Dictionary =
+                {
+                    'type': { name: languageName, parent: containRel },
+                    'pointers': {}, 'sets': {}, 'base': null,
+                    'attributes': {},
+                    'children': {}
+                };
             path2data[nodePath] = nodeData;
 
+            // set the nodes guid
+            let guid: string = core.getGuid(node);
+            nodeData['guid'] = guid;
+
+            // set the parent to know its child
             let parent: PluginJS.Node = core.getParent(node);
             let parentPath: string = core.getPath(parent);
             let parentData: PluginJS.Dictionary = path2data[parentPath];
-            parentData[containRel] = parentData[containRel] || [];
-            parentData[containRel].push(nodeData);
 
-            nodeData['id'] = core.getGuid(node);
+            let children = parentData['children'];
+            children[containRel] = children[containRel] || [];
+            // children[containRel].push(nodeData);
+            children[containRel].push(guid);
+            parentData['children'] = children;
+
+           
+            // set the nodes attributes
             core.getAttributeNames(node).forEach((attrName: string) => {
-                nodeData[attrName] = core.getAttribute(node, attrName);
+                let attr = core.getAttribute(node, attrName);
+                nodeData['attributes'][attrName] = attr;
             });
+
+            nodeGuidMap[guid] = nodeData;
 
             // get Pointers
             Promise
@@ -417,13 +374,18 @@ class StreamingPlugin extends PluginBase {
                         })
                         .then((targetNode: Node) => {
                             if (ptrName === 'base') {
-                                nodeData[ptrName + POINTER_SET_DIV + fcoName]
-                                    = core.getGuid(targetNode);
+                                nodeData['base'] = {
+                                    name: fcoName,
+                                    guid: core.getGuid(targetNode)
+                                };
                             } else {
+                                let pointers = nodeData['pointers'];
                                 let targetMetaNode = core.getBaseType(targetNode);
                                 let targetMetaName = core.getAttribute(targetMetaNode, 'name');
-                                nodeData[ptrName + POINTER_SET_DIV + targetMetaName]
-                                    = core.getGuid(targetNode);
+                                pointers[ptrName] = {
+                                    name: targetMetaName,
+                                    guid: core.getGuid(targetNode)
+                                };
                             }
                         })
                 });
@@ -442,9 +404,83 @@ class StreamingPlugin extends PluginBase {
                 return core.traverse(this.rootNode, { excludeRoot: true }, visitFn);
             })
             .then(() => {
-                return data;
+                return nodeGuidMap;
             });
     }
+
+
+    /**
+     A function to deliver the serialized object properly.
+
+    * @param {}
+    */
+    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        this.sendNotification("deliver as file in artifact");
+        let configDictionary: any = config;
+
+        if (!configDictionary.hasOwnProperty('fileName')) {
+            return Promise.reject(new Error('No file name provided.'));
+        }
+        this.sendNotification("config has property");
+
+        return Promise
+            .try(() => {
+                return this.blobClient.createArtifact('stream');
+            })
+            .then((artifact) => {
+                this.sendNotification('artifact created');
+                let pushedFileName = configDictionary['fileName'];
+                return Promise
+                    .try(() => {
+                        this.sendNotification('adding: ' + pushedFileName);
+                        return artifact.addFile(pushedFileName, payload);
+                    })
+                    .then((hash: PluginJS.MetadataHash) => {
+                        this.sendNotification('saving: ' + hash);
+                        return artifact.save();
+                    })
+            })
+            .then((hash: PluginJS.MetadataHash) => {
+                this.sendNotification('adding artifact: ' + hash);
+                this.result.addArtifact(hash);
+                this.result.setSuccess(true);
+                this.sendNotification('resolution');
+                return Promise.resolve(this.result);
+            })
+            .catch((err: Error) => {
+                this.sendNotification("problem in file delivery: " + err.message);
+                return Promise.reject(err.message);
+            })
+    }
+
+    private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        this.sendNotification("deliver URI");
+        if (!config.hasOwnProperty('uri')) {
+            return Promise.reject(new Error('No uri provided.'));
+        }
+        let configDictionary: any = config;
+        return Promise
+            .try(() => {
+                return this.blobClient.createArtifact('pushed');
+            })
+            .then((artifact) => {
+                let pushedFileName = configDictionary['uri'];
+                this.logger.debug('Exporting: ', pushedFileName);
+                return Promise
+                    .try(() => {
+                        return artifact.addFile(pushedFileName, payload);
+                    })
+                    .then((hash: PluginJS.MetadataHash) => {
+                        return artifact.save();
+                    })
+                    .then((hash: PluginJS.MetadataHash) => {
+                        this.result.addArtifact(hash);
+                        this.result.setSuccess(true);
+                        return Promise.resolve(this.result);
+                    })
+            });
+    }
+
 }
 
 export = StreamingPlugin;

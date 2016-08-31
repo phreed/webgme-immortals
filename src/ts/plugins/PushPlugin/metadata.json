@@ -15,7 +15,7 @@
       "name": "schematicVersion",
       "displayName": "Schematic Version",
       "description": "Specify the type and version of the subgraph.",
-      "value": "tree:1.0.0",
+      "value": "flat:1.0.0",
       "valueType": "string",
       "valueItems": [
         "tree:1.0.0",

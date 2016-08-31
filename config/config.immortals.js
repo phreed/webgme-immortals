@@ -12,7 +12,7 @@ export NODE_ENV=immortals
 var config = require('./config.default');
 var path = require('path');
 
-config.client.log.level = 'debug'
+config.client.log.level = 'debug';
 config.debug = true;
 config.server.port = 3000;
 

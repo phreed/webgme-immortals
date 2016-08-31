@@ -61,13 +61,18 @@ class PushPlugin extends PluginBase {
                 }
             })
             .then((jsonObject) => {
-                return JSON.stringify(jsonObject, null, 4);
+                let jsonStr = JSON.stringify(jsonObject, null, 4);
+                if (jsonStr == null) {
+                    return Promise.reject(new Error("no payload produced"));
+                }
+                return jsonStr;
             })
             .then((jsonStr: string) => {
                 switch (configDictionary['deliveryMode']) {
                     case 'file':
                         return this.deliverFile(config, jsonStr);
-
+                    case 'rest:1.0.0':
+                        return this.deliverUri(config, jsonStr);
                     default:
                         return Promise.reject(new Error('unknown delivery mode'));
                 }
@@ -107,13 +112,22 @@ class PushPlugin extends PluginBase {
                         this.sendNotification("saving artifact");
                         return artifact.save();
                     })
-                    .then((hash: PluginJS.MetadataHash) => {
-                        this.sendNotification('add artifact');
-                        this.result.addArtifact(hash);
-                        this.result.setSuccess(true);
-                        return Promise.resolve(this.result);
-                    })
-            });
+            })
+            .then((hash: PluginJS.MetadataHash) => {
+                this.sendNotification('add artifact to result');
+                this.result.addArtifact(hash);
+                this.result.setSuccess(true);
+                return Promise.resolve(this.result);
+            })
+    }
+
+    private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        let configDictionary: any = config;
+
+        if (!config.hasOwnProperty('hostAddr')) {
+            return Promise.reject(new Error('No file name provided.'));
+        }
+        return Promise.reject(new Error('restful delivery not available.'));
     }
 }
 // the following returns the plugin class function

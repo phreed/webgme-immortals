@@ -9,6 +9,8 @@ var config = require('./config.webgme'),
 
 // See config.immortals.js for server settings.
 
+config.client.log.level = 'debug'
+
 config.plugin.allowBrowserExecution = true;
 config.plugin.allowServerExecution = true;
 

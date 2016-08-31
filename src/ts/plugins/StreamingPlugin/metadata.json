@@ -15,7 +15,7 @@
       "name": "schematicVersion",
       "displayName": "Schematic Version",
       "description": "Specify the type and version to be used.",
-      "value": "schema-tree:1.0.0",
+      "value": "model-flat:1.0.0",
       "valueType": "string",
       "valueItems": [
         "schema-tree:1.0.0",
