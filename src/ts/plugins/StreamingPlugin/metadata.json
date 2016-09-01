@@ -28,7 +28,7 @@
       "name": "syntacticVersion",
       "displayName": "Syntactic Version",
       "description": "Specify the type and version to be used for output.",
-      "value": "json:1.0.0",
+      "value": "ttl:1.0.0",
       "valueType": "string",
       "valueItems": [
         "json:1.0.0",
@@ -61,7 +61,7 @@
       "name": "fileName",
       "displayName": "File name: for delivery modes that require one.",
       "description": "click and drag file .",
-      "value": "default_graph.json",
+      "value": "default_model.ttl",
       "valueType": "string",
       "readOnly": false
     },

@@ -17,7 +17,7 @@ declare namespace N3 {
     interface Output { 
         addTriple(subject: string, predicate: string, object: string): void;
         addTriple(triple: Triple): void;
-        end(err: ErrorCallback): void;
+        end(err: ErrorCallback, result?: any): void;
     }
 
     interface Options {
@@ -32,6 +32,9 @@ declare namespace N3 {
     }
     function Store(): StoreOutput;
 
+    namespace Util {
+        function createLiteral(value: any): string;
+    }
 }
 
 declare module "n3" {
