@@ -9,31 +9,40 @@ import * as nlv from 'utility/NodeListVisitor';
  * @return {string}                   [description]
  */
 
-function extractValue(node: any, key: string, fault: string): string {
-    if (node === null) return fault;
-    return ((key in node) ? node[key] : fault);
+function extractValue(map: any, key: string, fault: string): string {
+    if (map === null) return fault;
+    switch (typeof map) {
+        case 'object':
+            return ((key in map) ? map[key] : fault);
+        case 'string':
+            return map;
+        default:
+            console.log("what is that: " + typeof map);
+            return fault;
+    }
 }
 
-function buildSemanticUriForNode(node: any): string {
-    let uriPrefix: string = extractValue(node, 'uriPrefix', '');
-    let uriExt: string = extractValue(node, 'uriExt', '');
-    let uriName: string = extractValue(node, 'uriName', '');
-    let name: string = extractValue(node, 'name', '');
+function buildSemanticUriForNode(name: any): string {
+    let uriPrefix: string = extractValue(name, 'uriPrefix', '');
+    let uriExt: string = extractValue(name, 'uriExt', '');
+    let uriName: string = extractValue(name, 'uriName', '');
+    let nickName: string = extractValue(name, 'name', '');
 
     if (uriExt.slice(-1) !== '#') uriExt += '#';
 
     if (uriName == null || uriName.length == 0) {
-        return uriPrefix + uriExt + name;
+        return uriPrefix + uriExt + nickName;
     } else {
         return uriPrefix + uriExt + uriName;
     }
 }
 
 function getRdfNameForNode(node: any): string {
-    switch (extractValue(node, 'uriGen', 'none')) {
+    let nameDict = node['name'];
+    switch (extractValue(nameDict, 'uriGen', 'none')) {
         case "none":
         case "semantic":
-            return buildSemanticUriForNode(node);
+            return buildSemanticUriForNode(nameDict);
         case undefined:
         case null:
         case "none":
