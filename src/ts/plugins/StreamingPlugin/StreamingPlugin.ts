@@ -98,10 +98,8 @@ class StreamingPlugin extends PluginBase {
                     case 'ttl:1.0.0':
                         this.sendNotification("serializing ttl");
 
-                        let accumulator = new RdfNodeSerializer();
-                        this.sendNotification("serializing ttl 1 ");
+                        let accumulator = new RdfNodeSerializer(jsonObject);
                         nlv.visit(jsonObject, accumulator.visitNode);
-                        this.sendNotification("serializing ttl 2");
                         accumulator.complete();
                         return accumulator.ttlStr;
 

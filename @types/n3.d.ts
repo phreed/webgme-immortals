@@ -34,6 +34,7 @@ declare namespace N3 {
 
     namespace Util {
         function createLiteral(value: any): string;
+        function createLiteral(value: any, type: string): string;
     }
 }
 
