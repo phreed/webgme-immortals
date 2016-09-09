@@ -83,7 +83,7 @@ function buildSemanticUriForNode(name: any): string {
 
 function buildUriForNode(name: any): string {
     let nickName: string = extractValue(name, 'name', 'no-name');
-    return "http://darpa.mil/immortals/ontology/r1.0.0/model/#" + nickName;
+    return "http://darpa.mil/immortals/ontology/r1.0.0/model#" + nickName;
 }
 
 function getRdfNameForNode(node: any): string {
@@ -94,11 +94,11 @@ function getRdfNameForNode(node: any): string {
     console.log('uri generator: ' + uriGen);
     switch (uriGen) {
         case "semantic":
-            return buildSemanticUriForNode(nameDict) + '::' + guid;
+            return buildSemanticUriForNode(nameDict) + '--' + guid;
         case undefined:
         case null:
         case "none":
-            return buildUriForNode(nameDict) + '::' + guid;
+            return buildUriForNode(nameDict) + '--' + guid;
         default:
             return "http://darpa.mil/immortals/ontology/r1.0.0/unknown";
     }
@@ -108,6 +108,8 @@ function getRdfNameForNode(node: any): string {
  * A class for functors which serialize a node.
  */
 export class RdfNodeSerializer {
+    private ns = 'http://darpa.mil/immortals/ontology/r1.0.0/';
+
     private writer: N3.Output;
     public ttlStr: string = 'none produced';
     private nodeDict: PluginJS.Dictionary;
@@ -117,8 +119,8 @@ export class RdfNodeSerializer {
         dict['NA'] = {
             'name': {
                 'uriGen': 'semantic',
-                'uriPrefix': 'http://darpa.mil/immortals/ontology/r1.0.0/',
-                'uriName': '#not-available',
+                'uriPrefix': this.ns,
+                'uriName': 'not-available',
                 'name': 'na'
             },
             'guid': 'NA',
@@ -129,8 +131,40 @@ export class RdfNodeSerializer {
 
         this.writer = Writer(
             {
-                format: 'N-Triples',
-                prefixes: { b: 'http://darpa.mil/immortals/ontology/r1.0.0/#' }
+                format: 'ttl',
+                prefixes: { 
+                    foaf:  'http://xmlns.com/foaf/0.1',
+                    freebase: 'http://rdf.freebase.com/ns/',
+                    g:     'http://base.google.com/ns/1.0',
+                    fn:    'http://www.w3.org/2005/xpath-functions/#',
+                    owl:   'http://www.w3.org/2002/07/owl#',
+                    xsd:   'http://www.w3.org/2001/XMLSchema#',
+                    rdfs:  'http://www.w3.org/2000/01/rdf-schema#',
+                    rdf:   'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+                    b: this.ns + '#',
+                    IMMoRTALS_cp: this.ns + 'cp#',
+                    IMMoRTALS_ordering: this.ns + 'ordering#',
+                    IMMoRTALS_bytecode: this.ns + 'bytecode#',
+                    IMMoRTALS_android: this.ns + 'android#',
+                    IMMoRTALS_core: this.ns + 'core#',
+                    IMMoRTALS_resources: this.ns + 'resources#',
+                    IMMoRTALS_resources_gps_properties: this.ns + 'resources/gps/properties#',
+                    IMMoRTALS_functionality_locationprovider: this.ns + 'functionality/locationprovider#',
+                    IMMoRTALS_resources_memory: this.ns + 'resources/memory#',
+                    IMMoRTALS_functionality_imageprocessor: this.ns + 'functionality/imageprocessor#',
+                    IMMoRTALS_resources_gps: this.ns + 'resources/gps#',
+                    IMMoRTALS_property: this.ns + 'property#',
+                    IMMoRTALS_property_impact: this.ns + 'property/impact#',
+                    IMMoRTALS_functionality_dataproperties: this.ns + 'functionality/dataproperties#',
+                    IMMoRTALS_functionality: this.ns + 'functionality#',
+                    IMMoRTALS: 'http://darpa.mil/immortals/ontology/r2.0.0#',
+                    IMMoRTALS_com_securboration_immortals_example_instantiation: this.ns + 'com/securboration/immortals/example/instantiation#',
+                    IMMoRTALS_metrics: this.ns + 'metrics#',
+                    IMMoRTALS_connectivity: this.ns + 'connectivity#',
+                    IMMoRTALS_server: this.ns + 'server#',
+                    IMMoRTALS_cp_java: this.ns + 'cp/java#',
+                    IMMoRTALS_image_fidelity: this.ns + 'image/fidelity#'
+             }
             });
     }
 
@@ -140,19 +174,18 @@ export class RdfNodeSerializer {
     write = (node: any): void => {
         
         let subjectName: string = getRdfNameForNode(node);
-        let ns = 'http://darpa.mil/immortals/ontology/r1.0.0/#';
 
         console.log('write subject name');
         this.writer.addTriple({
             subject: subjectName,
-            predicate: ns + 'name',
+            predicate: this.ns + '#name',
             object: Util.createLiteral(objectifyName(node['name']))
         });
 
         console.log('write subject type');
         this.writer.addTriple({
             subject: subjectName,
-            predicate: ns + 'type',
+            predicate: this.ns + '#type',
             object: Util.createLiteral(objectifyType(node['type']))
 
         });
@@ -161,7 +194,7 @@ export class RdfNodeSerializer {
         if (base !== null) {
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: ns + 'base',
+                predicate: this.ns + '#base',
                 object: objectifyBase(node['base'], this.nodeDict)
             });
         }
@@ -179,7 +212,7 @@ export class RdfNodeSerializer {
             }
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: ns + 'attr=' + key,
+                predicate: this.ns + '#attr=' + key,
                 object: valueLiteral
             });
         }
@@ -190,7 +223,7 @@ export class RdfNodeSerializer {
 
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: ns + 'pointer=' + key,
+                predicate: this.ns + '#pointer=' + key,
                 object: objectifyPointer(valueNode, this.nodeDict)
             });
         }
@@ -205,7 +238,7 @@ export class RdfNodeSerializer {
                 console.log('guid: ' + guid);
                 this.writer.addTriple({
                     subject: subjectName,
-                    predicate: ns + 'child',
+                    predicate: this.ns + '#child',
                     object: objectifyChild(guid, this.nodeDict)
                 });
             }
