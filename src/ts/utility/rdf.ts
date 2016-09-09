@@ -54,9 +54,7 @@ function objectifyPointer(nodePointer: any, dict: any): string {
 function objectifyByGuid(nodeGuid: string, dict: any): string {
     console.log("object by guid: " + nodeGuid);
     let node = dict[nodeGuid];
-    console.log("keys: " + Object.keys(node));
-    let nodeName = node['name'];
-    return getRdfNameForNode(node['name']);
+    return getRdfNameForNode(node);
 }
 
 function isFilled(name: string | null | undefined) {
@@ -89,22 +87,26 @@ function buildUriForNode(name: any): string {
 }
 
 function getRdfNameForNode(node: any): string {
+    let guid = extractValue(node, 'guid', '00000');
+    console.log('write node having gid: ' + guid);
     let nameDict = node['name'];
     let uriGen = extractValue(nameDict, 'uriGen', 'none');
-    let guid = extractValue(node, 'guid', '00000');
-    console.log('uri generator: ' + uriGen + ' :: ' + guid);
+    console.log('uri generator: ' + uriGen);
     switch (uriGen) {
         case "semantic":
-            return buildSemanticUriForNode(nameDict);
+            return buildSemanticUriForNode(nameDict) + '::' + guid;
         case undefined:
         case null:
         case "none":
-            return buildUriForNode(nameDict);
+            return buildUriForNode(nameDict) + '::' + guid;
         default:
-            return "none";
+            return "http://darpa.mil/immortals/ontology/r1.0.0/unknown";
     }
 }
 
+/**
+ * A class for functors which serialize a node.
+ */
 export class RdfNodeSerializer {
     private writer: N3.Output;
     public ttlStr: string = 'none produced';
@@ -136,24 +138,25 @@ export class RdfNodeSerializer {
      * name,type,pointers,sets,base,attributes,children,guid
      */
     write = (node: any): void => {
+        
         let subjectName: string = getRdfNameForNode(node);
         let ns = 'http://darpa.mil/immortals/ontology/r1.0.0/#';
 
-        // name
+        console.log('write subject name');
         this.writer.addTriple({
             subject: subjectName,
             predicate: ns + 'name',
             object: Util.createLiteral(objectifyName(node['name']))
         });
 
-        // type
+        console.log('write subject type');
         this.writer.addTriple({
             subject: subjectName,
             predicate: ns + 'type',
             object: Util.createLiteral(objectifyType(node['type']))
 
         });
-        // base
+        console.log('write subject base');
         let base = node['base'];
         if (base !== null) {
             this.writer.addTriple({
@@ -162,7 +165,7 @@ export class RdfNodeSerializer {
                 object: objectifyBase(node['base'], this.nodeDict)
             });
         }
-        // attributes
+        console.log('write subject attributes');
         let attrs = node['attributes'];
         for (let key in attrs) {
             let valueRaw = attrs[key];
@@ -180,7 +183,7 @@ export class RdfNodeSerializer {
                 object: valueLiteral
             });
         }
-        // pointers
+        console.log('write subject pointers');
         let ptrs = node['pointers'];
         for (let key in ptrs) {
             let valueNode = ptrs[key];
@@ -191,8 +194,8 @@ export class RdfNodeSerializer {
                 object: objectifyPointer(valueNode, this.nodeDict)
             });
         }
-        // sets
-        // children
+        console.log('write subject sets');
+        console.log('write subject children');
         let children = node['children'];
         for (let key in children) {
             console.log('child keys: ' + key);
