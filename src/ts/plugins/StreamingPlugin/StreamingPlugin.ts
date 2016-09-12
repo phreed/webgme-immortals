@@ -54,7 +54,7 @@ class StreamingPlugin extends PluginBase {
             this.sendNotification('The streaming plugin has failed: no configuration');
             mainHandler(null, this.result);
         }
-        this.sendNotification("This streaming plugin function is running: " + new Date(Date.now()).toTimeString());
+        this.sendNotification("This streaming plugin is running: " + new Date(Date.now()).toTimeString());
         let configDictionary: any = config;
 
         /**
