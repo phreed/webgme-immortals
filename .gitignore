@@ -8,5 +8,5 @@ dist/
 typings/
 *.js.map
 gen/
-
+.vscode/
 

@@ -61,7 +61,7 @@
       "name": "fileName",
       "displayName": "File name: for delivery modes that require one.",
       "description": "click and drag file .",
-      "value": "default_model.ttl",
+      "value": "immortals_model.ttl",
       "valueType": "string",
       "readOnly": false
     },
