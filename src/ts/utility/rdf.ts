@@ -11,6 +11,8 @@ const NS_xsd = 'http://www.w3.org/2001/XMLSchema';
 const NS_rdfs = 'http://www.w3.org/2000/01/rdf-schema';
 const NS_rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns';
 
+const NS2 = 'http://darpa.mil/immortals/ontology/r2.0.0/';
+
 /**
  * [writeRdfTtlString description]
  * @param  {PluginJS.Dictionary | void}        attr [description]
@@ -246,7 +248,9 @@ export class RdfNodeSerializer {
 
                     IMMoRTALS_model: NS + 'model#',
                     IMMoRTALS_ptr: NS + 'pointer#',
-                    IMMoRTALS_attr: NS + 'attribute#'
+                    IMMoRTALS_attr: NS + 'attribute#',
+
+                    IMMoRTALS_impl: NS2 + 'com/securboration/immortals/example/instantiation#'
                 }
             });
     }

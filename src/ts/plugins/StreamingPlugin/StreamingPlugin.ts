@@ -320,96 +320,103 @@ class StreamingPlugin extends PluginBase {
          * @type {[type]}
          */
         let visitFn = (node: Node, done: PluginJS.VoidFn): void => {
-            let core = this.core;
-            let nodeNameAttr = core.getAttribute(node, 'name');
-            if (typeof nodeNameAttr !== 'string') { done(); return; }
+            try {
+                let core = this.core;
+                let nodeNameAttr = core.getAttribute(node, 'name');
+                if (typeof nodeNameAttr !== 'string') return;
 
-            let nodeName: string = nodeNameAttr;
-            this.logger.info('visitor function with : ' + nodeName);
+                let nodeName: string = nodeNameAttr;
+                this.logger.info('visitor function with : ' + nodeName);
 
-            let metaName: string;
-            if (core.isLibraryRoot(node)) {
-                metaName = ':LibraryRoot:';
-            } else {
-                let metaNameAttr = core.getAttribute(core.getBaseType(node), 'name');
-                if (typeof metaNameAttr !== 'string') { done(); return; }
-                metaName = metaNameAttr;
-            }
-            let baseNode: PluginJS.Node = core.getBase(node);
-            let nodePath: string = core.getPath(node);
-            let containRel = metaName;
-            let nodeData: PluginJS.Dictionary =
-                {
-                    'name': {},
-                    'type': { 'domain': languageName, 'parent': containRel },
-                    'pointers': {}, 'sets': {}, 'base': null,
-                    'attributes': {},
-                    'children': {}
-                };
-            path2data[nodePath] = nodeData;
-
-            // set the nodes guid
-            let guid: string = core.getGuid(node);
-            nodeData['guid'] = guid;
-
-            // set the parent to know its child
-            let parent: PluginJS.Node = core.getParent(node);
-            let parentPath: string = core.getPath(parent);
-            let parentData: PluginJS.Dictionary = path2data[parentPath];
-
-            let children = parentData['children'];
-            children[containRel] = children[containRel] || [];
-            // children[containRel].push(nodeData);
-            children[containRel].push(guid);
-            parentData['children'] = children;
-
-
-            // set the nodes attributes
-            core.getAttributeNames(node).forEach((attrName: string) => {
-                let attrValue = core.getAttribute(node, attrName);
-
-                if (attrName.match('url*')) {
-                    nodeData['name'][attrName] = attrValue;
-                } else if (attrName === 'name') {
-                    nodeData['name'][attrName] = attrValue;
+                let metaName: string;
+                if (node === this.rootNode) {
+                    metaName = ':Root:';
+                } else
+                if (core.isLibraryRoot(node)) {
+                    metaName = ':LibraryRoot:';
                 } else {
-                    nodeData['attributes'][attrName] = attrValue;
+                    let metaNameAttr = core.getAttribute(core.getBaseType(node), 'name');
+                    if (typeof metaNameAttr !== 'string') return;
+                    metaName = metaNameAttr;
                 }
-            });
+                let baseNode: PluginJS.Node = core.getBase(node);
+                let nodePath: string = core.getPath(node);
+                let containRel = metaName;
+                let nodeData: PluginJS.Dictionary =
+                    {
+                        'name': {},
+                        'type': { 'domain': languageName, 'parent': containRel },
+                        'pointers': {}, 'sets': {}, 'base': null,
+                        'attributes': {},
+                        'children': {}
+                    };
+                path2data[nodePath] = nodeData;
 
-            nodeGuidMap[guid] = nodeData;
+                // set the nodes guid
+                let guid: string = core.getGuid(node);
+                nodeData['guid'] = guid;
 
-            // get Pointers
-            Promise
-                .try(() => {
-                    return core.getPointerNames(node);
-                })
-                .map((ptrName: string) => {
-                    let targetPathRaw = pathToString(core.getPointerPath(node, ptrName));
-                    if (typeof targetPathRaw !== 'string') return;
-                    let targetPath: string = targetPathRaw;
-                    Promise
-                        .try(() => {
-                            return core.loadByPath(this.rootNode, targetPath);
-                        })
-                        .then((targetNode: Node) => {
-                            if (ptrName === 'base') {
-                                nodeData['base'] = {
-                                    name: fcoName,
-                                    guid: core.getGuid(targetNode)
-                                };
-                            } else {
-                                let pointers = nodeData['pointers'];
-                                let targetMetaNode = core.getBaseType(targetNode);
-                                let targetMetaName = core.getAttribute(targetMetaNode, 'name');
-                                pointers[ptrName] = {
-                                    name: targetMetaName,
-                                    guid: core.getGuid(targetNode)
-                                };
-                            }
-                        })
+                // set the parent to know its child the root node has no parent
+                if (node !== this.rootNode) {
+                    let parent: PluginJS.Node = core.getParent(node);
+                    let parentPath: string = core.getPath(parent);                    
+                    let parentData: PluginJS.Dictionary = path2data[parentPath];
+
+                    let children = parentData['children'];
+                    children[containRel] = children[containRel] || [];
+                    // children[containRel].push(nodeData);
+                    children[containRel].push(guid);
+                    parentData['children'] = children;
+                }
+
+                // set the nodes attributes
+                core.getAttributeNames(node).forEach((attrName: string) => {
+                    let attrValue = core.getAttribute(node, attrName);
+
+                    if (attrName.match('url*')) {
+                        nodeData['name'][attrName] = attrValue;
+                    } else if (attrName === 'name') {
+                        nodeData['name'][attrName] = attrValue;
+                    } else {
+                        nodeData['attributes'][attrName] = attrValue;
+                    }
                 });
-            done();
+
+                nodeGuidMap[guid] = nodeData;
+
+                // get Pointers
+                Promise
+                    .try(() => {
+                        return core.getPointerNames(node);
+                    })
+                    .map((ptrName: string) => {
+                        let targetPathRaw = pathToString(core.getPointerPath(node, ptrName));
+                        if (typeof targetPathRaw !== 'string') return;
+                        let targetPath: string = targetPathRaw;
+                        Promise
+                            .try(() => {
+                                return core.loadByPath(this.rootNode, targetPath);
+                            })
+                            .then((targetNode: Node) => {
+                                if (ptrName === 'base') {
+                                    nodeData['base'] = {
+                                        name: fcoName,
+                                        guid: core.getGuid(targetNode)
+                                    };
+                                } else {
+                                    let pointers = nodeData['pointers'];
+                                    let targetMetaNode = core.getBaseType(targetNode);
+                                    let targetMetaName = core.getAttribute(targetMetaNode, 'name');
+                                    pointers[ptrName] = {
+                                        name: targetMetaName,
+                                        guid: core.getGuid(targetNode)
+                                    };
+                                }
+                            })
+                    });
+            } finally {
+                done();
+            }
         };
 
         /**
@@ -421,7 +428,9 @@ class StreamingPlugin extends PluginBase {
         */
         return Promise
             .try<void>(() => {
-                return core.traverse(this.rootNode, { excludeRoot: true }, visitFn);
+                return core.traverse(this.rootNode, 
+                                     { excludeRoot: false }, 
+                                     visitFn);
             })
             .then(() => {
                 return nodeGuidMap;
