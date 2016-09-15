@@ -8,18 +8,18 @@
 
  The metadata.json needs to be copied as well.
  */
-import Promise = require('bluebird');
+import Promise = require("bluebird");
 
-import PluginConfig = require('plugin/PluginConfig');
-import PluginBase = require('plugin/PluginBase');
-import Util = require('blob/util');
+import PluginConfig = require("plugin/PluginConfig");
+import PluginBase = require("plugin/PluginBase");
+import Util = require("blob/util");
 
-import FlatSerializer from 'serialize/FlatSerializer';
-import CyjsSerializer from 'serialize/CyjsSerializer';
-import NewSerializer from 'serializer/NewSerializer';
-import * as webgmeV1 from 'webgme/v1';
-import BlobMetadata from 'blob/BlobMetadata';
-import MetaDataStr = require('text!./metadata.json');
+import FlatSerializer from "serialize/FlatSerializer";
+import CyjsSerializer from "serialize/CyjsSerializer";
+import NewSerializer from "serializer/NewSerializer";
+import * as webgmeV1 from "webgme/v1";
+import BlobMetadata from "blob/BlobMetadata";
+import MetaDataStr = require("text!./metadata.json");
 
 interface DeliveryFunction {
     (json: string): void;
@@ -43,16 +43,16 @@ class PushPlugin extends PluginBase {
         */
         Promise
             .try(() => {
-                switch (configDictionary['schematicVersion']) {
-                    case 'tree:1.0.0':
+                switch (configDictionary["schematicVersion"]) {
+                    case "tree:1.0.0":
                         let nsExport = Promise.promisify(NewSerializer.export);
                         return nsExport(this.core, this.activeNode);
 
-                    case 'flat:1.0.0':
+                    case "flat:1.0.0":
                         let fsExport = Promise.promisify(FlatSerializer.export);
                         return fsExport(this.core, this.activeNode);
 
-                    case 'cytoscape:1.0.0':
+                    case "cytoscape:1.0.0":
                         let cyExport = Promise.promisify(CyjsSerializer.export);
                         return cyExport(this.core, this.activeNode);
 
@@ -68,13 +68,13 @@ class PushPlugin extends PluginBase {
                 return jsonStr;
             })
             .then((jsonStr: string) => {
-                switch (configDictionary['deliveryMode']) {
-                    case 'file':
+                switch (configDictionary["deliveryMode"]) {
+                    case "file":
                         return this.deliverFile(config, jsonStr);
-                    case 'rest:1.0.0':
+                    case "rest:1.0.0":
                         return this.deliverUri(config, jsonStr);
                     default:
-                        return Promise.reject(new Error('unknown delivery mode'));
+                        return Promise.reject(new Error("unknown delivery mode"));
                 }
             })
             .then(() => {
@@ -82,7 +82,7 @@ class PushPlugin extends PluginBase {
                 mainHandler(null, this.result);
             })
             .catch((err: Error) => {
-                this.sendNotification('The push plugin has failed: ' + err.message);
+                this.sendNotification("The push plugin has failed: " + err.message);
                 mainHandler(err, this.result);
             });
     }
@@ -93,17 +93,17 @@ class PushPlugin extends PluginBase {
     private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
         let configDictionary: any = config;
 
-        if (!config.hasOwnProperty('fileName')) {
-            return Promise.reject(new Error('No file name provided.'));
+        if (!config.hasOwnProperty("fileName")) {
+            return Promise.reject(new Error("No file name provided."));
         }
         return Promise
             .try(() => {
                 this.sendNotification("creating artifact");
-                return this.blobClient.createArtifact('pushed');
+                return this.blobClient.createArtifact("pushed");
             })
             .then((artifact) => {
-                let pushedFileName = configDictionary['fileName'];
-                this.sendNotification('adding: ' + pushedFileName);
+                let pushedFileName = configDictionary["fileName"];
+                this.sendNotification("adding: " + pushedFileName);
                 return Promise
                     .try(() => {
                         return artifact.addFile(pushedFileName, payload);
@@ -111,23 +111,23 @@ class PushPlugin extends PluginBase {
                     .then((hash: PluginJS.MetadataHash) => {
                         this.sendNotification("saving artifact");
                         return artifact.save();
-                    })
+                    });
             })
             .then((hash: PluginJS.MetadataHash) => {
-                this.sendNotification('add artifact to result');
+                this.sendNotification("add artifact to result");
                 this.result.addArtifact(hash);
                 this.result.setSuccess(true);
                 return Promise.resolve(this.result);
-            })
+            });
     }
 
     private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
         let configDictionary: any = config;
 
-        if (!config.hasOwnProperty('hostAddr')) {
-            return Promise.reject(new Error('No file name provided.'));
+        if (!config.hasOwnProperty("hostAddr")) {
+            return Promise.reject(new Error("No file name provided."));
         }
-        return Promise.reject(new Error('restful delivery not available.'));
+        return Promise.reject(new Error("restful delivery not available."));
     }
 }
 // the following returns the plugin class function

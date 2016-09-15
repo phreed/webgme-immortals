@@ -1,7 +1,7 @@
 
 
 export function attrToString(attr: PluginJS.OutAttr): string {
-    if (typeof attr !== 'string') {
+    if (typeof attr !== "string") {
         throw new Error("attribute value is not a string");
     }
     return attr;
@@ -11,13 +11,13 @@ export function pathToString(path: PluginJS.OutPath): string | boolean {
     if (path === null) {
         return false;
     }
-    if (typeof path === 'string') {
+    if (typeof path === "string") {
         return path;
     }
     switch (typeof path) {
-        case 'object':
+        case "object":
             throw new Error("path value is an object: " + Object.keys(path));
-        case 'undefined':
+        case "undefined":
             throw new Error("path value is undefined");
         default:
             throw new Error("path value is not a string: but " + typeof path);

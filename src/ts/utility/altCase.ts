@@ -22,7 +22,7 @@ function isLowerCaseChar(ch: string): boolean {
 function preserveCamel(str: string): string {
     let work = str;
     let wasPreviousCharLowerCase = false;
-    for (let ix=0; ix < str.length; ix++) {
+    for (let ix = 0; ix < str.length; ix++) {
         let ch = str.charAt(ix);
         if (wasPreviousCharLowerCase) {
             wasPreviousCharLowerCase = isLowerCaseChar(ch);
@@ -36,7 +36,7 @@ function preserveCamel(str: string): string {
             wasPreviousCharLowerCase = false;
             continue;
         }
-        work = work.substr(0, ix) + '-' + work.substr(ix);
+        work = work.substr(0, ix) + "-" + work.substr(ix);
         wasPreviousCharLowerCase = false;
         ix++;
     }
@@ -54,26 +54,27 @@ export function dromedary(input: string[] | string): string {
         work = input
         .map((str: string): string => { return str.trim(); })
         .filter((str: string): number => { return str.length; })
-        .join('-');
+        .join("-");
     } else {
         work = input;
     }
 
-	if (!work.length) { return ''; }
-	if (work.length === 1) { return work.toLowerCase(); }
+    if (!work.length) { return ""; }
+    if (work.length === 1) { return work.toLowerCase(); }
 
-	if (!(/[_.\- ]+/).test(work)) {
-		if (work === work.toUpperCase()) { return work.toLowerCase(); }
-		if (isLowerCaseChar(work[0])) { return work; }
-		return work[0].toLowerCase() + work.slice(1);
-	}
+    if (!(/[_.\- ]+/).test(work)) {
+        if (work === work.toUpperCase()) { return work.toLowerCase(); }
+        if (isLowerCaseChar(work[0])) { return work; }
+        return work[0].toLowerCase() + work.slice(1);
+    }
 
-	work = preserveCamel(work);
+    work = preserveCamel(work);
 
-	return work
-	.replace(/^[_.\- ]+/, '')
-	.toLowerCase()
-	.replace(/[_.\- ]+(\w|$)/g, (match: string, p1: string):string => {
-		return p1.toUpperCase();
-	});
+    return work
+        .replace(/^[_.\- ]+/, "")
+        .toLowerCase()
+        .replace(/[_.\- ]+(\w|$)/g,
+            (match: string, p1: string): string => {
+                return p1.toUpperCase();
+        });
 }

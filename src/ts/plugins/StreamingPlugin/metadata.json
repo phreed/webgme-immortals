@@ -36,9 +36,21 @@
       ]
     },
     {
+      "name": "filter",
+      "displayName": "Filter",
+      "description": "Specify the nodes to retain",
+      "value": "not-library",
+      "valueType": "string",
+      "valueItems": [
+        "library",
+        "not-library",
+        "all"
+      ]
+    },
+    {
       "name": "deliveryMode",
       "displayName": "Delivery Mode",
-      "description": "",
+      "description": "Specify the manner of delivery for the artifact",
       "value": "file:1.0.0",
       "valueType": "string",
       "valueItems": [
