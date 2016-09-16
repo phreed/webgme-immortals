@@ -1,18 +1,19 @@
 
 import _ = require("underscore");
 import { Writer, Util } from "n3";
-import * as nlv from "utility/NodeListVisitor";
+import * as nlv from "serializer/NodeListVisitor";
 import * as acase from "utility/altCase";
-import { PruningFlag, PruningCondition } from "utility/filters";
+import { PruningFlag, PruningCondition } from "serializer/filters";
 
 
-const NS = "http://darpa.mil/immortals/ontology/r1.0.0/";
+const NS1 = "http://darpa.mil/immortals/ontology/r1.0.0/";
 const NS_owl = "http://www.w3.org/2002/07/owl";
 const NS_xsd = "http://www.w3.org/2001/XMLSchema";
 const NS_rdfs = "http://www.w3.org/2000/01/rdf-schema";
 const NS_rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
 
 const NS2 = "http://darpa.mil/immortals/ontology/r2.0.0/";
+const NS2_ex = NS2 + "com/securboration/immortals/example";
 
 /**
  * [writeRdfTtlString description]
@@ -45,22 +46,23 @@ function objectifyName(nodeName: any): string {
     return extractValue(nodeName, "name", "NA");
 }
 
-function objectifyType(nodeType: any): string {
+function objectifyType(nodeType: any, dict: any): string {
     // console.log("objectify type: ");
+    if ("name" in nodeType) {
+        return NS1 + "cp#" + nodeType["name"];
+    }
     let domain = extractValue(nodeType, "domain", "NA");
-    let parent = extractValue(nodeType, "parent", "NA");
-    return parent + "::" + domain;
+    let metaNode = extractValue(nodeType, "meta", "NA");
+    let rootNode = extractValue(nodeType, "root", "NA");
+    let baseNode = extractValue(nodeType, "base", "NA");
+
+    return objectifyByGuid(metaNode, dict);
 }
 
 function objectifyBase(nodeBase: any, dict: any): string {
     let guid = nodeBase["guid"];
     // console.log("objectify base: " + guid);
     return objectifyByGuid(guid, dict);
-}
-
-function objectifyChild(nodeGuid: string, dict: any): string {
-    // console.log("objectify child: " + nodeGuid);
-    return objectifyByGuid(nodeGuid, dict);
 }
 
 function objectifyPointer(nodePointer: any, dict: any): string {
@@ -75,15 +77,16 @@ function objectifyByGuid(nodeGuid: string, dict: any): string {
     return getRdfNameForNode(node, appendGuid, acase.bactrian);
 }
 
+function predicateByNode(key: string, node: any): string {
+    // console.log("predicate by node: " + node);
+    return NS1 + "#has" + acase.bactrian(acase.cookName(key));
+}
+
 function isFilled(name: string | null | undefined) {
     if (name === null) { return false; }
     if (name === undefined) { return false; }
     if (name.length < 1) { return false; }
     return true;
-}
-
-function cookName(rawName: string): string {
-    return rawName.trim().replace(/ +/g, "_").replace(/:/g, "-").replace(/\//g, "_");
 }
 
 function buildSemanticUriForNode(name: any, conditioner: (raw: string) => string): string {
@@ -104,7 +107,7 @@ function buildSemanticUriForNode(name: any, conditioner: (raw: string) => string
     if (isFilled(uriName)) {
         return uriPrefix + uriExt + "#" + uriName;
     } else if (isFilled(nickName)) {
-        return uriPrefix + uriExt + "#" + cookName(nickName);
+        return uriPrefix + uriExt + "#" + acase.cookName(nickName);
     } else {
         return uriPrefix + uriExt + "#" + "missing";
     }
@@ -113,7 +116,7 @@ function buildSemanticUriForNode(name: any, conditioner: (raw: string) => string
 function buildUriForNode(name: any, conditioner: (raw: string) => string): string {
     let nickName: string = conditioner(extractValue(name, "name", "no-name"));
 
-    return NS + "model#" + cookName(nickName);
+    return NS1 + "model#" + acase.cookName(nickName);
 }
 
 function getRdfNameForNode(node: any,
@@ -132,7 +135,7 @@ function getRdfNameForNode(node: any,
         case "none":
             return guidFn(buildUriForNode(nameDict, conditioner), guid);
         default:
-            return NS + "#unknown";
+            return NS1 + "#unknown";
     }
 }
 
@@ -199,7 +202,7 @@ export class RdfNodeSerializer {
         dict["NA"] = {
             "name": {
                 "uriGen": "semantic",
-                "uriPrefix": NS,
+                "uriPrefix": NS1,
                 "uriName": "not-available",
                 "name": "na"
             },
@@ -223,37 +226,37 @@ export class RdfNodeSerializer {
                     xsd: NS_xsd + "#",
                     rdfs: NS_rdfs + "#",
                     rdf: NS_rdf + "#",
-                    IMMoRTALS: NS + "#",
-                    IMMoRTALS_cp: NS + "cp#",
-                    IMMoRTALS_cp_java: NS + "cp/java#",
+                    IMMoRTALS: NS1 + "#",
+                    IMMoRTALS_cp: NS1 + "cp#",
+                    IMMoRTALS_cp_java: NS1 + "cp/java#",
 
-                    IMMoRTALS_ordering: NS + "ordering#",
-                    IMMoRTALS_bytecode: NS + "bytecode#",
-                    IMMoRTALS_android: NS + "android#",
-                    IMMoRTALS_core: NS + "core#",
+                    IMMoRTALS_ordering: NS1 + "ordering#",
+                    IMMoRTALS_bytecode: NS1 + "bytecode#",
+                    IMMoRTALS_android: NS1 + "android#",
+                    IMMoRTALS_core: NS1 + "core#",
 
-                    IMMoRTALS_resources: NS + "resources#",
-                    IMMoRTALS_resources_gps: NS + "resources/gps#",
-                    IMMoRTALS_resources_gps_properties: NS + "resources/gps/properties#",
-                    IMMoRTALS_resources_memory: NS + "resources/memory#",
+                    IMMoRTALS_resources: NS1 + "resources#",
+                    IMMoRTALS_resources_gps: NS1 + "resources/gps#",
+                    IMMoRTALS_resources_gps_properties: NS1 + "resources/gps/properties#",
+                    IMMoRTALS_resources_memory: NS1 + "resources/memory#",
 
-                    IMMoRTALS_functionality: NS + "functionality#",
-                    IMMoRTALS_functionality_locationprovider: NS + "functionality/locationprovider#",
-                    IMMoRTALS_functionality_imageprocessor: NS + "functionality/imageprocessor#",
-                    IMMoRTALS_functionality_dataproperties: NS + "functionality/dataproperties#",
+                    IMMoRTALS_functionality: NS1 + "functionality#",
+                    IMMoRTALS_functionality_locationprovider: NS1 + "functionality/locationprovider#",
+                    IMMoRTALS_functionality_imageprocessor: NS1 + "functionality/imageprocessor#",
+                    IMMoRTALS_functionality_dataproperties: NS1 + "functionality/dataproperties#",
 
-                    IMMoRTALS_property: NS + "property#",
-                    IMMoRTALS_property_impact: NS + "property/impact#",
+                    IMMoRTALS_property: NS1 + "property#",
+                    IMMoRTALS_property_impact: NS1 + "property/impact#",
 
-                    IMMoRTALS_com_securboration_immortals_example_instantiation: NS + "com/securboration/immortals/example/instantiation#",
-                    IMMoRTALS_metrics: NS + "metrics#",
-                    IMMoRTALS_connectivity: NS + "connectivity#",
-                    IMMoRTALS_server: NS + "server#",
-                    IMMoRTALS_image_fidelity: NS + "image/fidelity#",
+                    IMMoRTALS_com_securboration_immortals_example_instantiation: NS1 + "com/securboration/immortals/example/instantiation#",
+                    IMMoRTALS_metrics: NS1 + "metrics#",
+                    IMMoRTALS_connectivity: NS1 + "connectivity#",
+                    IMMoRTALS_server: NS1 + "server#",
+                    IMMoRTALS_image_fidelity: NS1 + "image/fidelity#",
 
-                    IMMoRTALS_model: NS + "model#",
-                    IMMoRTALS_ptr: NS + "pointer#",
-                    IMMoRTALS_attr: NS + "attribute#",
+                    IMMoRTALS_model: NS1 + "model#",
+                    IMMoRTALS_ptr: NS1 + "pointer#",
+                    IMMoRTALS_attr: NS1 + "attribute#",
 
                     IMMoRTALS_impl: NS2 + "com/securboration/immortals/example/instantiation#"
                 }
@@ -284,7 +287,7 @@ export class RdfNodeSerializer {
         // console.log("write subject name");
         this.writer.addTriple({
             subject: subjectName,
-            predicate: NS + "#name",
+            predicate: NS1 + "#name",
             object: Util.createLiteral(objectifyName(subject["name"]))
         });
 
@@ -292,21 +295,21 @@ export class RdfNodeSerializer {
         this.writer.addTriple({
             subject: subjectName,
             predicate: NS_rdf + "#type",
-            object: Util.createLiteral(objectifyType(subject["type"]))
+            object: objectifyType(subject["type"], this.nodeDict)
         });
         // console.log("write subject base");
         let base = subject["base"];
         if (base !== null) {
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: NS + "#base",
+                predicate: NS1 + "#base",
                 object: objectifyBase(subject["base"], this.nodeDict)
             });
         }
         // console.log("write subject attributes");
         let attrs = subject["attributes"];
         for (let key in attrs) {
-            let predicateName: string = NS + "attribute#" + key;
+            let predicateName: string = NS1 + "attribute#" + key;
             switch (key) {
                 case "comment":
                 case "documentation":
@@ -337,7 +340,7 @@ export class RdfNodeSerializer {
 
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: NS + "pointer#" + key,
+                predicate: NS1 + "pointer#" + key,
                 object: objectifyPointer(valueNode, this.nodeDict)
             });
         }
@@ -374,10 +377,15 @@ export class RdfNodeSerializer {
                         });
                     }
                 } else {
+                    let objective = this.nodeDict[guid];
+                    let predicateName = predicateByNode(key, objective);
+
+                    let ojectName = objectifyByGuid(guid, this.nodeDict);
+
                     this.writer.addTriple({
                         subject: subjectName,
-                        predicate: NS + "#child",
-                        object: objectifyChild(guid, this.nodeDict)
+                        predicate: predicateName,
+                        object: objectName
                     });
                 }
             }

@@ -12,10 +12,18 @@
  * 
  *  - https://github.com/ianstormtaylor/to-case
  */
+export function cookName(rawName: string): string {
+    return rawName
+        .trim()
+        .replace(/ +/g, "_")
+        .replace(/:/g, "-")
+        .replace(/\//g, "_");
+}
 
 function isLowerCaseChar(ch: string): boolean {
     return (ch.toLowerCase() === ch);
 }
+
 /**
  * Insert hyphens where the case change should happen
  */
@@ -43,18 +51,25 @@ function preserveCamel(str: string): string {
     return work;
 }
 
+/**
+ * Make the string start with an upper case.
+ */
 export function bactrian(input: string): string {
     let work = dromedary(input);
     return work.charAt(0).toUpperCase() + work.slice(1);
 }
 
+/**
+ * Remove all not ascii characters and make the first 
+ * character of each word upper case.
+ */
 export function dromedary(input: string[] | string): string {
     let work: string;
     if (input instanceof Array) {
         work = input
-        .map((str: string): string => { return str.trim(); })
-        .filter((str: string): number => { return str.length; })
-        .join("-");
+            .map((str: string): string => { return str.trim(); })
+            .filter((str: string): number => { return str.length; })
+            .join("-");
     } else {
         work = input;
     }
@@ -74,7 +89,7 @@ export function dromedary(input: string[] | string): string {
         .replace(/^[_.\- ]+/, "")
         .toLowerCase()
         .replace(/[_.\- ]+(\w|$)/g,
-            (match: string, p1: string): string => {
-                return p1.toUpperCase();
+        (match: string, p1: string): string => {
+            return p1.toUpperCase();
         });
 }

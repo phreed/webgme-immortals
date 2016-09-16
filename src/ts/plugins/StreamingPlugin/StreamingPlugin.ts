@@ -14,9 +14,9 @@ import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!./metadata.json");
 
 import { attrToString, pathToString } from "utility/gmeString";
-import * as nlv from "utility/NodeListVisitor";
-import { RdfNodeSerializer } from "utility/rdf";
-import { PruningCondition, PruningFlag } from "utility/filters";
+import * as nlv from "serializer/NodeListVisitor";
+import { RdfNodeSerializer } from "serializer/rdf";
+import { PruningCondition, PruningFlag } from "serializer/filters";
 
 // import async = require("asyncawait/async");
 // import await = require("asyncawait/await");
@@ -131,7 +131,6 @@ class StreamingPlugin extends PluginBase {
 
                     case "rest:1.0.0":
                         this.sendNotification("deliver as URI");
-
                         return this.deliverUri(config, payload);
 
                     default:
@@ -363,32 +362,45 @@ class StreamingPlugin extends PluginBase {
                 let nodeName: string = nodeNameAttr;
                 this.logger.info("visitor function with : " + nodeName);
 
-                let metaName: string;
-                if (node === this.rootNode) {
-                    metaName = ":Root:";
-                } else
-                    if (core.isLibraryRoot(node)) {
-                        metaName = ":LibraryRoot:";
+                let baseNodeGuid: string = core.getGuid(core.getBase(node));
+                let baseNodeTypeGuid: string = core.getGuid(core.getBaseType(node));
+                let baseNodeRootGuid: string = core.getGuid(core.getBaseRoot(node));
 
-                        // console.log("prune: " + nodePath);
-                        pruneList.push(nodePath);
-                        prunedRootPath = nodePath;
-                    } else {
-                        let metaNameAttr = core.getAttribute(core.getBaseType(node), "name");
-                        if (typeof metaNameAttr !== "string") { return; }
-                        metaName = metaNameAttr;
-                    }
-                let baseNode: PluginJS.Node = core.getBase(node);
-                let containRel = metaName;
                 let nodeData: PluginJS.Dictionary
                     = {
                         "name": {},
-                        "type": { "domain": languageName, "parent": containRel },
+                        "type": {
+                            "domain": languageName,
+                            "meta": baseNodeTypeGuid,
+                            "root": baseNodeRootGuid,
+                            "base": baseNodeGuid
+                        },
                         "pointers": {}, "sets": {}, "base": null,
                         "attributes": {},
                         "children": {},
                         "prune": PruningFlag.None
                     };
+
+                let metaName: string;
+                if (node === this.rootNode) {
+                    metaName = ":Root:";
+                    nodeData["type"] = {
+                        "ns": "cp",
+                        "name": "GmeInterchangeFormat"
+                    };
+                } else if (core.isLibraryRoot(node)) {
+                    metaName = ":LibraryRoot:";
+
+                    // console.log("prune: " + nodePath);
+                    pruneList.push(nodePath);
+                    prunedRootPath = nodePath;
+                } else {
+                    let metaNameAttr = core.getAttribute(core.getBaseType(node), "name");
+                    if (typeof metaNameAttr !== "string") { return; }
+                    metaName = metaNameAttr;
+                }
+                let containRel = metaName;
+                nodeData["type"]["parent"] = containRel;
                 nodeData["prune"] = (prunedRootPath === null) ? PruningFlag.None : PruningFlag.Library;
                 path2data[nodePath] = nodeData;
 
@@ -494,11 +506,36 @@ class StreamingPlugin extends PluginBase {
 
         return Promise
             .try(() => {
-                return this.blobClient.createArtifact("stream");
+                let artifactName = "stream-";
+                switch (configDictionary["schematicVersion"]) {
+                    case "schema-tree:1.0.0":
+                        artifactName += "schema-tree";
+                        break;
+                    case "schema-flat:1.0.0":
+                        artifactName += "schema-flat";
+                        break;
+                    case "model-tree:1.0.0":
+                        artifactName += "model-tree";
+                        break;
+                    case "model-flat:1.0.0":
+                        artifactName += "model-flat";
+                        break;
+                }
+                return this.blobClient.createArtifact(artifactName);
             })
             .then((artifact) => {
                 this.sendNotification("artifact created");
                 let pushedFileName = configDictionary["fileName"];
+                switch (configDictionary["syntacticVersion"]) {
+                    case "json:1.0.0":
+                        pushedFileName += ".json";
+                        break;
+                    case "ttl:1.0.0":
+                        pushedFileName += ".ttl";
+                        break;
+                    default:
+                        pushedFileName += ".txt";
+                }
                 return Promise
                     .try(() => {
                         this.sendNotification("adding: " + pushedFileName);

@@ -43,7 +43,6 @@
     }
   },
   "files": [
-    
   ],
   "include": [
     "./src/ts/**/*.ts"

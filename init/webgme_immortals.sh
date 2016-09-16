@@ -31,7 +31,7 @@ cd $GME_DIR
 echo "running nvm"
 nvm use v6.4.0
 echo "running node"
-node app.js
+node app_bootstrap.js
 
 echo "webgme started"
 
