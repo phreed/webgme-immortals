@@ -177,13 +177,13 @@ class StreamingPlugin extends PluginBase {
         let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), "name"));
         let languageName: string = attrToString(core.getAttribute(this.rootNode, "name"));
         this.logger.info("get model tree : " + languageName + " : " + fcoName);
-        let data: PluginJS.Dictionary = {
+        let rootEntry: PluginJS.Dictionary = {
             "version": "0.0.1"
         };
         /**
          * A dictionary: look up nodes based on their path name.
          */
-        let path2data: PluginJS.Dictionary = { "": data };
+        let path2entry: PluginJS.Dictionary = { "": rootEntry };
 
         /**
          * The base node makes reference to inheritance.
@@ -199,20 +199,20 @@ class StreamingPlugin extends PluginBase {
                 ? ":LibraryRoot:"
                 : core.getAttribute(core.getBaseType(node), "name");
             let containRel = CONTAINMENT_PREFIX + metaName;
-            let nodeData: PluginJS.Dictionary = { "lang": languageName + ":" + containRel };
+            let sourceEntry: PluginJS.Dictionary = { "lang": languageName + ":" + containRel };
             let baseNode = core.getBase(node);
             let nodePath = core.getPath(node);
-            path2data[nodePath] = nodeData;
+            path2entry[nodePath] = sourceEntry;
 
             let parent = core.getParent(node);
             let parentPath = core.getPath(parent);
-            let parentData = path2data[parentPath];
+            let parentData = path2entry[parentPath];
             parentData[containRel] = parentData[containRel] || [];
-            parentData[containRel].push(nodeData);
+            parentData[containRel].push(sourceEntry);
 
-            nodeData["id"] = core.getGuid(node);
+            sourceEntry["id"] = core.getGuid(node);
             core.getAttributeNames(node).forEach((attrName: string) => {
-                nodeData[attrName] = core.getAttribute(node, attrName);
+                sourceEntry[attrName] = core.getAttribute(node, attrName);
             });
 
             Promise
@@ -230,12 +230,12 @@ class StreamingPlugin extends PluginBase {
                         })
                         .then((targetNode: Node) => {
                             if (ptrName === "base") {
-                                nodeData[ptrName + POINTER_SET_DIV + fcoName]
+                                sourceEntry[ptrName + POINTER_SET_DIV + fcoName]
                                     = core.getGuid(targetNode);
                             } else {
                                 let targetMetaNode = core.getBaseType(targetNode);
                                 let targetMetaName = core.getAttribute(targetMetaNode, "name");
-                                nodeData[ptrName + POINTER_SET_DIV + targetMetaName]
+                                sourceEntry[ptrName + POINTER_SET_DIV + targetMetaName]
                                     = core.getGuid(targetNode);
                             }
                         });
@@ -261,8 +261,8 @@ class StreamingPlugin extends PluginBase {
                                     let memberMetaName = core.getAttribute(memberMetaNode, "name");
                                     let setAttr = setName + POINTER_SET_DIV + memberMetaName;
 
-                                    nodeData[setAttr] = typeof nodeData[setAttr] === "string"
-                                        ? nodeData[setAttr] + " " + core.getGuid(memberNode)
+                                    sourceEntry[setAttr] = typeof sourceEntry[setAttr] === "string"
+                                        ? sourceEntry[setAttr] + " " + core.getGuid(memberNode)
                                         : core.getGuid(memberNode);
                                 });
                         });
@@ -282,8 +282,8 @@ class StreamingPlugin extends PluginBase {
                 return core.traverse(this.rootNode, { excludeRoot: true }, visitFn);
             })
             .then(() => {
-                console.log("DATA: " + data);
-                return data;
+                console.log("DATA: " + rootEntry);
+                return rootEntry;
             });
     }
 
@@ -315,21 +315,28 @@ class StreamingPlugin extends PluginBase {
         let languageName: string = attrToString(core.getAttribute(this.rootNode, "name"));
         this.logger.info("get model edges : " + languageName + " : " + fcoName);
 
-        let data: PluginJS.Dictionary
+        let rootEntry: PluginJS.Dictionary
             = {
                 "version": "0.0.1",
-                "pointers": {}, "sets": {}, "base": null,
-
+                "pointers": {}, "reverses": {},
+                "sets": {},
+                "base": {
+                    "name": "Object",
+                    "guid": "00000000-0000-0000-0000-000000000000"
+                },
                 "name": { "name": fcoName },
                 "type": { "domain": languageName },
                 "attributes": {},
                 "children": {},
-                "prune": PruningFlag.None
+                "prune": PruningFlag.None,
+                "guid": "00000000-0000-0000-0000-000000000000"
             };
-        let nodeGuidMap: PluginJS.Dictionary = {};
+        let nodeGuidMap: PluginJS.Dictionary = {
+            "00000000-0000-0000-0000-000000000000": rootEntry
+        };
 
         this.logger.info("A dictionary: look up nodes based on their path name.");
-        let path2data: PluginJS.Dictionary = { "": data };
+        let path2entry: PluginJS.Dictionary = { "": rootEntry };
 
         /**
          * A filter mechanism to effectively eliminate containment branches.
@@ -366,8 +373,11 @@ class StreamingPlugin extends PluginBase {
                 let baseNodeTypeGuid: string = core.getGuid(core.getBaseType(node));
                 let baseNodeRootGuid: string = core.getGuid(core.getBaseRoot(node));
 
-                let nodeData: PluginJS.Dictionary
-                    = {
+                // set the nodes sourceGuid
+                let sourceGuid: string = core.getGuid(node);
+                let sourceEntry: PluginJS.Dictionary
+                    = Object.assign({
+                        "guid": sourceGuid,
                         "name": {},
                         "type": {
                             "domain": languageName,
@@ -375,16 +385,23 @@ class StreamingPlugin extends PluginBase {
                             "root": baseNodeRootGuid,
                             "base": baseNodeGuid
                         },
-                        "pointers": {}, "sets": {}, "base": null,
+                        "pointers": {}, "reverses": {},
+                        "sets": {},
+                        "base": {
+                            "name": "FCO",
+                            "guid": "00000000-0000-0000-0000-000000000000"
+                        },
                         "attributes": {},
                         "children": {},
                         "prune": PruningFlag.None
-                    };
+                    }, nodeGuidMap[sourceGuid]);
+
+                nodeGuidMap[sourceGuid] = sourceEntry;
 
                 let metaName: string;
                 if (node === this.rootNode) {
                     metaName = ":Root:";
-                    nodeData["type"] = {
+                    sourceEntry["type"] = {
                         "ns": "cp",
                         "name": "GmeInterchangeFormat"
                     };
@@ -400,13 +417,9 @@ class StreamingPlugin extends PluginBase {
                     metaName = metaNameAttr;
                 }
                 let containRel = metaName;
-                nodeData["type"]["parent"] = containRel;
-                nodeData["prune"] = (prunedRootPath === null) ? PruningFlag.None : PruningFlag.Library;
-                path2data[nodePath] = nodeData;
-
-                // set the nodes guid
-                let guid: string = core.getGuid(node);
-                nodeData["guid"] = guid;
+                sourceEntry["type"]["parent"] = containRel;
+                sourceEntry["prune"] = (prunedRootPath === null) ? PruningFlag.None : PruningFlag.Library;
+                path2entry[nodePath] = sourceEntry;
 
                 // set the parent to know its child the root node has no parent
                 // if a non-pruned item has a pruned parent then bring it in.
@@ -414,11 +427,11 @@ class StreamingPlugin extends PluginBase {
                     let parent: PluginJS.Node = core.getParent(node);
                     let parentPath: string = core.getPath(parent);
 
-                    let parentData: PluginJS.Dictionary = path2data[parentPath];
+                    let parentData: PluginJS.Dictionary = path2entry[parentPath];
                     let children = parentData["children"];
                     children[containRel] = children[containRel] || [];
-                    // children[containRel].push(nodeData);
-                    children[containRel].push(guid);
+                    // children[containRel].push(sourceEntry);
+                    children[containRel].push(sourceGuid);
                 }
 
                 // set the nodes attributes
@@ -426,17 +439,15 @@ class StreamingPlugin extends PluginBase {
                     let attrValue = core.getAttribute(node, attrName);
 
                     if (attrName.match("url*")) {
-                        nodeData["name"][attrName] = attrValue;
+                        sourceEntry["name"][attrName] = attrValue;
                     } else if (attrName === "name") {
-                        nodeData["name"][attrName] = attrValue;
+                        sourceEntry["name"][attrName] = attrValue;
                     } else {
-                        nodeData["attributes"][attrName] = attrValue;
+                        sourceEntry["attributes"][attrName] = attrValue;
                     }
                 });
 
-                nodeGuidMap[guid] = nodeData;
-
-                // get Pointers
+                // get pointers & referred (reverse-pointer)
                 Promise
                     .try(() => {
                         return core.getPointerNames(node);
@@ -450,18 +461,32 @@ class StreamingPlugin extends PluginBase {
                                 return core.loadByPath(this.rootNode, targetPath);
                             })
                             .then((targetNode: Node) => {
+                                let targetGuid = core.getGuid(targetNode);
                                 if (ptrName === "base") {
-                                    nodeData["base"] = {
+                                    sourceEntry["base"] = {
                                         name: fcoName,
-                                        guid: core.getGuid(targetNode)
+                                        guid: targetGuid
                                     };
                                 } else {
-                                    let pointers = nodeData["pointers"];
+                                    let pointers = sourceEntry["pointers"];
                                     let targetMetaNode = core.getBaseType(targetNode);
                                     let targetMetaName = core.getAttribute(targetMetaNode, "name");
                                     pointers[ptrName] = {
                                         name: targetMetaName,
-                                        guid: core.getGuid(targetNode)
+                                        guid: targetGuid
+                                    };
+                                    let targetEntry = nodeGuidMap[targetGuid];
+                                    if (targetEntry === undefined) {
+                                        targetEntry = {
+                                            "name": {},
+                                            "guid": targetGuid,
+                                            "pointers": {}, "reverses": {}
+                                        };
+                                        nodeGuidMap[targetGuid] = targetEntry;
+                                    }
+                                    targetEntry["reverses"][ptrName] = {
+                                        name: targetMetaName,
+                                        guid: sourceGuid
                                     };
                                 }
                             });

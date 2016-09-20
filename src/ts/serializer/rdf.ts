@@ -24,6 +24,7 @@ const NS2_ex = NS2 + "com/securboration/immortals/example";
 function appendGuid(raw: string, guid: string): string {
     return raw + "--" + guid;
 }
+
 function noGuid(raw: string, guid: string): string {
     return raw;
 }
@@ -74,7 +75,8 @@ function objectifyPointer(nodePointer: any, dict: any): string {
 function objectifyByGuid(nodeGuid: string, dict: any): string {
     // console.log("object by guid: " + nodeGuid);
     let node = dict[nodeGuid];
-    return getRdfNameForNode(node, appendGuid, acase.bactrian);
+    let fnGuid = isClass(node) ? noGuid : appendGuid;
+    return getRdfNameForNode(node, fnGuid, acase.bactrian);
 }
 
 function predicateByNode(key: string, node: any): string {
@@ -119,10 +121,16 @@ function buildUriForNode(name: any, conditioner: (raw: string) => string): strin
     return NS1 + "model#" + acase.cookName(nickName);
 }
 
+/** 
+ * Construct an RDF name for the node.
+ * This is of the form...
+ * "http://somthing/else#and-guid"
+ * Where the guid element is left off in some cases.
+ */
 function getRdfNameForNode(node: any,
     guidFn: (raw: string, guid: string) => string,
     conditioner: (raw: string) => string): string {
-    let guid = extractValue(node, "guid", "00000");
+    let guid = extractValue(node, "guid", "00000-01");
     // console.log("write node having gid: " + guid);
     let nameDict = node["name"];
     let uriGen = extractValue(nameDict, "uriGen", "none");
@@ -153,6 +161,7 @@ function getRdfNameForNode(node: any,
 function isAtom(node: any): boolean {
     if (!_.isEmpty(node["children"])) { return false; }
     if (!_.isEmpty(node["pointers"])) { return false; }
+    if (!_.isEmpty(node["reverses"])) { return false; }
     return true;
 }
 
@@ -178,11 +187,20 @@ function isConnection(node: any): boolean {
 }
 
 /**
- * If the base of the node is the FCO then the
- * node describes the class.
+ * If the base of the node and its meta are the same
+ * then the node describes the class.
  */
 function isClass(node: any): boolean {
-    if (node["base"]["base"] === null) { return true; }
+    if (node === undefined) { return false; }
+    if (!("type" in node)) { return false; }
+    let nodeType = node["type"];
+
+    let selfNodeGuid = extractValue(node, "guid", "NA");
+    let domainName = extractValue(nodeType, "domain", "NA");
+    let metaNodeGuid = extractValue(nodeType, "meta", "NA");
+    let rootNodeGuid = extractValue(nodeType, "root", "NA");
+    let baseNodeGuid = extractValue(nodeType, "base", "NA");
+    if (metaNodeGuid === selfNodeGuid) { return true; }
     return false;
 }
 
@@ -277,8 +295,9 @@ export class RdfNodeSerializer {
         } else {
             if (this.pruningCondition.cond) { return; }
         }
+        let fnGuid = isClass(subject) ? noGuid : appendGuid;
+        let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
 
-        let subjectName: string = getRdfNameForNode(subject, appendGuid, acase.bactrian);
         if (isAtom(subject)) {
             // console.log("an atom " + subjectName);
             return;
@@ -312,8 +331,10 @@ export class RdfNodeSerializer {
             let predicateName: string = NS1 + "attribute#" + key;
             switch (key) {
                 case "comment":
-                case "documentation":
                     predicateName = NS_rdfs + "#comment";
+                    break;
+                case "documentation":
+                    predicateName = NS_rdfs + "#documentation";
                     break;
                 default:
                 // console.log("attribute: " + key);
@@ -322,7 +343,8 @@ export class RdfNodeSerializer {
             let valueLiteral: any;
             switch (typeof valueRaw) {
                 case "string":
-                    valueLiteral = Util.createLiteral(valueRaw, "en-gb");
+                    // valueLiteral = Util.createLiteral(valueRaw, "en-gb");
+                    valueLiteral = Util.createLiteral(valueRaw);
                     break;
                 default:
                     valueLiteral = Util.createLiteral(valueRaw);
@@ -354,13 +376,14 @@ export class RdfNodeSerializer {
             for (let guid of child) {
                 // console.log("guid: " + guid);
                 let objective = this.nodeDict[guid];
-                let objectName = getRdfNameForNode(objective, noGuid, acase.dromedary);
+                let fnGuid = isClass(objective) ? noGuid : appendGuid;
+                let objectName = getRdfNameForNode(objective, fnGuid, acase.dromedary);
                 if (isAtom(objective)) {
-                    // console.log("atom attr: " + objectName)
+                    // console.log("atom child: " + objectName);
                     let attrs = objective["attributes"];
                     for (let key in attrs) {
-                        let predicateName: string = objectName + acase.bactrian(key);
-
+                        // let predicateName: string = objectName + acase.bactrian(key);
+                        let predicateName = predicateByNode(key, objective);
                         let valueRaw = attrs[key];
                         let valueLiteral: any;
                         switch (typeof valueRaw) {
@@ -377,6 +400,7 @@ export class RdfNodeSerializer {
                         });
                     }
                 } else {
+                    // console.log("model child: " + objectName);
                     let objective = this.nodeDict[guid];
                     let predicateName = predicateByNode(key, objective);
 
