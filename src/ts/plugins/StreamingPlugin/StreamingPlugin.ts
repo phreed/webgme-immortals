@@ -105,7 +105,7 @@ class StreamingPlugin extends PluginBase {
                                 pruningCondition.flag = PruningFlag.Library;
                                 pruningCondition.cond = true;
                                 break;
-                            case "not-library":
+                            case "off-book":
                                 pruningCondition.flag = PruningFlag.Library;
                                 pruningCondition.cond = false;
                                 break;

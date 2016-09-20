@@ -39,11 +39,11 @@
       "name": "filter",
       "displayName": "Filter",
       "description": "Specify the nodes to retain",
-      "value": "not-library",
+      "value": "off-book",
       "valueType": "string",
       "valueItems": [
         "library",
-        "not-library",
+        "off-book",
         "all"
       ]
     },
