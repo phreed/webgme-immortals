@@ -9,21 +9,12 @@
  The metadata.json needs to be copied as well.
  */
 import Promise = require("bluebird");
-
-import PluginConfig = require("plugin/PluginConfig");
 import PluginBase = require("plugin/PluginBase");
-import Util = require("blob/util");
 
 import FlatSerializer from "serialize/FlatSerializer";
 import CyjsSerializer from "serialize/CyjsSerializer";
 import NewSerializer from "serializer/NewSerializer";
-import * as webgmeV1 from "webgme/v1";
-import BlobMetadata from "blob/BlobMetadata";
 import MetaDataStr = require("text!./metadata.json");
-
-interface DeliveryFunction {
-    (json: string): void;
-}
 
 class PushPlugin extends PluginBase {
     pluginMetadata: any;
@@ -108,7 +99,7 @@ class PushPlugin extends PluginBase {
                     .try(() => {
                         return artifact.addFile(pushedFileName, payload);
                     })
-                    .then((hash: PluginJS.MetadataHash) => {
+                    .then(() => {
                         this.sendNotification("saving artifact");
                         return artifact.save();
                     });
@@ -123,6 +114,7 @@ class PushPlugin extends PluginBase {
 
     private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
         let configDictionary: any = config;
+        this.sendNotification("not implemented: " + configDictionary + " : " + payload);
 
         if (!config.hasOwnProperty("hostAddr")) {
             return Promise.reject(new Error("No file name provided."));

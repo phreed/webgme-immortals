@@ -6,10 +6,6 @@
  */
 
 import Promise = require("bluebird");
-import _ = require("underscore");
-import http = require("https");
-
-import PluginConfig = require("plugin/PluginConfig");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!./metadata.json");
 
@@ -25,11 +21,11 @@ import { PruningCondition, PruningFlag } from "serializer/filters";
 // var fsPromise = Promise.promisifyAll(fs);
 
 
-const REF_PREFIX = "#//";
+// const REF_PREFIX = "#//";
 const POINTER_SET_DIV = "-";
 const CONTAINMENT_PREFIX = "";
-const ROOT_NAME = "ROOT";
-const NS_URI = "www.webgme.org";
+// const ROOT_NAME = "ROOT";
+// const NS_URI = "www.webgme.org";
 
 
 class StreamingPlugin extends PluginBase {
@@ -149,7 +145,7 @@ class StreamingPlugin extends PluginBase {
     }
 
     getSchemaTree = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node): Promise<string> => {
+        _1: PluginJS.Node, _2: Node): Promise<string> => {
         let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), "name"));
         let languageName: string = attrToString(core.getAttribute(this.rootNode, "name"));
         this.logger.info("get schema tree with : " + fcoName + " : " + languageName);
@@ -167,9 +163,9 @@ class StreamingPlugin extends PluginBase {
      * @param {PluginJS.Callback} mainHandler [description]
      */
     getModelTree = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node): PluginJS.Dictionary => {
-        let config: PluginJS.GmeConfig = this.getCurrentConfig();
-        let configDictionary: PluginJS.Dictionary = config;
+        _rootNode: PluginJS.Node, _metaNode: Node): PluginJS.Dictionary => {
+        // let config: PluginJS.GmeConfig = this.getCurrentConfig();
+        // let configDictionary: PluginJS.Dictionary = config;
 
         /**
         * Visitor function store.
@@ -200,7 +196,7 @@ class StreamingPlugin extends PluginBase {
                 : core.getAttribute(core.getBaseType(node), "name");
             let containRel = CONTAINMENT_PREFIX + metaName;
             let sourceEntry: PluginJS.Dictionary = { "lang": languageName + ":" + containRel };
-            let baseNode = core.getBase(node);
+            // let baseNode = core.getBase(node);
             let nodePath = core.getPath(node);
             path2entry[nodePath] = sourceEntry;
 
@@ -289,7 +285,7 @@ class StreamingPlugin extends PluginBase {
 
 
     getSchemaEdges = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node): Promise<string> => {
+        _rootNode: PluginJS.Node, _metaNode: Node): Promise<string> => {
         let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), "name"));
         let languageName: string = attrToString(core.getAttribute(this.rootNode, "name"));
         this.logger.info("get schema edges : " + languageName + " : " + fcoName);
@@ -306,10 +302,10 @@ class StreamingPlugin extends PluginBase {
      * @param {PluginJS.Callback} mainHandler [description]
      */
     getModelEdges = (core: PluginJS.Core,
-        rootNode: PluginJS.Node, metaNode: Node): PluginJS.Dictionary => {
+        _rootNode: PluginJS.Node, _metaNode: Node): PluginJS.Dictionary => {
 
-        let config = this.getCurrentConfig();
-        let configDictionary: any = config;
+        // let config = this.getCurrentConfig();
+        // let configDictionary: any = config;
 
         let fcoName: string = attrToString(core.getAttribute(core.getFCO(this.rootNode), "name"));
         let languageName: string = attrToString(core.getAttribute(this.rootNode, "name"));
@@ -600,7 +596,7 @@ class StreamingPlugin extends PluginBase {
                     .try(() => {
                         return artifact.addFile(pushedFileName, payload);
                     })
-                    .then((hash: PluginJS.MetadataHash) => {
+                    .then(() => {
                         return artifact.save();
                     })
                     .then((hash: PluginJS.MetadataHash) => {

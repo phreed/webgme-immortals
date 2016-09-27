@@ -89,7 +89,7 @@ export function dromedary(input: string[] | string): string {
         .replace(/^[_.\- ]+/, "")
         .toLowerCase()
         .replace(/[_.\- ]+(\w|$)/g,
-        (match: string, p1: string): string => {
+        (_: string, p1: string): string => {
             return p1.toUpperCase();
         });
 }

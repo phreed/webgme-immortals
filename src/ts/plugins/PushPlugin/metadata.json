@@ -19,8 +19,7 @@
       "valueType": "string",
       "valueItems": [
         "tree:1.0.0",
-        "flat:1.0.0",
-        "cytoscape:1.0.0"
+        "flat:1.0.0"
       ]
     },
     {
