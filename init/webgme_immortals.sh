@@ -29,9 +29,8 @@ export GME_DIR=$HOME_DIR/projects/brass/webgme-immortals
 cd $GME_DIR
 
 echo "running nvm"
-nvm use v6.4.0
+nvm use v6.5.0
 echo "running node"
 node app_bootstrap.js
 
 echo "webgme started"
-

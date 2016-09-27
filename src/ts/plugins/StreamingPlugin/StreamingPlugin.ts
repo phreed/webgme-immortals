@@ -7,7 +7,8 @@
 
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
-import MetaDataStr = require("text!./metadata.json");
+
+import MetaDataStr = require("text!plugins/StreamingPlugin/metadata.json");
 
 import { attrToString, pathToString } from "utility/gmeString";
 import * as nlv from "serializer/NodeListVisitor";
@@ -125,6 +126,10 @@ class StreamingPlugin extends PluginBase {
                         this.sendNotification("deliver as file in artifact");
                         return this.deliverFile(config, payload);
 
+                    case "artifact:1.0.0":
+                        this.sendNotification("deliver as file on server");
+                        return this.deliverArtifact(config, payload);
+
                     case "rest:1.0.0":
                         this.sendNotification("deliver as URI");
                         return this.deliverUri(config, payload);
@@ -134,10 +139,12 @@ class StreamingPlugin extends PluginBase {
                 }
             })
             .then(() => {
+                this.logger.info("successful completion");
                 this.sendNotification("The streaming plugin has completed successfully.");
                 mainHandler(null, this.result);
             })
             .catch((err: Error) => {
+                this.logger.info("failed");
                 console.log("streaming plugin failed: " + err.stack);
                 this.sendNotification("The streaming plugin has failed: " + err.message);
                 mainHandler(err, this.result);
@@ -516,9 +523,10 @@ class StreamingPlugin extends PluginBase {
 
     * @param {}
     */
-    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+    private deliverArtifact = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
 
         let configDictionary: any = config;
+this.logger.info("deliver artifact");
 
         if (!configDictionary.hasOwnProperty("fileName")) {
             return Promise.reject(new Error("No file name provided."));
@@ -580,7 +588,50 @@ class StreamingPlugin extends PluginBase {
             });
     }
 
+/**
+     A function to deliver the serialized object properly.
+
+    * @param {}
+    */
+    private deliverFile = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        this.logger.info("deliver file");
+
+        let fs = require("fs");
+        let configDictionary: any = config;
+        if (!configDictionary.hasOwnProperty("fileName")) {
+            return Promise.reject(new Error("No file name provided."));
+        }
+        this.sendNotification("config has property");
+
+        return Promise
+            .try(() => {
+                let pushedFileName = configDictionary["fileName"];
+                switch (configDictionary["syntacticVersion"]) {
+                    case "json:1.0.0":
+                        pushedFileName += ".json";
+                        break;
+                    case "ttl:1.0.0":
+                        pushedFileName += ".ttl";
+                        break;
+                    default:
+                        pushedFileName += ".txt";
+                }
+                return fs.writeFile(pushedFileName, payload);
+            })
+            .then(() => {
+                this.sendNotification("file written");
+                this.result.setSuccess(true);
+                this.sendNotification("resolved");
+                return Promise.resolve(this.result);
+            })
+            .catch((err: Error) => {
+                this.sendNotification("problem writing file: " + err.message);
+                return Promise.reject(err.message);
+            });
+    }
+
     private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
+        this.logger.info("deliver URI");
         if (!config.hasOwnProperty("uri")) {
             return Promise.reject(new Error("No uri provided."));
         }

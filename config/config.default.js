@@ -38,8 +38,8 @@ config.requirejsPaths["serialize"] = './src/js/serialize/';
 config.requirejsPaths["serializer"] = './gen/serializer/';
 config.requirejsPaths["utility"] = './gen/utility/';
 // config.requirejsPaths["serializer"] = ['gen/serializer/','src/ts/serializer/'];
-config.requirejsPaths["text"] = './src/';
-//config.requirejsPaths["text"] = ['./src/','./gen/'];
+config.requirejsPaths["plugins/StreamingPlugin/metadata"] = './gen/plugins/StreamingPlugin/metadata';
+config.requirejsPaths["plugins/PushPlugin/metadata"] = './gen/plugins/PushPlugin/metadata';
 
 validateConfig(config);
 module.exports = config;

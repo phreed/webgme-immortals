@@ -13,8 +13,8 @@ import PluginBase = require("plugin/PluginBase");
 
 import FlatSerializer from "serialize/FlatSerializer";
 import CyjsSerializer from "serialize/CyjsSerializer";
-import NewSerializer from "serializer/NewSerializer";
-import MetaDataStr = require("text!./metadata.json");
+import {NewSerializer} from "serializer/NewSerializer";
+import MetaDataStr = require("text!plugins/PushPlugin/metadata.json");
 
 class PushPlugin extends PluginBase {
     pluginMetadata: any;
