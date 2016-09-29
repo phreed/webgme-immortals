@@ -34,8 +34,10 @@ config.requirejsPaths["n3"] = 'node_modules/n3/browser/n3-browserify';
 
 
 config.requirejsPaths["serialize"] = './src/js/serialize/';
-// see
+
 config.requirejsPaths["serializer"] = './gen/serializer/';
+config.requirejsPaths["extract"] = './gen/extract/';
+config.requirejsPaths["delivery"] = './gen/delivery/';
 config.requirejsPaths["utility"] = './gen/utility/';
 // config.requirejsPaths["serializer"] = ['gen/serializer/','src/ts/serializer/'];
 config.requirejsPaths["plugins/StreamingPlugin/metadata"] = './gen/plugins/StreamingPlugin/metadata';

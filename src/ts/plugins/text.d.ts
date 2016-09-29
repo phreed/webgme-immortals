@@ -1,4 +1,4 @@
-declare module "text!./metadata.json" {
+declare module "text!*" {
     var text: string;
     export = text;
 }

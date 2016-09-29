@@ -22,7 +22,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strictNullChecks": true,
-    "skipLibCheck": true,
     "module": "amd",
     "moduleResolution": "node",
     "removeComments": false,
@@ -46,15 +45,17 @@
       ]
     }
   },
-  "files": [
-  ],
+  "files": [],
   "include": [
     "./src/ts/**/*.ts"
   ],
   "exclude": [
+    "./src/ts/plugins/FilingPlugin/FilingPlugin.ts",
+    "./src/ts/serializer/delivery.ts",
     "node_modules",
     "bower_components",
     "jspm_packages",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    ".vscode"
   ]
 }

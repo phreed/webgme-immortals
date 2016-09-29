@@ -7,7 +7,7 @@
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 
-import MetaDataStr = require("text!plugins/StreamingPlugin/metadata.json");
+import MetaDataStr = require("text!plugins/FilingPlugin/metadata.json");
 
 import * as nlv from "serializer/NodeListVisitor";
 import { RdfNodeSerializer } from "serializer/rdf";
@@ -18,9 +18,11 @@ import { getEdgesSchema } from "extract/EdgesSchemaExtract";
 import { getTreeModel } from "extract/TreeModelExtract";
 import { getTreeSchema } from "extract/TreeSchemaExtract";
 
-import { deliverArtifact } from "delivery/ArtifactDelivery";
+import { deliverFile } from "delivery/FileDelivery";
+import { deliverUri } from "delivery/UriDelivery";
 
-class StreamingPlugin extends PluginBase {
+
+class FilingPlugin extends PluginBase {
     pluginMetadata: any;
 
     constructor() {
@@ -112,8 +114,18 @@ class StreamingPlugin extends PluginBase {
                 }
             })
             .then((payload) => {
-                this.sendNotification("deliver as file on server");
-                return deliverArtifact(this, config, payload);
+                switch (configDictionary["deliveryMode"]) {
+                    case "file:1.0.0":
+                        this.sendNotification("deliver as file on server");
+                        return deliverFile(this, config, payload);
+
+                    case "rest:1.0.0":
+                        this.sendNotification("deliver as URI");
+                        return deliverUri(this, config, payload);
+
+                    default:
+                        return Promise.reject(new Error("invalid delivery mode"));
+                }
             })
             .then(() => {
                 this.logger.info("successful completion");
@@ -129,4 +141,4 @@ class StreamingPlugin extends PluginBase {
     }
 }
 
-export = StreamingPlugin;
+export = FilingPlugin;
