@@ -1,0 +1,67 @@
+{
+  "id": "SerializerPlugin",
+  "name": "Serializer Plugin",
+  "version": "0.1.0",
+  "description": "This is a browser based serializer plugin",
+  "icon": {
+    "class": "glyphicon glyphicon-cog",
+    "src": ""
+  },
+  "disableServerSideExecution": true,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": true,
+  "configStructure": [
+    {
+      "name": "schematicVersion",
+      "displayName": "Schematic Version",
+      "description": "Specify the type and version to be used.",
+      "value": "model-flat:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "schema-tree:1.0.0",
+        "schema-flat:1.0.0",
+        "model-tree:1.0.0",
+        "model-flat:1.0.0"
+      ]
+    },
+    {
+      "name": "syntacticVersion",
+      "displayName": "Syntactic Version",
+      "description": "Specify the type and version to be used for output.",
+      "value": "ttl:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "json:1.0.0",
+        "ttl:1.0.0"
+      ]
+    },
+    {
+      "name": "filter",
+      "displayName": "Filter",
+      "description": "Specify the nodes to retain",
+      "value": "book",
+      "valueType": "string",
+      "valueItems": [
+        "library",
+        "book",
+        "all"
+      ]
+    },
+    {
+      "name": "fileName",
+      "displayName": "File name: for delivery modes that require one.",
+      "description": "click and drag file .",
+      "value": "immortals_model",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "query",
+      "displayName": "extract sub-model",
+      "description": "Model extraction from system Multi-Model.",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}
