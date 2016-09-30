@@ -10,7 +10,7 @@ import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamingPlugin/metadata.json");
 
 import * as nlv from "serializer/NodeListVisitor";
-import { RdfNodeSerializer } from "serializer/rdf";
+import { RdfNodeSerializer } from "serializer/RdfTtlSerializer";
 import { PruningCondition, PruningFlag } from "serializer/filters";
 
 import { getEdgesModel } from "extract/EdgesModelExtract";
@@ -18,7 +18,9 @@ import { getEdgesSchema } from "extract/EdgesSchemaExtract";
 import { getTreeModel } from "extract/TreeModelExtract";
 import { getTreeSchema } from "extract/TreeSchemaExtract";
 
-import { deliverArtifact } from "delivery/ArtifactDelivery";
+import { deliverFile } from "delivery/FileDelivery";
+import { deliverUri } from "delivery/UriDelivery";
+
 
 class StreamingPlugin extends PluginBase {
     pluginMetadata: any;
@@ -93,7 +95,7 @@ class StreamingPlugin extends PluginBase {
                                 pruningCondition.flag = PruningFlag.Library;
                                 pruningCondition.cond = true;
                                 break;
-                            case "off-book":
+                            case "book":
                                 pruningCondition.flag = PruningFlag.Library;
                                 pruningCondition.cond = false;
                                 break;
@@ -112,8 +114,18 @@ class StreamingPlugin extends PluginBase {
                 }
             })
             .then((payload) => {
-                this.sendNotification("deliver as file on server");
-                return deliverArtifact(this, config, payload);
+                switch (configDictionary["deliveryMode"]) {
+                    case "file:1.0.0":
+                        this.sendNotification("deliver as file on server");
+                        return deliverFile(this, config, payload);
+
+                    case "rest:1.0.0":
+                        this.sendNotification("deliver as URI");
+                        return deliverUri(this, config, payload);
+
+                    default:
+                        return Promise.reject(new Error("invalid delivery mode"));
+                }
             })
             .then(() => {
                 this.logger.info("successful completion");

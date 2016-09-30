@@ -2,13 +2,13 @@
   "id": "StreamingPlugin",
   "name": "Streaming Plugin",
   "version": "0.1.0",
-  "description": "This is a external store synchronizer, it posts topics via zeromq",
+  "description": "This is a external store synchronizer, it posts topics via some streaming tool.",
   "icon": {
     "class": "glyphicon glyphicon-cog",
     "src": ""
   },
   "disableServerSideExecution": false,
-  "disableBrowserSideExecution": false,
+  "disableBrowserSideExecution": true,
   "writeAccessRequired": true,
   "configStructure": [
     {
@@ -39,13 +39,36 @@
       "name": "filter",
       "displayName": "Filter",
       "description": "Specify the nodes to retain",
-      "value": "off-book",
+      "value": "book",
       "valueType": "string",
       "valueItems": [
         "library",
-        "off-book",
+        "book",
         "all"
       ]
+    },
+    {
+      "name": "deliveryMode",
+      "displayName": "Delivery Mode",
+      "description": "Specify the manner of delivery for the artifact",
+      "value": "file:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "file:1.0.0",
+        "artifact:1.0.0",
+        "websocket:1.0.0",
+        "broker:1.0.0"
+      ]
+    },
+    {
+      "name": "hostAddr",
+      "displayName": "Host IP address or name: for delivery modes that require one.",
+      "regex": "^[0-9a-zA-Z]+$",
+      "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore!",
+      "description": "What is the ip address or name of the host for the graph database mega-model.",
+      "value": "localhost",
+      "valueType": "string",
+      "readOnly": false
     },
     {
       "name": "fileName",

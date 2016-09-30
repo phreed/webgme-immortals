@@ -68,12 +68,15 @@ export function dromedary(input: string[] | string): string {
     if (input instanceof Array) {
         work = input
             .map((str: string): string => { return str.trim(); })
-            .filter((str: string): number => { return str.length; })
+            .filter((str: string): number => {
+                if (str === undefined) { return 0; }
+                return str.length;
+            })
             .join("-");
     } else {
         work = input;
     }
-
+    if (work === undefined) { return ""; }
     if (!work.length) { return ""; }
     if (work.length === 1) { return work.toLowerCase(); }
 
