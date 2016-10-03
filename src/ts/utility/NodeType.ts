@@ -11,7 +11,7 @@ export function isFaultType(arg: any): arg is FaultType {
 }
 export interface FaultType {
     fault: string;
-};
+}
 
 export function isNGuidType(arg: any): arg is NGuidType {
     if (arg.name === undefined) { return false; }
@@ -21,7 +21,7 @@ export function isNGuidType(arg: any): arg is NGuidType {
 export interface NGuidType {
     name: string;
     guid: GuidType;
-};
+}
 
 /** 
  * Sets are kind of like pointers but 
@@ -29,11 +29,11 @@ export interface NGuidType {
  */
 export interface Pointers {
     [key: string]: NGuidType;
-};
+}
 
 export interface Sets {
     [kind: string]: (FaultType | NGuidType)[];
-};
+}
 
 export interface TypeType {
     domain: string;
@@ -42,15 +42,15 @@ export interface TypeType {
     base: string;
     parent: string;
     name?: string;
-};
+}
 
 export interface NameType {
     name: string;
-    uriExt: string;
+    uriGen: string;
     uriPrefix: string;
     uriName: string;
-    uriGen: string;
-};
+    uriExt: string;
+}
 
 export interface Subject {
     guid: string;

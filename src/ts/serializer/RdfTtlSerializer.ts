@@ -82,7 +82,7 @@ function objectifyByGuid(nodeGuid: string, dict: any): string {
 
 function predicateByNode(key: string): string {
     // console.log(`predicate by key: ${key}`);
-    return `${NS2 }#has${acase.bactrian(acase.cookName(key))}`;
+    return `${NS2}#has${acase.bactrian(acase.cookName(key))}`;
 }
 
 function isFilled(name: string | null | undefined) {
@@ -221,7 +221,7 @@ export class RdfNodeSerializer {
     private pruningCondition: PruningCondition;
     private writer: N3.Output;
     public ttlStr: string = "none produced";
-    private nodeDict: PluginJS.Dictionary;
+    private nodeDict: { [guid: string]: nt.Subject };
 
     constructor(dict: PluginJS.Dictionary, pruningCondition: PruningCondition) {
         this.nodeDict = dict;
@@ -229,6 +229,7 @@ export class RdfNodeSerializer {
             "name": {
                 "uriGen": "semantic",
                 "uriPrefix": NS2,
+                "uriExt": "",
                 "uriName": "not-available",
                 "name": "na"
             },

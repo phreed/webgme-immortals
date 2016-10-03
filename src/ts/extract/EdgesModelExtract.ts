@@ -39,12 +39,12 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
                 "guid": "00000000-0000-0000-0000-000000000000"
             },
             "name": {
-                name: fcoName, uriExt: BLANK, uriPrefix: BLANK,
-                uriName: BLANK, uriGen: BLANK
+                "name": fcoName, "uriExt": BLANK, "uriPrefix": BLANK,
+                "uriName": BLANK, "uriGen": BLANK
             },
             "type": {
-                domain: languageName,
-                meta: BLANK, root: BLANK, base: BLANK, parent: BLANK
+                "domain": languageName,
+                "meta": BLANK, "root": BLANK, "base": BLANK, "parent": BLANK
             },
             "attributes": {},
             "children": {},
@@ -96,26 +96,27 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
             // set the nodes sourceGuid
             let sourceGuid: string = core.getGuid(node);
             let sourceEntry: nt.Subject
-                = Object.assign(<nt.Subject>{
-                    "guid": sourceGuid,
-                    "name": {},
-                    "type": {
-                        "domain": languageName,
-                        "meta": baseNodeTypeGuid,
-                        "root": baseNodeRootGuid,
-                        "base": baseNodeGuid
-                    },
-                    "pointers": {}, "inv_pointers": {},
-                    "sets": {}, "inv_sets": {},
-                    "base": {
-                        "name": "FCO",
-                        "guid": "00000000-0000-0000-0000-000000000000"
-                    },
-                    "attributes": {},
-                    "children": {},
-                    "prune": PruningFlag.None
-                }, nodeGuidMap[sourceGuid]);
-
+                = Object.assign({},
+                    nodeGuidMap[sourceGuid],
+                    <nt.Subject>{
+                        "guid": sourceGuid,
+                        "name": {},
+                        "type": {
+                            "domain": languageName,
+                            "meta": baseNodeTypeGuid,
+                            "root": baseNodeRootGuid,
+                            "base": baseNodeGuid
+                        },
+                        "pointers": {}, "inv_pointers": {},
+                        "sets": {}, "inv_sets": {},
+                        "base": {
+                            "name": "FCO",
+                            "guid": "00000000-0000-0000-0000-000000000000"
+                        },
+                        "attributes": {},
+                        "children": {},
+                        "prune": PruningFlag.None
+                    });
             nodeGuidMap[sourceGuid] = sourceEntry;
 
             let metaName: string;
@@ -161,20 +162,28 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
 
             // set the nodes attributes
             core.getAttributeNames(node).forEach((attrName: string) => {
-                let attrValue = core.getAttribute(node, attrName);
-
-                if (attrName.match("url*")) {
-                    sourceEntry.name.uriName = attrName;
-                } else if (attrName === "name") {
-                    sourceEntry.name.uriName = attrName;
+                let attrValueRaw = core.getAttribute(node, attrName);
+                let attrValue: string;
+                if (typeof attrValueRaw === "string") {
+                    attrValue = attrValueRaw;
                 } else {
-                    if (typeof attrValue === "string") {
-                        sourceEntry.attributes[attrName] = attrValue;
-                    } else if (typeof attrValue === "number") {
-                        sourceEntry.attributes[attrName] = attrValue;
-                    } else if (typeof attrValue === "object") {
-                        console.log(`problem with attribute value ${attrName}`);
-                    }
+                    attrValue = "<undefined>";
+                }
+                let sen = sourceEntry.name;
+                switch (attrName) {
+                    case "uriName": sen.uriName = attrValue; break;
+                    case "uriExt": sen.uriExt = attrValue; break;
+                    case "uriGen": sen.uriGen = attrValue; break;
+                    case "uriPrefix": sen.uriPrefix = attrValue; break;
+                    case "name": sen.name = attrValue; break;
+                    default:
+                        if (typeof attrValue === "string") {
+                            sourceEntry.attributes[attrName] = attrValue;
+                        } else if (typeof attrValue === "number") {
+                            sourceEntry.attributes[attrName] = attrValue;
+                        } else if (typeof attrValue === "object") {
+                            console.log(`problem with attribute value ${attrName}`);
+                        }
                 }
             });
 
