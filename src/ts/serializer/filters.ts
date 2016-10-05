@@ -2,7 +2,8 @@
 
 export enum PruningFlag {
     None     = 0,
-    Library  = 1 << 0
+    Library  = 1 << 0,
+    Header   = 1 << 1,
 }
 
 export class PruningCondition {

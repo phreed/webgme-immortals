@@ -18,6 +18,8 @@ import { PruningFlag } from "serializer/filters";
 import * as nt from "utility/NodeType";
 
 const BLANK = "";
+const NULL_OBJECT = "_OBJECT"
+const NULL_GUID = "00000000-0000-0000-0000-000000000000";
 
 export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
     _rootNode: PluginJS.Node, _metaNode: Node): PluginJS.Dictionary {
@@ -35,28 +37,28 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
             "pointers": {}, "inv_pointers": {},
             "sets": {}, "inv_sets": {},
             "base": {
-                "name": "Object",
-                "guid": "00000000-0000-0000-0000-000000000000"
+                "name": NULL_OBJECT,
+                "guid": NULL_GUID,
             },
             "name": {
-                "name": fcoName, "uriExt": BLANK, "uriPrefix": BLANK,
+                "name": NULL_OBJECT, "uriExt": BLANK, "uriPrefix": BLANK,
                 "uriName": BLANK, "uriGen": BLANK
             },
             "type": {
                 "domain": languageName,
-                "meta": BLANK, "root": BLANK, "base": BLANK, "parent": BLANK
+                "meta": NULL_GUID, "root": NULL_GUID, "base": NULL_GUID, "parent": NULL_GUID
             },
             "attributes": {},
             "children": {},
             "prune": PruningFlag.None,
-            "guid": "00000000-0000-0000-0000-000000000000"
+            "guid": NULL_GUID
         };
     let nodeGuidMap: PluginJS.Dictionary = {
-        "00000000-0000-0000-0000-000000000000": rootEntry
+        [NULL_GUID]: rootEntry
     };
 
     sponsor.logger.info("A dictionary: look up nodes based on their path name.");
-    let path2entry: PluginJS.Dictionary = { BLANK: rootEntry };
+    let path2entry: PluginJS.Dictionary = { [BLANK]: rootEntry };
 
     /**
      * A filter mechanism to effectively eliminate containment branches.
@@ -110,8 +112,8 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
                         "pointers": {}, "inv_pointers": {},
                         "sets": {}, "inv_sets": {},
                         "base": {
-                            "name": "FCO",
-                            "guid": "00000000-0000-0000-0000-000000000000"
+                            "name": NULL_OBJECT,
+                            "guid": NULL_GUID
                         },
                         "attributes": {},
                         "children": {},
@@ -120,18 +122,21 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
             nodeGuidMap[sourceGuid] = sourceEntry;
 
             let metaName: string;
+            let metaNodeGuid: string;
             if (node === sponsor.rootNode) {
                 metaName = ":Root:";
                 sourceEntry.type = {
-                    "domain": "cp",
-                    "name": "GmeInterchangeFormat",
-                    "meta": BLANK,
-                    "root": BLANK,
-                    "base": BLANK,
-                    "parent": BLANK
+                    "domain": BLANK,
+                    "name": "Root",
+                    "meta": NULL_GUID,
+                    "root": NULL_GUID,
+                    "base": NULL_GUID,
+                    "parent": NULL_GUID
                 };
+                metaNodeGuid = NULL_GUID;
             } else if (core.isLibraryRoot(node)) {
                 metaName = ":LibraryRoot:";
+                metaNodeGuid = core.getGuid(node);
 
                 // console.log(`prune: ${nodePath}`);
                 pruneList.push(nodePath);
@@ -140,9 +145,10 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
                 let metaNameAttr = core.getAttribute(core.getBaseType(node), "name");
                 if (typeof metaNameAttr !== "string") { return; }
                 metaName = metaNameAttr;
+                metaNodeGuid = core.getGuid(core.getParent(node));
             }
+            sourceEntry.type.parent = metaNodeGuid;
             let containRel = metaName;
-            sourceEntry.type.parent = containRel;
             sourceEntry.prune = (prunedRootPath === null) ? PruningFlag.None : PruningFlag.Library;
 
             path2entry[nodePath] = sourceEntry;

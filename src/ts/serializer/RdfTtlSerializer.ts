@@ -16,7 +16,7 @@ const NS_xsd = "http://www.w3.org/2001/XMLSchema";
 const NS_rdfs = "http://www.w3.org/2000/01/rdf-schema";
 const NS_rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
 
-const NS2 = "http://darpa.mil/immortals/ontology/r2.0.0/";
+const NS2 = "http://darpa.mil/immortals/ontology/r2.0.0";
 // const NS2_ex = `${NS2}com/securboration/immortals/example`;
 
 /**
@@ -40,6 +40,7 @@ const noGuid: FnGuid = function (raw: string, _guid: string): string {
 
 function setDefault(value: string, fault: string): string {
     if (typeof value === undefined) { return fault; }
+    if (value === "") { return fault; }
     return value;
 }
 
@@ -50,8 +51,11 @@ function objectifyName(nodeName: nt.NameType): string {
 
 function objectifyType(nodeType: nt.TypeType, dict: any): string {
     // console.log("objectify type: ");
+    if (nodeType === undefined) {
+        return `${NS2}/cp#undefined`;
+    }
     if ("name" in nodeType) {
-        return `${NS2}cp#${nodeType.name}`;
+        return `${NS2}/cp#${nodeType.name}`;
     }
     // let domain = setDefault(nodeType.domain, NA);
     let metaNode = setDefault(nodeType.meta, NA);
@@ -97,7 +101,10 @@ function buildSemanticUriForNode(name: nt.NameType, conditioner: (raw: string) =
     let uriExt: string = setDefault(name.uriExt, BLANK);
     let uriName: string = setDefault(name.uriName, BLANK);
     let nickName: string = conditioner(setDefault(name.name, BLANK));
-
+    if (uriPrefix.slice(-1) === "/") {
+        // console.log("your uriPrefix has a trailing slash (/) you should remove it");
+        uriPrefix = uriPrefix.slice(0, -1);
+    }
     if (uriExt.slice(-1) === "/") {
         // console.log("your uriExt has a trailing slash (/) you should remove it");
         uriExt = uriExt.slice(0, -1);
@@ -108,18 +115,24 @@ function buildSemanticUriForNode(name: nt.NameType, conditioner: (raw: string) =
     }
 
     if (isFilled(uriName)) {
-        return `${uriPrefix}${uriExt}#${uriName}`;
+        return `${uriPrefix}/${uriExt}#${uriName}`;
     } else if (isFilled(nickName)) {
-        return `${uriPrefix}${uriExt}#${acase.cookName(nickName)}`;
+        return `${uriPrefix}/${uriExt}#${acase.cookName(nickName)}`;
     } else {
         return `${uriPrefix}${uriExt}#missing`;
     }
 }
 
-function buildUriForNode(name: nt.NameType, conditioner: (raw: string) => string): string {
+
+function buildRawUriForNode(name: nt.NameType, conditioner: (raw: string) => string): string {
+    let nickName: string = conditioner(setDefault(name.name, "no-raw-name"));
+    return `${nickName}`;
+}
+
+function buildNoneUriForNode(name: nt.NameType, conditioner: (raw: string) => string): string {
     let nickName: string = conditioner(setDefault(name.name, "no-name"));
 
-    return `${NS2}model#${acase.cookName(nickName)}`;
+    return `${NS2}/model#${acase.cookName(nickName)}`;
 }
 
 /** 
@@ -139,11 +152,13 @@ function getRdfNameForNode(node: nt.Subject,
     switch (uriGen) {
         case "semantic":
             return guidFn(buildSemanticUriForNode(nameDict, conditioner), guid);
+        case "raw":
+            return guidFn(buildRawUriForNode(nameDict, conditioner), guid);
         case undefined:
         case null:
         case "none":
             if (nameDict !== undefined) {
-                return guidFn(buildUriForNode(nameDict, conditioner), guid);
+                return guidFn(buildNoneUriForNode(nameDict, conditioner), guid);
             }
             return `${NS2}#unknown`;
         default:
@@ -163,12 +178,15 @@ function getRdfNameForNode(node: nt.Subject,
  * it produces no triples of its own.
  */
 function isAtom(node: nt.Subject): boolean {
-    if (!_.isEmpty(node.children)) { return false; }
-    if (!_.isEmpty(node.pointers)) { return false; }
+    if (isModel(node)) { return false; }
+
+    if (isConnection(node)) { return false; }
     if (!_.isEmpty(node.inv_pointers)) { return false; }
+
+    if (isCollection(node)) { return false; }
+    if (!_.isEmpty(node.inv_sets)) { return false; }
     return true;
 }
-
 
 /** 
 * model => a node with children
@@ -176,23 +194,28 @@ function isAtom(node: nt.Subject): boolean {
 * as triples where the model is the subject.
 * Children that are not atoms are treated as objects.
 */
-/*
 function isModel(node: any): boolean {
     if (_.isEmpty(node.children)) { return false; }
     return true;
 }
-*/
 
 /**
  * connection => a node with pointers
  * 
  */
-/*
 function isConnection(node: any): boolean {
-    if (_.isEmpty(node.pointers)) { return false; }
+    if (!_.isEmpty(node.pointers)) { return false; }
     return true;
 }
-*/
+
+/**
+ * The node is a set if it points to sets.
+ */
+function isCollection(node: nt.Subject): boolean {
+    if (_.isEmpty(node.sets)) { return false; }
+    return true;
+}
+
 
 /**
  * If the base of the node and its meta are the same
@@ -254,38 +277,39 @@ export class RdfNodeSerializer {
                     rdfs: `${NS_rdfs}#`,
                     rdf: `${NS_rdf}#`,
                     IMMoRTALS: `${NS2}#`,
-                    IMMoRTALS_cp: `${NS2}cp#`,
-                    IMMoRTALS_cp_java: `${NS2}cp/java#`,
+                    IMMoRTALS_gmei: `${NS2}/gmei#`,
+                    IMMoRTALS_cp: `${NS2}/cp#`,
+                    IMMoRTALS_cp_java: `${NS2}/cp/java#`,
 
-                    IMMoRTALS_ordering: `${NS2}ordering#`,
-                    IMMoRTALS_bytecode: `${NS2}bytecode#`,
-                    IMMoRTALS_android: `${NS2}android#`,
-                    IMMoRTALS_core: `${NS2}core#`,
+                    IMMoRTALS_ordering: `${NS2}/ordering#`,
+                    IMMoRTALS_bytecode: `${NS2}/bytecode#`,
+                    IMMoRTALS_android: `${NS2}/android#`,
+                    IMMoRTALS_core: `${NS2}/core#`,
 
-                    IMMoRTALS_resources: `${NS2}resources#`,
-                    IMMoRTALS_resources_gps: `${NS2}resources/gps#`,
-                    IMMoRTALS_resources_gps_properties: `${NS2}resources/gps/properties#`,
-                    IMMoRTALS_resources_memory: `${NS2}resources/memory#`,
+                    IMMoRTALS_resources: `${NS2}/resources#`,
+                    IMMoRTALS_resources_gps: `${NS2}/resources/gps#`,
+                    IMMoRTALS_resources_gps_properties: `${NS2}/resources/gps/properties#`,
+                    IMMoRTALS_resources_memory: `${NS2}/resources/memory#`,
 
-                    IMMoRTALS_functionality: `${NS2}functionality#`,
-                    IMMoRTALS_functionality_locationprovider: `${NS2}functionality/locationprovider#`,
-                    IMMoRTALS_functionality_imageprocessor: `${NS2}functionality/imageprocessor#`,
-                    IMMoRTALS_functionality_dataproperties: `${NS2}functionality/dataproperties#`,
+                    IMMoRTALS_functionality: `${NS2}/functionality#`,
+                    IMMoRTALS_functionality_locationprovider: `${NS2}/functionality/locationprovider#`,
+                    IMMoRTALS_functionality_imageprocessor: `${NS2}/functionality/imageprocessor#`,
+                    IMMoRTALS_functionality_dataproperties: `${NS2}/functionality/dataproperties#`,
 
-                    IMMoRTALS_property: `${NS2}property#`,
-                    IMMoRTALS_property_impact: `${NS2}property/impact#`,
+                    IMMoRTALS_property: `${NS2}/property#`,
+                    IMMoRTALS_property_impact: `${NS2}/property/impact#`,
 
-                    IMMoRTALS_com_securboration_immortals_example_instantiation: `${NS2}com/securboration/immortals/example/instantiation#`,
-                    IMMoRTALS_metrics: `${NS2}metrics#`,
-                    IMMoRTALS_connectivity: `${NS2}connectivity#`,
-                    IMMoRTALS_server: `${NS2}server#`,
-                    IMMoRTALS_image_fidelity: `${NS2}image/fidelity#`,
+                    IMMoRTALS_com_securboration_immortals_example_instantiation: `${NS2}/com/securboration/immortals/example/instantiation#`,
+                    IMMoRTALS_metrics: `${NS2}/metrics#`,
+                    IMMoRTALS_connectivity: `${NS2}/connectivity#`,
+                    IMMoRTALS_server: `${NS2}/server#`,
+                    IMMoRTALS_image_fidelity: `${NS2}/image/fidelity#`,
 
-                    IMMoRTALS_model: `${NS2}model#`,
-                    IMMoRTALS_ptr: `${NS2}pointer#`,
-                    IMMoRTALS_attr: `${NS2}attribute#`,
+                    IMMoRTALS_model: `${NS2}/model#`,
+                    IMMoRTALS_ptr: `${NS2}/pointer#`,
+                    IMMoRTALS_attr: `${NS2}/attribute#`,
 
-                    IMMoRTALS_impl: `${NS2}com/securboration/immortals/example/instantiation#`
+                    IMMoRTALS_impl: `${NS2}/com/securboration/immortals/example/instantiation#`
                 }
             });
     }
@@ -326,6 +350,7 @@ export class RdfNodeSerializer {
             predicate: `${NS_rdf}#type`,
             object: objectifyType(subject.type, this.nodeDict)
         });
+        
         // console.log("write subject base");
         let base = subject.base;
         if (base !== null) {
@@ -346,7 +371,8 @@ export class RdfNodeSerializer {
                     predicateName = `${NS_rdfs}#comment`;
                     break;
                 case "documentation":
-                    predicateName = `${NS_rdfs}#documentation`;
+                case "Documentation":
+                    predicateName = `${NS2}#hasHumanReadableForm`;
                     break;
                 default:
                 // console.log(`attribute: ${key}`);
@@ -373,7 +399,7 @@ export class RdfNodeSerializer {
             let valueNode = ptrs[key];
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: `${NS2}pointer#${key}`,
+                predicate: `${NS2}/pointer#${key}`,
                 object: objectifyPointer(valueNode, this.nodeDict)
             });
         }
@@ -390,14 +416,13 @@ export class RdfNodeSerializer {
                     // let memberName = member.name;
                     let objective = this.nodeDict[memberGuid];
                     let fnGuid = isClass(objective) ? noGuid : appendGuid;
-                    let objectName = getRdfNameForNode(objective, fnGuid, acase.dromedary);
+                    let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
                     if (isAtom(objective)) {
                         console.log(`atom member ${objectName}`);
-
+                        // console.log(`atom member> s:${subjectName} <atom> o:${objectName}`);
                     } else {
-                        console.log(`model member: ${objectName}`);
-                        // let objective = this.nodeDict[guid];
                         let predicateName = predicateByNode(kind);
+                        // console.log(`model member> s:${subjectName} p:{predicateName} o:${objectName}`);
                         this.writer.addTriple({
                             subject: subjectName,
                             predicate: predicateName,
@@ -418,8 +443,11 @@ export class RdfNodeSerializer {
                 // console.log(`guid: ${guid}`);
                 let objective = this.nodeDict[guid];
                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
-                let objectName = getRdfNameForNode(objective, fnGuid, acase.dromedary);
-                if (isAtom(objective)) {
+                let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
+                let objIsAtom = isAtom(objective);
+                let objIsCollection = isCollection(objective);
+
+                if (objIsAtom) {
                     // console.log(`atom child: ${objectName}`);
                     let attrs = objective.attributes;
                     for (let key in attrs) {
@@ -441,10 +469,31 @@ export class RdfNodeSerializer {
                             object: valueLiteral
                         });
                     }
-                } else {
-                    // console.log(`model child: ${objectName}`);
-                    // let objective = this.nodeDict[guid];
+                }
+                if (objIsCollection) {
+                    let sets = objective.sets;
+                    for (let key in sets) {
+                        // let predicateName: string = objectName + acase.bactrian(key);
+                        let predicateName = predicateByNode(key);
+                        let valueRawArray = sets[key];
+                        for (let value of valueRawArray) {
+                            if (nt.isNGuidType(value)) {
+                                let objective = this.nodeDict[value.guid];
+                                let fnGuid = isClass(objective) ? noGuid : appendGuid;
+                                let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
+                                // console.log(`collection member: s:${subjectName} p:${predicateName} o:${objectName}`);
+                                this.writer.addTriple({
+                                    subject: subjectName,
+                                    predicate: predicateName,
+                                    object: objectName
+                                });
+                            }
+                        }
+                    }
+                }
+                if (!objIsAtom || !objIsCollection) {
                     let predicateName = predicateByNode(key);
+                    // console.log(`model child: s:${subjectName} p:${predicateName} o:${objectName}`);
                     this.writer.addTriple({
                         subject: subjectName,
                         predicate: predicateName,
