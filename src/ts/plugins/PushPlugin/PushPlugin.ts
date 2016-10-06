@@ -27,7 +27,7 @@ class PushPlugin extends PluginBase {
 
     public main(mainHandler: PluginJS.ResultCallback): void {
         let config = this.getCurrentConfig();
-        this.sendNotification("The push plugin function is running: " + new Date(Date.now()).toTimeString());
+        this.sendNotification(`The push plugin function is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = config;
 
         /**
@@ -74,7 +74,7 @@ class PushPlugin extends PluginBase {
                 mainHandler(null, this.result);
             })
             .catch((err: Error) => {
-                this.sendNotification("The push plugin has failed: " + err.message);
+                this.sendNotification(`The push plugin has failed: ${err.message}`);
                 mainHandler(err, this.result);
             });
     }
@@ -95,7 +95,7 @@ class PushPlugin extends PluginBase {
             })
             .then((artifact) => {
                 let pushedFileName = configDictionary["fileName"];
-                this.sendNotification("adding: " + pushedFileName);
+                this.sendNotification(`adding: ${pushedFileName}`);
                 return Promise
                     .try(() => {
                         return artifact.addFile(pushedFileName, payload);
@@ -115,7 +115,7 @@ class PushPlugin extends PluginBase {
 
     private deliverUri = (config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> => {
         let configDictionary: any = config;
-        this.sendNotification("not implemented: " + configDictionary + " : " + payload);
+        this.sendNotification(`not implemented: ${configDictionary} : ${payload}`);
 
         if (!config.hasOwnProperty("hostAddr")) {
             return Promise.reject(new Error("No file name provided."));

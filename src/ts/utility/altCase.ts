@@ -83,7 +83,7 @@ export function dromedary(input: string[] | string): string {
     if (!(/[_.\- ]+/).test(work)) {
         if (work === work.toUpperCase()) { return work.toLowerCase(); }
         if (isLowerCaseChar(work[0])) { return work; }
-        return work[0].toLowerCase() + work.slice(1);
+        return `${work[0].toLowerCase()}${work.slice(1)}`;
     }
 
     work = preserveCamel(work);

@@ -16,10 +16,11 @@ export function pathToString(path: PluginJS.OutPath): string | boolean {
     }
     switch (typeof path) {
         case "object":
-            throw new Error("path value is an object: " + Object.keys(path));
+            throw new Error(`path value is an object: ${Object.keys(path)}`);
         case "undefined":
             throw new Error("path value is undefined");
         default:
-            throw new Error("path value is not a string: but " + typeof path);
+            throw new Error(`path value is not a string: but ${typeof path}`);
     }
 }
+

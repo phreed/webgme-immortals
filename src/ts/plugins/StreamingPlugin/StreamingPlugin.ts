@@ -19,7 +19,7 @@ import { getTreeModel } from "extract/TreeModelExtract";
 import { getTreeSchema } from "extract/TreeSchemaExtract";
 
 import { deliverFile } from "delivery/FileDelivery";
-import { deliverUri } from "delivery/UriDelivery";
+import { deliverMultipart } from "delivery/UriDelivery";
 
 
 class StreamingPlugin extends PluginBase {
@@ -45,7 +45,7 @@ class StreamingPlugin extends PluginBase {
             this.sendNotification("The streaming plugin has failed: no configuration");
             mainHandler(null, this.result);
         }
-        this.sendNotification("This streaming plugin is running: " + new Date(Date.now()).toTimeString());
+        this.sendNotification(`This streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = config;
 
         /**
@@ -119,9 +119,9 @@ class StreamingPlugin extends PluginBase {
                         this.sendNotification("deliver as file on server");
                         return deliverFile(this, config, payload);
 
-                    case "rest:1.0.0":
-                        this.sendNotification("deliver as URI");
-                        return deliverUri(this, config, payload);
+                    case "multipart:1.0.0":
+                        this.sendNotification("deliver as multipart/form-data");
+                        return deliverMultipart(this, config, payload);
 
                     default:
                         return Promise.reject(new Error("invalid delivery mode"));
@@ -134,8 +134,8 @@ class StreamingPlugin extends PluginBase {
             })
             .catch((err: Error) => {
                 this.logger.info(`failed: ${err.stack}`);
-                console.log("streaming plugin failed: " + err.stack);
-                this.sendNotification("The streaming plugin has failed: " + err.message);
+                console.log(`streaming plugin failed: ${err.stack}`);
+                this.sendNotification(`The streaming plugin has failed: ${err.message}`);
                 mainHandler(err, this.result);
             });
     }

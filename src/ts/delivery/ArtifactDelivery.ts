@@ -1,5 +1,7 @@
+
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
+import { addSytacticSuffix } from "utility/ConfigUtil";
 
 /**
  A function to deliver the serialized object properly.
@@ -37,24 +39,15 @@ export function deliverArtifact(sponsor: PluginBase, config: PluginJS.GmeConfig,
         })
         .then((artifact) => {
             sponsor.sendNotification("artifact created");
-            let pushedFileName = configDictionary["fileName"];
-            switch (configDictionary["syntacticVersion"]) {
-                case "json:1.0.0":
-                    pushedFileName += ".json";
-                    break;
-                case "ttl:1.0.0":
-                    pushedFileName += ".ttl";
-                    break;
-                default:
-                    pushedFileName += ".txt";
-            }
+            let pushedFileName = addSytacticSuffix(config, configDictionary["fileName"]);
+
             return Promise
                 .try(() => {
                     sponsor.sendNotification(`adding: ${pushedFileName}`);
                     return artifact.addFile(pushedFileName, payload);
                 })
                 .then((hash: PluginJS.MetadataHash) => {
-                    sponsor.sendNotification("saving: " + hash);
+                    sponsor.sendNotification(`saving: ${hash}`);
                     return artifact.save();
                 });
         })

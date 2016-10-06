@@ -2,6 +2,7 @@
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 import fs = require("fs-extra");
+import { addSytacticSuffix } from "utility/ConfigUtil";
 
 /**
  A function to deliver the serialized object properly.
@@ -10,7 +11,7 @@ import fs = require("fs-extra");
 */
 
 export function deliverFile(sponsor: PluginBase, config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> {
-    sponsor.logger.info("deliver file of size: " + payload.length);
+    sponsor.logger.info(`deliver file of size: ${payload.length}`);
 
     let configDictionary: any = config;
     if (!configDictionary.hasOwnProperty("fileName")) {
@@ -20,22 +21,12 @@ export function deliverFile(sponsor: PluginBase, config: PluginJS.GmeConfig, pay
 
     return Promise
         .try(() => {
-            let targetFileName = configDictionary["fileName"];
-            switch (configDictionary["syntacticVersion"]) {
-                case "json:1.0.0":
-                    targetFileName += ".json";
-                    break;
-                case "ttl:1.0.0":
-                    targetFileName += ".ttl";
-                    break;
-                default:
-                    targetFileName += ".txt";
-            }
+            let targetFileName = addSytacticSuffix(config, configDictionary["fileName"]);
             fs.ensureFileSync(targetFileName);
             return targetFileName;
         })
         .then((fileName: string) => {
-            sponsor.logger.info("file being written: " + fileName);
+            sponsor.logger.info(`file being written: "}${fileName}`);
             return fs.writeFileSync(fileName, payload);
         })
         .then(() => {
@@ -45,7 +36,7 @@ export function deliverFile(sponsor: PluginBase, config: PluginJS.GmeConfig, pay
             return Promise.resolve(sponsor.result);
         })
         .catch((err: Error) => {
-            sponsor.sendNotification("problem writing file: " + err.message);
+            sponsor.sendNotification(`problem writing file: ${err.message}`);
             return Promise.reject(err.message);
         });
 }

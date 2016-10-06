@@ -170,8 +170,8 @@ define(['cytoscape',
             // }
 
             // this.nodes[desc.id] = desc;
-            // node.innerHTML = 'Adding node "' + desc.name + '" (click to view). It has ' +
-            //     desc.childrenIds.length + ' ' + label + '.';
+            // node.innerHTML = `Adding node "${desc.name}" (click to view). 
+            //       It has ${desc.childrenIds.length} ${label}.`;
 
             // this._el.append(node);
             // node.onclick = this.onNodeClick.bind(this, desc.id);
@@ -184,14 +184,14 @@ define(['cytoscape',
 
     cytoscapeWidget.prototype.removeNode = function (gmeId) {
         var desc = this.nodes[gmeId];
-        //this._el.append('<div>Removing node "'+desc.name+'"</div>');
+        //this._el.append(`<div>Removing node "${desc.name}"</div>`);
         delete this.nodes[gmeId];
     };
 
     cytoscapeWidget.prototype.updateNode = function (desc) {
         if (desc) {
             this._logger.debug('Updating node:', desc);
-            //this._el.append('<div>Updating node "'+desc.name+'"</div>');
+            //this._el.append(`<div>Updating node "$desc.name}"</div>`);
         }
     };
 

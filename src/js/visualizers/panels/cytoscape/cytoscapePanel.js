@@ -67,7 +67,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     cytoscapePanel.prototype.onResize = function (width, height) {
-        this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
+        this.logger.debug(`onResize --> width: ${width}, height: ${height}`);
         this.widget.onWidgetContainerResize(width, height);
     };
 

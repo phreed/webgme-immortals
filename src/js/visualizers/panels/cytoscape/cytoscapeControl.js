@@ -57,7 +57,7 @@ define(['js/Constants',
         var desc = this._getObjectDescriptor(nodeId),
             self = this;
 
-        self._logger.debug('activeObject nodeId \'' + nodeId + '\'');
+        self._logger.debug(`activeObject nodeId '${nodeId}'`);
 
         // reinitialize cy data in widget
         self._widget._cy.remove('node').remove('edge');
@@ -195,7 +195,7 @@ define(['js/Constants',
                     data.push({
                         group: "edges",
                         data: {
-                            id: desc.id + 'src',
+                            id: `${desc.id}src`,
                             name: 'src',
                             source: desc.id,
                             target: desc.srcObjId
@@ -205,7 +205,7 @@ define(['js/Constants',
                     data.push({
                         group: "edges",
                         data: {
-                            id: desc.id + 'dst',
+                            id: `${desc.id}dst`,
                             name: 'dst',
                             source: desc.id,
                             target: desc.dstObjId
@@ -258,7 +258,7 @@ define(['js/Constants',
                             group: "edges",
                             data: {
                                 name: i,
-                                id: desc.id + i,
+                                id: `${desc.id}${i}`,
                                 source: desc.id,
                                 target: desc.pointers[i].to
                             }
@@ -275,14 +275,14 @@ define(['js/Constants',
         var i = events ? events.length : 0,
             event;
 
-        this._logger.debug('_eventCallback \'' + i + '\' items');
+        this._logger.debug(`_eventCallback '${i}' items`);
 
         if (i > 0) {
             this.eventQueue.push(events);
             this.processNextInQueue();
         }
 
-        this._logger.debug('_eventCallback \'' + events.length + '\' items - DONE');
+        this._logger.debug(`_eventCallback '${events.length}' items - DONE`);
     };
 
     cytoscapeControl.prototype.processNextInQueue = function() {
@@ -327,10 +327,10 @@ define(['js/Constants',
             depSrcConnIdx,
             depDstConnIdx;
 
-        this._logger.debug('_dispatchEvents ' + events[0].etype);
+        this._logger.debug(`_dispatchEvents ${events[0].etype}`);
         events.shift();
 
-        this._logger.debug('_dispatchEvents "' + i + '" items');
+        this._logger.debug(`_dispatchEvents "${i}" items`);
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
@@ -339,7 +339,7 @@ define(['js/Constants',
         orderedConnectionEvents = [];
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
-            /*this._logger.warn('_delayedConnections: ' + this._delayedConnections.length );*/
+            /*this._logger.warn(`_delayedConnections: ${this._delayedConnections.length}` );*/
             for (i = 0; i < this._delayedConnections.length; i += 1) {
                 orderedConnectionEvents.push({
                     etype: CONSTANTS.TERRITORY_EVENT_LOAD,
@@ -519,7 +519,7 @@ define(['js/Constants',
         //     }
         // }
 
-        this._logger.debug('_dispatchEvents "' + events.length + '" items - DONE');
+        this._logger.debug(`_dispatchEvents "${events.length}" items - DONE`);
 
         //continue processing event queue
         this.processNextInQueue();
@@ -599,8 +599,7 @@ define(['js/Constants',
 
                                     this.createCyObject(objDesc);
 
-                                    this._logger.debug('Connection: ' + gmeID + ' for GME object: ' +
-                                        objDesc.id);
+                                    this._logger.debug(`Connection: ${gmeID} for GME object: ${objDesc.id}`);
 
                                     this._GmeID2ComponentID[gmeID].push(gmeID);
                                     this._ComponentID2GmeID[gmeID] = gmeID;
@@ -741,11 +740,11 @@ define(['js/Constants',
 
     cytoscapeControl.prototype._attachClientEventListeners = function() {
         this._detachClientEventListeners();
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
+        WebGMEGlobal.State.on(`change: ${CONSTANTS.STATE_ACTIVE_OBJECT}`, this._stateActiveObjectChanged, this);
     };
 
     cytoscapeControl.prototype._detachClientEventListeners = function() {
-        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
+        WebGMEGlobal.State.off(`change: ${CONSTANTS.STATE_ACTIVE_OBJECT}`, this._stateActiveObjectChanged);
     };
 
     cytoscapeControl.prototype.onActivate = function() {
@@ -846,9 +845,9 @@ define(['js/Constants',
 
         var createArrowMenuItem = function (arrowType, isEnd) {
             var size = arrowType === CytoscapeConstants.LINE_ARROWS.NONE ? '' : '-xwide-xlong',
-                startArrow = isEnd ? null : arrowType + size,
+                startArrow = isEnd ? null : `${arrowType}${size}`,
                 startArrowCy = isEnd ? null : CytoscapeConstants.CY_LINE_ARROWS[arrowType],
-                endArrow = isEnd ? arrowType + size : null,
+                endArrow = isEnd ? `${arrowType}${size}` : null,
                 endArrowCy = isEnd ? CytoscapeConstants.CY_LINE_ARROWS[arrowType] : null;
 
             return {
@@ -1007,16 +1006,16 @@ define(['js/Constants',
         endArrow = endArrow || CytoscapeConstants.LINE_ARROWS.NONE;
         type = (type || CytoscapeConstants.LINE_TYPES.NONE).toLowerCase();
 
-        el.attr({style: 'height: ' + vSize + 'px; width: ' + hSize + 'px;'});
+        el.attr({style: `height: ${vSize}px; width: ${hSize}px;`});
 
         if (type === CytoscapeConstants.LINE_TYPES.BEZIER) {
-            path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' C' + (5 + bezierControlOffset) + ',' +
-                (Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2) + ' ' + (hSize - bezierControlOffset) + ',' +
-                (Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2) + ' ' + (hSize - 5) + ',' +
-                (Math.round(vSize / 2) + 0.5));
+            path = paper.path(`M 5, ${Math.round(vSize / 2) + 0.5} C${5+bezierControlOffset},` +
+                `${Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2} ${hSize - bezierControlOffset},` +
+                `${Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2} ${hSize - 5},` +
+                `${Math.round(vSize / 2) + 0.5}`);
         } else {
-            path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' L' + (hSize - 5) + ',' +
-                (Math.round(vSize / 2) + 0.5));
+            path = paper.path(`M 5,${Math.round(vSize / 2) + 0.5} L${hSize - 5},` +
+                                `${Math.round(vSize / 2) + 0.5}`);
         }
 
         path.attr({

@@ -43,7 +43,7 @@ class SerializerPlugin extends PluginBase {
             this.sendNotification("The streaming plugin has failed: no configuration");
             mainHandler(null, this.result);
         }
-        this.sendNotification("This streaming plugin is running: " + new Date(Date.now()).toTimeString());
+        this.sendNotification(`This streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = config;
 
         /**
@@ -122,8 +122,8 @@ class SerializerPlugin extends PluginBase {
             })
             .catch((err: Error) => {
                 this.logger.info(`failed: ${err.stack}`);
-                console.log("streaming plugin failed: " + err.stack);
-                this.sendNotification("The streaming plugin has failed: " + err.message);
+                console.log(`streaming plugin failed: ${err.stack}`);
+                this.sendNotification(`The streaming plugin has failed: ${err.message}`);
                 mainHandler(err, this.result);
             });
     }

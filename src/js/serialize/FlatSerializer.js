@@ -97,9 +97,9 @@ function (require, exports, ASSERT, CANON) {
             if (uriExt.slice(-1) !== '#') uriExt += '#';
 
             if (uriName == null || uriName.length == 0) {
-              return uriPrefix + uriExt + name;
+              return `${uriPrefix}/${uriExt}#${name}`;
             } else {
-              return uriPrefix + uriExt + uriName;
+              return `${uriPrefix}/${uriExt}#${uriName}`;
             }
         }
 
@@ -256,7 +256,7 @@ function (require, exports, ASSERT, CANON) {
             notInComputation = false;
             core.loadByPath(root, path, function (err, node) {
                 if (err || !node) {
-                    return next(err || new Error('no node found at given path:' + path));
+                    return next(err || new Error(`no node found at given path: ${path}`));
                 }
 
                 //fill out the basic data and make place in the jsonLibrary for the node
@@ -538,7 +538,7 @@ function (require, exports, ASSERT, CANON) {
                 //then simple nodes
                 keys = Object.keys(originalJsonLibrary.nodes);
                 for (i = 0; i < keys.length; i++) {
-                    addElement(keys[i], libraryRootPath + getRelativePathByGuid(keys[i], originalJsonLibrary));
+                    addElement(keys[i], `${libraryRootPath }${getRelativePathByGuid(keys[i], originalJsonLibrary)}`);
                 }
                 //then the updated one
                 //adding external bases
@@ -549,11 +549,11 @@ function (require, exports, ASSERT, CANON) {
                 //then simple nodes
                 keys = Object.keys(updatedJsonLibrary.nodes);
                 for (i = 0; i < keys.length; i++) {
-                    addElement(keys[i], libraryRootPath + getRelativePathByGuid(keys[i], updatedJsonLibrary));
+                    addElement(keys[i], `${libraryRootPath}${getRelativePathByGuid(keys[i], updatedJsonLibrary)}`);
                 }
             },
             insertEmptyNode = function (guid, next) {
-                log('node ' + logId(guid, updatedJsonLibrary) + ' will be added as an empty object');
+                log(`node ${logId(guid, updatedJsonLibrary)} will be added as an empty object`);
                 //first we collect all creation related data
                 var relid = updatedJsonLibrary.relids[guid],
                     parentPath = guidCache[updatedJsonLibrary.nodes[guid].parent],
@@ -594,9 +594,10 @@ function (require, exports, ASSERT, CANON) {
             },
             moveNode = function (guid, next) {
                 //we need the node itself and the new parent
-                log('node ' + logId(guid, updatedJsonLibrary) + ' will be moved within the library from' +
-                getRelativePathByGuid(guid, originalJsonLibrary) + ' to ' +
-                getRelativePathByGuid(guid, updatedJsonLibrary));
+                log(`node ${logId(guid, updatedJsonLibrary)} 
+        will be moved within the library 
+        from ${getRelativePathByGuid(guid, originalJsonLibrary)} 
+        to ${getRelativePathByGuid(guid, updatedJsonLibrary)}`);
 
                 var node,
                     parent,
@@ -637,8 +638,7 @@ function (require, exports, ASSERT, CANON) {
                         //removing attributes
                         for (i = 0; i < keys.length; i++) {
                             if (!uAttributes[keys[i]]) {
-                                log('node ' + logId(guid, updatedJsonLibrary) + ' will lose it\'s attribute [' +
-                                keys[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will lose it\'s attribute [${keys[i]}]`);
 
                                 core.delAttribute(node, keys[i]);
                             }
@@ -647,14 +647,12 @@ function (require, exports, ASSERT, CANON) {
                         keys = Object.keys(uAttributes);
                         for (i = 0; i < keys.length; i++) {
                             if (!oAttributes[keys[i]]) {
-                                log('node ' + logId(guid, updatedJsonLibrary) + ' will get a new attribute [' +
-                                keys[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will get a new attribute [${keys[i]}]`);
                                 core.setAttribute(node, keys[i], uAttributes[keys[i]]);
                             } else if (CANON.stringify(oAttributes[keys[i]] !==
                                 CANON.stringify(uAttributes[keys[i]]))) {
 
-                                log('node ' + logId(guid, updatedJsonLibrary) +
-                                ' will update the value of attribute [' + keys[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will update the value of attribute [${keys[i]}]`);
 
                                 core.setAttribute(node, keys[i], uAttributes[keys[i]]);
                             }
@@ -669,8 +667,7 @@ function (require, exports, ASSERT, CANON) {
                         //removing registry entries
                         for (i = 0; i < keys.length; i++) {
                             if (!uREgistry[keys[i]]) {
-                                log('node ' + logId(guid, updatedJsonLibrary) + ' will lose it\'s registry item [' +
-                                keys[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will lose it\'s registry item [${keys[i]}]`);
 
                                 core.delRegistry(node, keys[i]);
                             }
@@ -679,12 +676,10 @@ function (require, exports, ASSERT, CANON) {
                         keys = Object.keys(uREgistry);
                         for (i = 0; i < keys.length; i++) {
                             if (!oRegistry[keys[i]]) {
-                                log('node ' + logId(guid, updatedJsonLibrary) + ' will get a new registry item [' +
-                                keys[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will get a new registry item [${keys[i]}]`);
                                 core.setRegistry(node, keys[i], uREgistry[keys[i]]);
                             } else if (CANON.stringify(oRegistry[keys[i]] !== CANON.stringify(uREgistry[keys[i]]))) {
-                                log('node ' + logId(guid, updatedJsonLibrary) +
-                                ' will update the value of registry item [' + keys[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will update the value of registry item [${keys[i]}]`);
                                 core.setRegistry(node, keys[i], uREgistry[keys[i]]);
                             }
                         }
@@ -714,8 +709,7 @@ function (require, exports, ASSERT, CANON) {
                         //first removing pointers
                         for (i = 0; i < oPointers.length; i++) {
                             if (uPointers.indexOf(oPointers[i]) === -1) {
-                                log('node ' + logId(guid, updatedJsonLibrary) + ' will lose it\'s pointer [' +
-                                oPointers[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will lose it\'s pointer [${oPointers[i]}]`);
                                 core.delPointer(node, oPointers[i]);
                             }
                         }
@@ -723,14 +717,12 @@ function (require, exports, ASSERT, CANON) {
                         //creating list for inserting or updating pointers
                         for (i = 0; i < uPointers.length; i++) {
                             if (oPointers.indexOf(uPointers[i]) === -1) {
-                                log('node ' + logId(guid, updatedJsonLibrary) + ' will have a new pointer [' +
-                                uPointers[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will have a new pointer [${uPointers[i]}]`);
                                 setList.push(uPointers[i]);
                             } else if (originalJsonNode.pointers[uPointers[i]] !==
                                 updatedJsonNode.pointers[uPointers[i]]) {
 
-                                log('node ' + logId(guid, updatedJsonLibrary) +
-                                ' will have a new target for pointer [' + uPointers[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will have a new target for pointer [${uPointers[i]}]`);
                                 setList.push(uPointers[i]);
                             }
                         }
@@ -767,8 +759,7 @@ function (require, exports, ASSERT, CANON) {
                                 //removing members
                                 for (i = 0; i < oMembers.length; i++) {
                                     if (uMembers.indexOf(oMembers[i]) === -1) {
-                                        log('node ' + logId(guid, updatedJsonLibrary) + ' will clear member [' +
-                                        oMembers[i] + '] from set [' + name + ']');
+                                        log(`node ${logId(guid, updatedJsonLibrary)} will clear member [${oMembers[i]}] from set [${name}]`);
                                         core.delMember(node, name, guidCache[oMembers[i]]);
                                     }
                                 }
@@ -777,13 +768,11 @@ function (require, exports, ASSERT, CANON) {
                                 for (i = 0; i < uMembers.length; i++) {
                                     if (oMembers.indexOf(uMembers[i]) === -1) {
                                         toCreate.push(uMembers[i]);
-                                        log('node ' + logId(guid, updatedJsonLibrary) + ' will add member [' +
-                                        uMembers[i] + '] to it\'s set [' + name + ']');
+                                        log(`node ${logId(guid, updatedJsonLibrary)} will add member [${uMembers[i]}] to it\'s set [${name}]`);
                                     } else if (CANON.stringify(originalJsonNode.sets[name][uMembers[i]]) !==
                                         CANON.stringify(updatedJsonNode.sets[name][uMembers[i]])) {
 
-                                        log('node ' + logId(guid, updatedJsonLibrary) + ' will update member [' +
-                                        uMembers[i] + '] in set [' + name + ']');
+                                        log(`node ${logId(guid, updatedJsonLibrary)} will update member [${uMembers[i]}] in set [${name}]`);
 
                                         updateMember(name, uMembers[i]);
                                     }
@@ -842,7 +831,7 @@ function (require, exports, ASSERT, CANON) {
                                         core.delMemberAttribute(node, setName, guidCache[guid], keys[i]);
                                     }
                                 }
-                                //adding + updating
+                                //adding and updating
                                 keys = Object.keys(uMember.attributes || {});
                                 for (i = 0; i < keys.length; i++) {
                                     if (!oMember.attributes || oMember.attributes[keys[i]] === undefined ||
@@ -862,7 +851,7 @@ function (require, exports, ASSERT, CANON) {
                                         core.delMemberRegistry(node, setName, guidCache[guid], keys[i]);
                                     }
                                 }
-                                //adding + updating
+                                //adding and updating
                                 keys = Object.keys(uMember.registry || {});
                                 for (i = 0; i < keys.length; i++) {
                                     if (!oMember.registry || oMember.registry[keys[i]] === undefined ||
@@ -884,8 +873,7 @@ function (require, exports, ASSERT, CANON) {
                         //first we simply remove the whole set if we have to
                         for (i = 0; i < oSets.length; i++) {
                             if (uSets.indexOf(oSets[i]) === -1) {
-                                log('node ' + logId(guid, updatedJsonLibrary) + ' will lose it\'s set [' +
-                                oSets[i] + ']');
+                                log(`node ${logId(guid, updatedJsonLibrary)} will lose it\'s set [${oSets[i]}]`);
                                 core.deleteSet(node, oSets[i]);
                             }
                         }
@@ -1093,7 +1081,7 @@ function (require, exports, ASSERT, CANON) {
 
                     //there is some change
                     originalJsonNode = originalJsonLibrary.nodes[guid];
-                    log('node ' + logId(guid, updatedJsonLibrary) + ' will be updated');
+                    log(`node ${logId(guid, updatedJsonLibrary)} will be updated`);
                     loadNode();
                 } else if (!originalJsonLibrary.nodes[guid]) {
                     //new node
@@ -1106,7 +1094,7 @@ function (require, exports, ASSERT, CANON) {
                         pointers: {},
                         sets: {}
                     };
-                    log('node ' + logId(guid, updatedJsonLibrary) + ' will be filled with data');
+                    log(`node ${logId(guid, updatedJsonLibrary)} will be filled with data`);
                     loadNode();
                 } else {
                     //no need for update
@@ -1114,8 +1102,8 @@ function (require, exports, ASSERT, CANON) {
                 }
             },
             removeNode = function (guid, next) {
-                log('node ' + logId(guid, originalJsonLibrary) + ' will be removed - which will cause also the ' +
-                'removal of all of its descendant and children');
+                log(`node ${logId(guid, originalJsonLibrary)} will be removed - 
+    which will cause also the removal of all of its descendant and children`);
                 core.loadByPath(root, guidCache[guid], function (err, node) {
                     if (err) {
                         return next(err);
@@ -1131,7 +1119,7 @@ function (require, exports, ASSERT, CANON) {
             getRelativePathByGuid = function (guid, library) {
                 var path = '';
                 while (guid !== library.root.guid) {
-                    path = '/' + library.relids[guid] + path;
+                    path = `/${library.relids[guid]}${path}`;
                     guid = library.nodes[guid].parent;
                 }
                 return path;
@@ -1234,14 +1222,14 @@ function (require, exports, ASSERT, CANON) {
                 }
             },
             logId = function (guid, library) {
-                var txtId = guid + '';
+                var txtId = `${guid}`;
                 if (library.nodes[guid] && library.nodes[guid].attributes && library.nodes[guid].attributes.name) {
-                    txtId = library.nodes[guid].attributes.name + '(' + guid + ')';
+                    txtId = `${library.nodes[guid].attributes.name}(${guid})`;
                 }
                 return txtId;
             },
             log = function (txt) {
-                logTxt += txt + '\n';
+                logTxt += `${txt}\n`;
             },
             phase = 'addnodes';
 

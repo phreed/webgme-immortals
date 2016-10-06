@@ -451,7 +451,7 @@ export class RdfNodeSerializer {
                     // console.log(`atom child: ${objectName}`);
                     let attrs = objective.attributes;
                     for (let key in attrs) {
-                        // let predicateName: string = objectName + acase.bactrian(key);
+                        // let predicateName: string = `${objectName}${acase.bactrian(key)}`;
                         let predicateName = predicateByNode(key);
                         let valueRaw = attrs[key];
                         let valueLiteral: any;
@@ -473,7 +473,7 @@ export class RdfNodeSerializer {
                 if (objIsCollection) {
                     let sets = objective.sets;
                     for (let key in sets) {
-                        // let predicateName: string = objectName + acase.bactrian(key);
+                        // let predicateName: string = `${objectName}${acase.bactrian(key)}`;
                         let predicateName = predicateByNode(key);
                         let valueRawArray = sets[key];
                         for (let value of valueRawArray) {

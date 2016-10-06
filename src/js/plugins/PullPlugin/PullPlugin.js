@@ -76,7 +76,7 @@ define([
       // regexMessage: 'Name can only contain latin characters!',
       // ValidHostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$";
       // ValidIpAddressRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
-      description: 'What is the ip address or name of the host for the ' + 'graph database multi-model.',
+      description: 'What is the ip address or name of the host for the graph database multi-model.',
       value: '127.0.0.1',
       valueType: 'string',
       readOnly: false

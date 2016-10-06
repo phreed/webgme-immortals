@@ -25,7 +25,7 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
     */
     let fcoName: string = attrToString(core.getAttribute(core.getFCO(sponsor.rootNode), "name"));
     let languageName: string = attrToString(core.getAttribute(sponsor.rootNode, "name"));
-    sponsor.logger.info("get model tree : " + languageName + " : " + fcoName);
+    sponsor.logger.info(`get model tree : ${languageName}:${fcoName}`);
     let rootEntry: PluginJS.Dictionary = {
         "version": "0.0.1"
     };
@@ -47,8 +47,8 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
         let metaName = (core.isLibraryRoot(node))
             ? ":LibraryRoot:"
             : core.getAttribute(core.getBaseType(node), "name");
-        let containRel = CONTAINMENT_PREFIX + metaName;
-        let sourceEntry: PluginJS.Dictionary = { "lang": languageName + ":" + containRel };
+        let containRel = `${CONTAINMENT_PREFIX}${metaName}`;
+        let sourceEntry: PluginJS.Dictionary = { "lang": `${languageName}:${containRel}` };
         // let baseNode = core.getBase(node);
         let nodePath = core.getPath(node);
         path2entry[nodePath] = sourceEntry;
@@ -79,12 +79,12 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
                     })
                     .then((targetNode: Node) => {
                         if (ptrName === "base") {
-                            sourceEntry[ptrName + POINTER_SET_DIV + fcoName]
+                            sourceEntry[`${ptrName}${POINTER_SET_DIV}${fcoName}`]
                                 = core.getGuid(targetNode);
                         } else {
                             let targetMetaNode = core.getBaseType(targetNode);
                             let targetMetaName = core.getAttribute(targetMetaNode, "name");
-                            sourceEntry[ptrName + POINTER_SET_DIV + targetMetaName]
+                            sourceEntry[`${ptrName}${POINTER_SET_DIV}${targetMetaName}`]
                                 = core.getGuid(targetNode);
                         }
                     });
@@ -108,10 +108,10 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
                             .then((memberNode: Node) => {
                                 let memberMetaNode = core.getBaseType(memberNode);
                                 let memberMetaName = core.getAttribute(memberMetaNode, "name");
-                                let setAttr = setName + POINTER_SET_DIV + memberMetaName;
+                                let setAttr = `${setName}${POINTER_SET_DIV}${memberMetaName}`;
 
                                 sourceEntry[setAttr] = typeof sourceEntry[setAttr] === "string"
-                                    ? sourceEntry[setAttr] + " " + core.getGuid(memberNode)
+                                    ? `${sourceEntry[setAttr]} ${core.getGuid(memberNode)}`
                                     : core.getGuid(memberNode);
                             });
                     });
@@ -131,7 +131,7 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
             return core.traverse(sponsor.rootNode, { excludeRoot: true }, visitFn);
         })
         .then(() => {
-            console.log("DATA: " + rootEntry);
+            console.log(`DATA: ${rootEntry}`);
             return rootEntry;
         });
 }

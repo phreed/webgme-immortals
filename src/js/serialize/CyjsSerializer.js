@@ -233,7 +233,7 @@ define(["require", "exports", 'common/util/assert', 'common/util/canon'],
         notInComputation = false;
         core.loadByPath(root, path, function(err, node) {
           if (err || !node) {
-            return next(err || new Error('no node found at given path:' + path));
+            return next(err || new Error(`no node found at given path: ${path}`));
           }
 
           //fill out the basic data and make place in the jsonModel for the node
@@ -278,7 +278,7 @@ define(["require", "exports", 'common/util/assert', 'common/util/canon'],
           for (var ptrKey in pointers) {
             var ptr = pointers[ptrKey];
             if (!ptr) {
-              console.log("null target path : " + ptrKey);
+              console.log(`null target path : ${ptrKey}`);
             } else {
               jsonModel.elements.edges.push({
                 data: {
@@ -311,7 +311,7 @@ define(["require", "exports", 'common/util/assert', 'common/util/canon'],
               // good pointers than need no repair
               break;
             default:
-              console.log("unknown pointer type : " + edge.data.type);
+              console.log(`unknown pointer type : ${edge.data.type}`);
           }
           // postProcessMembersOfSets(jsonModel.nodes[guids[i]]);
           // postProcessMetaOfNode(jsonModel.nodes[guids[i]]);
