@@ -32,14 +32,12 @@ export function deliverMultipart(sponsor: PluginBase,
                 contentType: "text/plain",
                 knownLength: payload.length
             });
-            sponsor.logger.info(`file being written: ${fileName}`);
+            sponsor.logger.info(`payload being written: ${fileName}`);
             let uri = configDictionary["hostAddr"];
             form.submit(uri, (_error: any, response: any): void => {
                 response.resume();
             });
-        })
-        .then(() => {
-            sponsor.sendNotification("file written");
+            sponsor.sendNotification(`payload ${fileName} written`);
             sponsor.result.setSuccess(true);
             sponsor.sendNotification("resolved");
             return Promise.resolve(sponsor.result);

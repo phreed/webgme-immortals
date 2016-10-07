@@ -88,8 +88,7 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
             let nodeNameAttr = core.getAttribute(node, "name");
             if (typeof nodeNameAttr !== "string") { return; }
 
-            let nodeName: string = nodeNameAttr;
-            sponsor.logger.info(`visitor function with ${nodeName}`);
+            // sponsor.logger.info(`visitor function with ${nodeNameAttr}`);
 
             let baseNodeGuid: string = core.getGuid(core.getBase(node));
             let baseNodeTypeGuid: string = core.getGuid(core.getBaseType(node));

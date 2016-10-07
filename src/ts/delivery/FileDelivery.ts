@@ -26,13 +26,10 @@ export function deliverFile(sponsor: PluginBase, config: PluginJS.GmeConfig, pay
             return targetFileName;
         })
         .then((fileName: string) => {
-            sponsor.logger.info(`file being written: "}${fileName}`);
-            return fs.writeFileSync(fileName, payload);
-        })
-        .then(() => {
-            sponsor.sendNotification("file written");
+            sponsor.logger.info(`file being written: ${fileName} in ${process.cwd()}`);
+            fs.writeFileSync(fileName, payload);
+            sponsor.sendNotification(`file ${fileName} written`);
             sponsor.result.setSuccess(true);
-            sponsor.sendNotification("resolved");
             return Promise.resolve(sponsor.result);
         })
         .catch((err: Error) => {
