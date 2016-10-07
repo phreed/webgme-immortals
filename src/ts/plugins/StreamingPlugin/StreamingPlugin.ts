@@ -124,7 +124,7 @@ class StreamingPlugin extends PluginBase {
                         return deliverMultipart(this, config, payload);
 
                     default:
-                        return Promise.reject(new Error("invalid delivery mode"));
+                        return Promise.reject(new Error(`unknown delivery mode: ${configDictionary["deliveryMode"]}`));
                 }
             })
             .then(() => {

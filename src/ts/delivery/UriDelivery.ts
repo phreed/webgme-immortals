@@ -16,7 +16,7 @@ export function deliverMultipart(sponsor: PluginBase,
     config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> {
     sponsor.logger.info("deliver multipart/form-data to URI");
 
-    if (!config.hasOwnProperty("uri")) {
+    if (!config.hasOwnProperty("hostAddr")) {
         return Promise.reject(new Error("No uri provided."));
     }
     let configDictionary: any = config;
@@ -27,14 +27,18 @@ export function deliverMultipart(sponsor: PluginBase,
         })
         .then((fileName: string) => {
             let form = new FormData();
-            form.append("filename", payload);
+            form.append("filename", payload, {
+                filename: fileName,
+                contentType: "text/plain",
+                knownLength: payload.length
+            });
             sponsor.logger.info(`file being written: ${fileName}`);
-            let uri = configDictionary["uri"];
-            let submitAsync = Promise.promisify(form.submit);
-            return submitAsync(uri);
+            let uri = configDictionary["hostAddr"];
+            form.submit(uri, (_error: any, response: any): void => {
+                response.resume();
+            });
         })
-        .then((res: any) => {
-            res.resume();
+        .then(() => {
             sponsor.sendNotification("file written");
             sponsor.result.setSuccess(true);
             sponsor.sendNotification("resolved");
