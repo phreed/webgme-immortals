@@ -70,7 +70,7 @@ define([
         'websocket'
       ]
     }, {
-      name: 'hostAddr',
+      name: 'deliveryUrl',
       displayName: 'graph db host IP address or name',
       // regex: '^[a-zA-Z]+$',
       // regexMessage: 'Name can only contain latin characters!',
@@ -130,7 +130,7 @@ define([
         self.blobClient.getObject(self.currentConfig.file, saveFile);
         break;
       case 'websocket':
-        if (!self.currentConfig.hostAddr) {
+        if (!self.currentConfig.deliveryUrl) {
           callback(new Error('No host address provided.'), self.result);
           return;
         }

@@ -36,7 +36,7 @@
       ]
     },
     {
-      "name": "hostAddr",
+      "name": "deliveryUrl",
       "displayName": "Host IP address or name for delivery modes which have one.",
       "regex": "^[0-9a-zA-Z\\.-_]+$|^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
       "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore. It may also be a four part dotted address.",

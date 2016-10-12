@@ -117,7 +117,7 @@ class PushPlugin extends PluginBase {
         let configDictionary: any = config;
         this.sendNotification(`not implemented: ${configDictionary} : ${payload}`);
 
-        if (!config.hasOwnProperty("hostAddr")) {
+        if (!config.hasOwnProperty("deliveryUrl")) {
             return Promise.reject(new Error("No file name provided."));
         }
         return Promise.reject(new Error("restful delivery not available."));

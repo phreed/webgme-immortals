@@ -19,7 +19,7 @@ import { getTreeModel } from "extract/TreeModelExtract";
 import { getTreeSchema } from "extract/TreeSchemaExtract";
 
 import { deliverFile } from "delivery/FileDelivery";
-import { deliverMultipart } from "delivery/UriDelivery";
+import { deliverMultipart, deliverSinglepart } from "delivery/UriDelivery";
 
 
 class StreamingPlugin extends PluginBase {
@@ -122,6 +122,10 @@ class StreamingPlugin extends PluginBase {
                     case "multipart:1.0.0":
                         this.sendNotification("deliver as multipart/form-data");
                         return deliverMultipart(this, config, payload);
+
+                    case "singlepart:1.0.0":
+                        this.sendNotification("deliver as text/plain");
+                        return deliverSinglepart(this, config, payload);
 
                     default:
                         return Promise.reject(new Error(`unknown delivery mode: ${configDictionary["deliveryMode"]}`));
