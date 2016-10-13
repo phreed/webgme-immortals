@@ -44,5 +44,6 @@ config.requirejsPaths["plugins/StreamingPlugin/metadata"] = './gen/plugins/Strea
 config.requirejsPaths["plugins/PushPlugin/metadata"] = './gen/plugins/PushPlugin/metadata';
 config.requirejsPaths["plugins/SerializerPlugin/metadata"] = './gen/plugins/SerializerPlugin/metadata';
 
+
 validateConfig(config);
 module.exports = config;

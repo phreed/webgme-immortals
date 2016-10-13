@@ -11,10 +11,12 @@ export NODE_ENV=immortals
 
 var config = require('./config.default');
 var path = require('path');
+var systemdSocket = require('systemd-socket');
 
 config.client.log.level = 'debug';
 config.debug = true;
-config.server.port = 3000;
+config.server.port = 8081;
+config.server.handle = systemdSocket(0);
 
 // configure the logger
 console.log(config.server);
