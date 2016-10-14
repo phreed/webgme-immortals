@@ -37,8 +37,7 @@ systemctl --system enable webgme.socket
 systemctl --system start webgme.socket
 
 systemctl --system enable webgme.service
-systemctl --system start webgme.service
+# systemctl --system start webgme.service
 # systemctl status webgme.service
 
-journalctl -xe
 ```
