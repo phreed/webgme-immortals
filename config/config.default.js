@@ -24,14 +24,17 @@ config.requirejsPaths["style"] = './style/';
 
 config.visualization.extraCss = ['style/immortals.css'];
 
-config.plugin.basePaths.push('./gen/plugins','./src/ts','./src/js');
+config.plugin.basePaths.push('./gen/plugins', './src/ts', './src/js');
 console.log(config.plugin.basePaths);
 
 config.requirejsPaths["cytoscape"] = './bower_components/cytoscape/dist/cytoscape.min';
 config.requirejsPaths["bluebird"] = './node_modules/bluebird/js/browser/bluebird';
-// config.requirejsPaths["n3"] = './node_modules/n3/N3';
+// simply installing n3 as an npm module is insufficient
+// npm install n3
+// cd node_modules/n3
+// npm install
+// npm run browser
 config.requirejsPaths["n3"] = 'node_modules/n3/browser/n3-browserify';
-
 
 config.requirejsPaths["serialize"] = './src/js/serialize/';
 
@@ -40,10 +43,12 @@ config.requirejsPaths["extract"] = './gen/extract/';
 config.requirejsPaths["delivery"] = './gen/delivery/';
 config.requirejsPaths["utility"] = './gen/utility/';
 // config.requirejsPaths["serializer"] = ['gen/serializer/','src/ts/serializer/'];
-config.requirejsPaths["plugins/StreamingPlugin/metadata"] = './gen/plugins/StreamingPlugin/metadata';
-config.requirejsPaths["plugins/PushPlugin/metadata"] = './gen/plugins/PushPlugin/metadata';
-config.requirejsPaths["plugins/SerializerPlugin/metadata"] = './gen/plugins/SerializerPlugin/metadata';
 
+config.requirejsPaths["plugins/SerializerServerPlugin/metadata"] = './gen/plugins/SerializerServerPlugin/metadata';
+config.requirejsPaths["plugins/SerializerClientPlugin/metadata"] = './gen/plugins/SerializerClientPlugin/metadata';
+
+config.requirejsPaths["plugins/PushPlugin/metadata"] = './gen/plugins/PushPlugin/metadata';
+config.requirejsPaths["plugins/StreamPlugin/metadata"] = './gen/plugins/StreamPlugin/metadata';
 
 validateConfig(config);
 module.exports = config;

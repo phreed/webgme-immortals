@@ -2,12 +2,21 @@
  * A plugin that inherits from the PluginBase.
  * To see source code documentation about available
  * properties and methods visit %host%/docs/source/PluginBase.html.
+ * 
+ * The idea here is to export all of the commits 
+ * to a stream processor. From there the commits will
+ * be extracted and used to construct different 
+ * data-structures suitable for various questions and
+ * the generation of derived and related facts.
+ * In particular the incorporation of static and 
+ * dynamic information about the system environment
+ * and constructed components.
  */
 
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 
-import MetaDataStr = require("text!plugins/StreamingPlugin/metadata.json");
+import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
 
 import * as nlv from "serializer/NodeListVisitor";
 import { RdfNodeSerializer } from "serializer/RdfTtlSerializer";
@@ -21,13 +30,33 @@ import { getTreeSchema } from "extract/TreeSchemaExtract";
 import { deliverFile } from "delivery/FileDelivery";
 import { deliverMultipart, deliverSinglepart } from "delivery/UriDelivery";
 
-
-class StreamingPlugin extends PluginBase {
+class StreamPlugin extends PluginBase {
     pluginMetadata: any;
 
     constructor() {
         super();
         this.pluginMetadata = JSON.parse(MetaDataStr);
+    }
+
+    public loadNodeMap(this: any, rootNode: PluginJS.Node): { [key: string]: any } {
+        let core = this.core;
+        return Promise
+            .try(() => {
+                let nodeArray = core.loadSubTree(rootNode);
+                if (nodeArray instanceof Array) {
+                    return nodeArray;
+                } else {
+                    return Promise.reject("not a valid array");
+                }
+            })
+            .then((nodeArray: PluginJS.Node[]) => {
+                let nodeMap = new Map<string, any>();
+                for (let node in nodeArray) {
+                    nodeMap.set(core.getPath(node), node);
+                }
+                return nodeMap;
+            });
+
     }
 
     /**
@@ -47,6 +76,22 @@ class StreamingPlugin extends PluginBase {
         }
         this.sendNotification(`This streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = config;
+
+        Promise
+            .try(() => {
+                return this.loadNodeMap(this.rootNode);
+            })
+            .then((nodes: Map<string, any>) => {
+                for (let key in nodes.keys()) {
+                    this.logger.info("%s", key);
+                }
+                this.result.setSuccess(true);
+                mainHandler(null, this.result);
+            })
+            .catch((err: Error) => {
+                this.logger.error("%s", err.stack);
+                mainHandler(err, this.result);
+            });
 
         /**
         Push the current data-model into a JSON structure.
@@ -145,4 +190,4 @@ class StreamingPlugin extends PluginBase {
     }
 }
 
-export = StreamingPlugin;
+export = StreamPlugin;

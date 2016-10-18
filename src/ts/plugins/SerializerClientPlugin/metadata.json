@@ -1,6 +1,6 @@
 {
-  "id": "SerializerPlugin",
-  "name": "Serializer Plugin",
+  "id": "SerializerClientPlugin",
+  "name": "Client-Side Serializer Plugin",
   "version": "0.1.0",
   "description": "This is a browser based serializer plugin",
   "icon": {

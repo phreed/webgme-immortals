@@ -27,8 +27,7 @@
   ],
   "dependencies": {
     "cytoscape": "~2.7.10",
-    "bluebird": "~3.4.6",
-    "n3": "n3js#^0.5.0"
+    "bluebird": "~3.4.6"
   },
   "private": true
 }

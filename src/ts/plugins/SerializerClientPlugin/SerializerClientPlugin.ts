@@ -7,7 +7,7 @@
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 
-import MetaDataStr = require("text!plugins/SerializerPlugin/metadata.json");
+import MetaDataStr = require("text!plugins/SerializerClientPlugin/metadata.json");
 
 import * as nlv from "serializer/NodeListVisitor";
 import { RdfNodeSerializer } from "serializer/RdfTtlSerializer";
@@ -20,7 +20,7 @@ import { getTreeSchema } from "extract/TreeSchemaExtract";
 
 import { deliverArtifact } from "delivery/ArtifactDelivery";
 
-class SerializerPlugin extends PluginBase {
+class SerializerClientPlugin extends PluginBase {
     pluginMetadata: any;
 
     constructor() {
@@ -129,4 +129,4 @@ class SerializerPlugin extends PluginBase {
     }
 }
 
-export = SerializerPlugin;
+export = SerializerClientPlugin;

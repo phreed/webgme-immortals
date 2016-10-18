@@ -1,6 +1,6 @@
 {
-  "id": "StreamingPlugin",
-  "name": "Streaming Plugin",
+  "id": "SerializerServerPlugin",
+  "name": "Server-Side Serializer Plugin",
   "version": "0.1.0",
   "description": "This is a external store synchronizer, it posts topics via some streaming tool.",
   "icon": {
@@ -51,7 +51,7 @@
       "name": "deliveryMode",
       "displayName": "Delivery Mode",
       "description": "Specify the manner of delivery for the serialization",
-      "value": "singlepart:1.0.0",
+      "value": "file:1.0.0",
       "valueType": "string",
       "valueItems": [
         "file:1.0.0",

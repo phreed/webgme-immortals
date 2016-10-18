@@ -1,6 +1,6 @@
 
 import _ = require("underscore");
-import { Writer, Util } from "n3";
+import { Writer, N3Writer, Util } from "n3";
 import * as nlv from "serializer/NodeListVisitor";
 import * as acase from "utility/altCase";
 import { PruningCondition } from "serializer/filters";
@@ -242,7 +242,7 @@ function isClass(node: nt.Subject): boolean {
 export class RdfNodeSerializer {
 
     private pruningCondition: PruningCondition;
-    private writer: N3.Output;
+    private writer: N3Writer;
     public ttlStr: string = "none produced";
     private nodeDict: { [guid: string]: nt.Subject };
 
@@ -350,7 +350,7 @@ export class RdfNodeSerializer {
             predicate: `${NS_rdf}#type`,
             object: objectifyType(subject.type, this.nodeDict)
         });
-        
+
         // console.log("write subject base");
         let base = subject.base;
         if (base !== null) {
@@ -505,7 +505,7 @@ export class RdfNodeSerializer {
     }
 
     complete = (): void => {
-        this.writer.end((error, result) => {
+        this.writer.end((error: Error, result: any) => {
             error;
             this.ttlStr = result;
         });
