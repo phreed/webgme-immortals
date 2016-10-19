@@ -15,7 +15,7 @@ var systemdSocket = require('systemd-socket');
 
 config.client.log.level = 'debug';
 config.debug = true;
-config.server.port = 8081;
+config.server.port = 3000;
 config.server.handle = systemdSocket(0);
 
 // configure the logger
