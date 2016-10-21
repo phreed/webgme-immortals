@@ -3,11 +3,14 @@
 In the following "I" represents the configuration used by
 the author of this document.
 "You" should feel free to change "I"'s settings.
-I run the following commands to install on Ubuntu.
+I run the following commands to install the prerequisites on Ubuntu.
 ```bash
   sudo apt-get install mongodb-server
+  sudo apt-get install mongodb-clients
   sudo apt-get install git
-
+```
+Clone the repository into an appropriate place and build the application.
+```bash
   mkdir -p ~/projects/brass
   cd ~/projects/brass
   git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
@@ -18,7 +21,9 @@ I run the following commands to install on Ubuntu.
   nvm use v4.2.4
 
   npm install
-
+```
+If you want to run the application to see if it works.
+```bash
   webgme start
 ```
 
@@ -26,8 +31,10 @@ webGME and its derivatives are node.js applications which
 use mongodb as the backing store and git for version-control.
 Development and operation are possible on MS-Windows and Mac-OSX.
 The following instructions are for Ubuntu 16.04 (which I use).
+Note that mongodb-clients is not necessary but it can be useful.
 ```bash
   sudo apt-get install mongodb-server
+  sudo apt-get install mongodb-clients
   sudo apt-get install git
 ```
 Clone the webgme-immortals project into an appropriate place.
@@ -84,53 +91,7 @@ Changes to Javascript or CSS will only require an refresh on the browser.
 
 ### Long Running Service
 
-WebGME can be run as a service on Ubuntu.
-It makes use of 'upstart' (<16.04) and 'systemd' (>= 16.04).
-
-#### Upstart (Ubuntu <16.04)
-Copy the webgme files to their appropriate locations.
-The config file may need to be updated based on where your
-webgme-immortals project resides.
-```bash
-sudo cp ./init/webgme.conf /etc/init/webgme.conf
-```
-Fire it up!
-```bash
-# service webgme start
-```
-
-
-#### systemd (Ubuntu >=16.04)
-
-
-```bash
-SYSTEMD_DIR=/lib/systemd/system
-mkdir -p $SYSTEMD_DIR
-cp webgme.service  $SYSTEMD_DIR
-cp webgme.socket $SYSTEMD_DIR
-
-# ENV_DIR=/etc/default/webgme/
-ENV_DIR=~/.config/webgme/
-mkdir -p $ENV_DIR
-# cp webgme_immortals.env $ENV_DIR
-
-systemctl --system daemon-reload
-
-systemctl --system enable webgme.socket
-systemctl --system start webgme.socket
-# systemctl status webgme.socket
-
-# SHARE_DIR=/usr/share/webgme
-SHARE_DIR=~/.config/webgme
-mkdir -p $SHARE_DIR
-# cp webgme_immortals.sh $SHARE_DIR
-
-systemctl --system enable webgme.service
-systemctl --system start webgme.service
-# systemctl status webgme.service
-
-journalctl -xe
-```
+see brass/webgme-immortals/init/README.md
 
 ### Samples ###
 

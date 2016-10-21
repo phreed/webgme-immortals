@@ -8,17 +8,17 @@ var config = require('webgme/config/config.default'),
 
 
 // The paths can be loaded from the webgme-setup.json
-config.plugin.basePaths.push('src/plugins');
+config.plugin.basePaths.push('src/js/plugins');
 config.seedProjects.basePaths.push('src/seeds/immortals');
 
+config.visualization.panelPaths.push('src/js/visualizers/panels');
 
 // Visualizer descriptors
-config.visualization.visualizerDescriptors.push('./src/visualizers/Visualizers.json');
+config.visualization.visualizerDescriptors.push('./src/js/visualizers/Visualizers.json');
 // Add requirejs paths
 config.requirejsPaths = {
-  'panels': './src/visualizers/panels',
-  'widgets': './src/visualizers/widgets',
-  'serialize': './src/serialize'
+  'panels': './src/js/visualizers/panels',
+  'widgets': './src/js/visualizers/widgets'
 };
 
 

@@ -1,0 +1,219 @@
+@prefix freebase: <http://rdf.freebase.com/ns/>.
+@prefix fn: <http://www.w3.org/2005/xpath-functions/#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix IMMoRTALS: <http://darpa.mil/immortals/ontology/r2.0.0/#>.
+@prefix IMMoRTALS_cp: <http://darpa.mil/immortals/ontology/r2.0.0/cp#>.
+@prefix IMMoRTALS_cp_java: <http://darpa.mil/immortals/ontology/r2.0.0/cp/java#>.
+@prefix IMMoRTALS_ordering: <http://darpa.mil/immortals/ontology/r2.0.0/ordering#>.
+@prefix IMMoRTALS_bytecode: <http://darpa.mil/immortals/ontology/r2.0.0/bytecode#>.
+@prefix IMMoRTALS_android: <http://darpa.mil/immortals/ontology/r2.0.0/android#>.
+@prefix IMMoRTALS_core: <http://darpa.mil/immortals/ontology/r2.0.0/core#>.
+@prefix IMMoRTALS_resources: <http://darpa.mil/immortals/ontology/r2.0.0/resources#>.
+@prefix IMMoRTALS_resources_gps: <http://darpa.mil/immortals/ontology/r2.0.0/resources/gps#>.
+@prefix IMMoRTALS_resources_gps_properties: <http://darpa.mil/immortals/ontology/r2.0.0/resources/gps/properties#>.
+@prefix IMMoRTALS_resources_memory: <http://darpa.mil/immortals/ontology/r2.0.0/resources/memory#>.
+@prefix IMMoRTALS_functionality: <http://darpa.mil/immortals/ontology/r2.0.0/functionality#>.
+@prefix IMMoRTALS_functionality_locationprovider: <http://darpa.mil/immortals/ontology/r2.0.0/functionality/locationprovider#>.
+@prefix IMMoRTALS_functionality_imageprocessor: <http://darpa.mil/immortals/ontology/r2.0.0/functionality/imageprocessor#>.
+@prefix IMMoRTALS_functionality_dataproperties: <http://darpa.mil/immortals/ontology/r2.0.0/functionality/dataproperties#>.
+@prefix IMMoRTALS_property: <http://darpa.mil/immortals/ontology/r2.0.0/property#>.
+@prefix IMMoRTALS_property_impact: <http://darpa.mil/immortals/ontology/r2.0.0/property/impact#>.
+@prefix IMMoRTALS_com_securboration_immortals_example_instantiation: <http://darpa.mil/immortals/ontology/r2.0.0/com/securboration/immortals/example/instantiation#>.
+@prefix IMMoRTALS_metrics: <http://darpa.mil/immortals/ontology/r2.0.0/metrics#>.
+@prefix IMMoRTALS_connectivity: <http://darpa.mil/immortals/ontology/r2.0.0/connectivity#>.
+@prefix IMMoRTALS_server: <http://darpa.mil/immortals/ontology/r2.0.0/server#>.
+@prefix IMMoRTALS_image_fidelity: <http://darpa.mil/immortals/ontology/r2.0.0/image/fidelity#>.
+@prefix IMMoRTALS_model: <http://darpa.mil/immortals/ontology/r2.0.0/model#>.
+@prefix IMMoRTALS_ptr: <http://darpa.mil/immortals/ontology/r2.0.0/pointer#>.
+@prefix IMMoRTALS_attr: <http://darpa.mil/immortals/ontology/r2.0.0/attribute#>.
+@prefix IMMoRTALS_impl: <http://darpa.mil/immortals/ontology/r2.0.0/com/securboration/immortals/example/instantiation#>.
+
+IMMoRTALS_model:MissionRoot--03d36072-9e09-7866-cb4e-d0a36ff825f6 IMMoRTALS:name "mission-ROOT";
+    a IMMoRTALS_cp:GmeInterchangeFormat;
+    IMMoRTALS:base IMMoRTALS_model:Fco--00000000-0000-0000-0000-000000000000;
+    IMMoRTALS:hasFunctionalitySpec IMMoRTALS_cp:imageFunctionalitySpec--44f873e7-fcb0-9eff-4717-0cb7f85d3acb;
+    IMMoRTALS:hasDocumentation "#### FCO\nFCO (first class object) is the base object.\n\n\n\n", "The mission goals specify the target parameters across the system.\nThe difficulty with mission goals is that they can be specific or general.\nIn this sample model they tend toward the more specific.\nThey define a few types of messages and the rates that those messages are sent/received from/by specific devices.\n";
+    IMMoRTALS:hasLibraryroot IMMoRTALS_model:network, IMMoRTALS_model:deploy, IMMoRTALS_model:message;
+    IMMoRTALS:hasMissionSpec IMMoRTALS_cp:clientDeviceSpec--a48cda85-c73b-738c-fc65-1d6d497e3be3, IMMoRTALS_cp:messageDeliverySpec--b64df4ab-b97c-43df-1e59-ecb2fbc7ef20;
+    IMMoRTALS:hasLanguageFolder IMMoRTALS_resources:language-folder.
+
+IMMoRTALS_cp:ImageFunctionalitySpec--44f873e7-fcb0-9eff-4717-0cb7f85d3acb IMMoRTALS:name "Image Functionality Spec";
+    a IMMoRTALS_cp:FunctionalitySpec;
+    IMMoRTALS:base IMMoRTALS_cp:FunctionalitySpec;
+    rdfs:documentation "";
+    IMMoRTALS:hasPrecedence "1"^^xsd:integer;
+    IMMoRTALS:hasPropertyConstraint <http://darpa.mil/immortals/ontology/r2.0.0/property impact#propertyConstraint--561dc2ed-407e-b2c6-0ec2-8f9884d21d86>;
+    IMMoRTALS:hasDocumentation "".
+
+IMMoRTALS_cp:ClientDeviceSpec--a48cda85-c73b-738c-fc65-1d6d497e3be3 IMMoRTALS:name "Client Device Spec";
+    a IMMoRTALS_cp:MissionSpec;
+    IMMoRTALS:base IMMoRTALS_cp:MissionSpec;
+    rdfs:documentation "The software must support at least 25 concurrent clients";
+    IMMoRTALS:hasMeasuredValue IMMoRTALS_metrics:rightValue--efa947eb-5e45-9108-8501-0a94e787fde7;
+    IMMoRTALS:hasPrecedence "1"^^xsd:integer;
+    IMMoRTALS:hasValue "WHEN_VALUE_GREATER_THAN_INCLUSIVE".
+
+IMMoRTALS_resources:language-folder IMMoRTALS:name "_Language Folder";
+    a IMMoRTALS_resources:language-folder;
+    IMMoRTALS:base IMMoRTALS_resources:Fco;
+    rdfs:documentation "#### Language Folder\nThe stereotypical objects, located in this language folder, can be considered as classes.\n\n";
+    IMMoRTALS:hasLanguageStereotypes IMMoRTALS_resources:propertyStereotypes--f97da3ae-c4b6-e8b6-b062-9d8ebd993bd0, IMMoRTALS_resources:languageStereotypes, IMMoRTALS_resources:specificationStereotypes--5bed367f-73ac-1c14-896a-d6b42d2350c1, IMMoRTALS_resources:imageStereotypes--40eb4a68-326b-80d8-e4f5-05a108565e2e, IMMoRTALS_resources:provisioningStereotypes--40c15d3a-3130-0dee-8af3-f359610318d2, IMMoRTALS_resources:performanceStereotypes--967f3158-b2ad-061d-7684-8b493c9f4061;
+    IMMoRTALS:hasDocumentation "Mission languages".
+
+IMMoRTALS_cp:MessageDeliverySpec--b64df4ab-b97c-43df-1e59-ecb2fbc7ef20 IMMoRTALS:name "Message Delivery Spec";
+    a IMMoRTALS_cp:MissionSpec;
+    IMMoRTALS:base IMMoRTALS_cp:MissionSpec;
+    rdfs:documentation "The SA message delivery requirement";
+    IMMoRTALS:hasInboundMsgLoad IMMoRTALS_resources:inboundMsgLoad--787d2d70-bab1-ab33-76e6-fea0438cf8d4, IMMoRTALS_resources:inboundMsgLoad--8dd3382e-45ad-d259-a3b1-ab43f61a73a7;
+    IMMoRTALS:hasReifyDevice IMMoRTALS_resources:reifyDevice--81bf0ba9-1705-0444-cace-d71396d32050, IMMoRTALS_resources:reifyDevice--28d0d6e6-8899-f2cd-8c0f-fe2737cfcff6, IMMoRTALS_resources:reifyDevice--777e825d-40ee-a032-04ec-2443382c06cb;
+    IMMoRTALS:hasOutboundMsgLoad IMMoRTALS_resources:outboundMsgLoad--005ee784-3a32-7499-a248-9bb44e4dc6f8, IMMoRTALS_resources:outboundMsgLoad--727bc370-d7b1-8470-876a-168d4554d57b;
+    IMMoRTALS:hasAnticipatedResPerf IMMoRTALS_resources:specRecvLocMsgRate--742608c0-0aec-54a1-e9db-6e20c7e6842c, IMMoRTALS_resources:a1--SendLocMsgRate--73303b1b-caa6-829b-b30c-62529647716f, IMMoRTALS_resources:c1--SendLocMsgRate--12259656-184c-cc82-c21a-7e2a70415458;
+    IMMoRTALS:hasObservedResPerf IMMoRTALS_resources:actRecvLocMsgRate--cd02be4d-2d75-4b63-8db7-4b5280913071;
+    IMMoRTALS:hasDocumentation "### Mission Goals : Challenge Problem #1\n\n#### Qualitative Goals\n\nLocation-data are generated by gps-devices.\nThis location-data can be saasm {required, optional, ?} as a goal.\nThe location-data goal can be set for the mission or by device.\n(This is achieved by setting setting the saasm setting on the base mobile-device or on specific devices.)\n\nThese location-data are used to compose location-messages by mobile-devices.\nThe mobile-devices send the location-messages to the sa-server.\nThe sa-server distributes the location-messages to all mobile-devices.\n\n", "#### Mission Goals : Challenge Problem #2\n\n#### Quantitative Goals \n\nThe rate that messages are created is set.\nThe rate which messages are received is specified as a range.".
+
+<http://darpa.mil/immortals/ontology/r2.0.0/property impact#PropertyConstraint--561dc2ed-407e-b2c6-0ec2-8f9884d21d86> IMMoRTALS:name "Property Constraint";
+    a <http://darpa.mil/immortals/ontology/r2.0.0/property impact#PropertyConstraint>;
+    IMMoRTALS:base <http://darpa.mil/immortals/ontology/r2.0.0/property impact#PropertyConstraint>;
+    rdfs:documentation "The implementer must produce images at least 1024x1024 pixels in size AND with at least 24-bit RGB channels";
+    IMMoRTALS:hasPrecedence "1"^^xsd:integer;
+    IMMoRTALS:hasValue "WHEN_PROPERTY_GREATER_THAN_INCLUSIVE", "APPLICABLE_TO_ALL_OF";
+    IMMoRTALS:hasProperty IMMoRTALS_image_fidelity:constrainedProperty--ff40bdaf-245a-bde9-d5f7-1378e4f12d08.
+
+IMMoRTALS_metrics:RightValue--efa947eb-5e45-9108-8501-0a94e787fde7 IMMoRTALS:name "Right Value";
+    a IMMoRTALS_metrics:MeasuredValue;
+    IMMoRTALS:base IMMoRTALS_metrics:MeasuredValue;
+    IMMoRTALS:hasValue "25"^^xsd:integer;
+    IMMoRTALS:hasUnit "count".
+
+IMMoRTALS_resources:PropertyStereotypes--f97da3ae-c4b6-e8b6-b062-9d8ebd993bd0 IMMoRTALS:name "Property Stereotypes";
+    a IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:base IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:hasInheritanceType "class";
+    IMMoRTALS:hasValue "";
+    IMMoRTALS:hasDocumentation "";
+    IMMoRTALS:hasValue "", "WHEN_PROPERTY_GREATER_THAN_INCLUSIVE";
+    IMMoRTALS:hasPrecedence "1"^^xsd:integer;
+    IMMoRTALS:hasDocumentation "<language description>".
+
+IMMoRTALS_resources:LanguageStereotypes IMMoRTALS:name "_Language Stereotypes";
+    a IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:base IMMoRTALS_resources:Fco;
+    IMMoRTALS:hasInheritanceType "class";
+    IMMoRTALS:hasDocumentation "<language description>".
+
+IMMoRTALS_resources:SpecificationStereotypes--5bed367f-73ac-1c14-896a-d6b42d2350c1 IMMoRTALS:name "Specification Stereotypes";
+    a IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:base IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:hasInheritanceType "class";
+    IMMoRTALS:hasDocumentation "";
+    IMMoRTALS:hasProfile "[0 20] msg/sec";
+    IMMoRTALS:hasDocumentation "", "## Specifications\n\nThese stereotypes are used to provide mission specifications.\n\n", "", "";
+    IMMoRTALS:hasProfile "[0 20] msg/sec", "[0 20] msg/sec".
+
+IMMoRTALS_resources:ImageStereotypes--40eb4a68-326b-80d8-e4f5-05a108565e2e IMMoRTALS:name "Image Stereotypes";
+    a IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:base IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:hasInheritanceType "class";
+    IMMoRTALS:hasWidth "0"^^xsd:integer;
+    IMMoRTALS:hasHeight "0"^^xsd:integer;
+    IMMoRTALS:hasDocumentation "<language description>".
+
+IMMoRTALS_resources:ProvisioningStereotypes--40c15d3a-3130-0dee-8af3-f359610318d2 IMMoRTALS:name "Provisioning Stereotypes";
+    a IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:base IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:hasInheritanceType "class";
+    IMMoRTALS:hasValue "0"^^xsd:integer;
+    IMMoRTALS:hasUnit "count";
+    IMMoRTALS:hasDocumentation "#### Provisioning Stereotypes\n\nThese cross-cuts relate Execution-Devices to Device-Instances.\nThe Execution-Device being a stereotypical but unrealized Device-Instance.".
+IMMoRTALS_resources:PerformanceStereotypes--967f3158-b2ad-061d-7684-8b493c9f4061 IMMoRTALS:name "Performance Stereotypes";
+    a IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:base IMMoRTALS_resources:LanguageStereotypes;
+    IMMoRTALS:hasInheritanceType "class";
+    IMMoRTALS:hasTimeEpochMilliSec "0"^^xsd:integer;
+    IMMoRTALS:hasStartTimeEpochMilliSec "0"^^xsd:integer;
+    IMMoRTALS:hasEndTimeEpochMilliSec "0"^^xsd:integer;
+    IMMoRTALS:hasDocumentation "### Performance Language\n\nDescribes the rate at which the messages are generated and consumed by Device-Instances.\nThe Performance objects are defined as classes for the mission model.".
+
+IMMoRTALS_resources:InboundMsgLoad--787d2d70-bab1-ab33-76e6-fea0438cf8d4 IMMoRTALS:name "inbound msg load";
+    a IMMoRTALS_resources:InboundMsgLoad;
+    IMMoRTALS:base IMMoRTALS_resources:InboundMsgLoad;
+    IMMoRTALS:hasProfile "[0 20] msg/sec";
+    IMMoRTALS_ptr:src <http://darpa.mil/immortals/ontology/r1.0.0/resources#Location--bce3cc0d-92a7-2f2a-026f-f8eaf265751f>;
+    IMMoRTALS_ptr:dst <http://darpa.mil/immortals/ontology/r1.0.0/resources#MobileC1--b0093c7a-d98f-feb8-bc1e-2a1ff8544858>.
+
+IMMoRTALS_resources:ReifyDevice--81bf0ba9-1705-0444-cace-d71396d32050 IMMoRTALS:name "reify device";
+    a IMMoRTALS_resources:ReifyDevice;
+    IMMoRTALS:base IMMoRTALS_resources:ReifyDevice;
+    IMMoRTALS_ptr:dst <http://darpa.mil/immortals/ontology/r1.0.0/resources#MobileC1--b0093c7a-d98f-feb8-bc1e-2a1ff8544858>;
+    IMMoRTALS_ptr:src <http://darpa.mil/immortals/ontology/r1.0.0/resources#Nexus7-UsbEnabled--a9a758a4-efcc-c170-7ded-677df53a7e35>.
+
+IMMoRTALS_resources:ReifyDevice--28d0d6e6-8899-f2cd-8c0f-fe2737cfcff6 IMMoRTALS:name "reify device";
+    a IMMoRTALS_resources:ReifyDevice;
+    IMMoRTALS:base IMMoRTALS_resources:ReifyDevice;
+    IMMoRTALS_ptr:src <http://darpa.mil/immortals/ontology/r1.0.0/resources#SaServerDeviceInstance--0f29b143-f244-a446-ce45-eb58a1ae9b12>;
+    IMMoRTALS_ptr:dst <http://darpa.mil/immortals/ontology/r1.0.0/resources#ServerInstance--37074304-caea-6138-771e-aab93405c5fd>.
+
+IMMoRTALS_resources:OutboundMsgLoad--005ee784-3a32-7499-a248-9bb44e4dc6f8 IMMoRTALS:name "outbound msg load";
+    a IMMoRTALS_resources:OutboundMsgLoad;
+    IMMoRTALS:base IMMoRTALS_resources:OutboundMsgLoad;
+    IMMoRTALS:hasProfile "[0 20] msg/sec";
+    IMMoRTALS_ptr:specified IMMoRTALS_resources:C1--SendLocMsgRate--12259656-184c-cc82-c21a-7e2a70415458;
+    IMMoRTALS_ptr:dst <http://darpa.mil/immortals/ontology/r1.0.0/resources#Location--bce3cc0d-92a7-2f2a-026f-f8eaf265751f>;
+    IMMoRTALS_ptr:src <http://darpa.mil/immortals/ontology/r1.0.0/resources#MobileC1--b0093c7a-d98f-feb8-bc1e-2a1ff8544858>.
+
+IMMoRTALS_resources:C1--SendLocMsgRate--12259656-184c-cc82-c21a-7e2a70415458 IMMoRTALS:name "C1: Send Loc Msg Rate";
+    a IMMoRTALS_resources:AnticipatedResPerf;
+    IMMoRTALS:base IMMoRTALS_resources:AnticipatedResPerf;
+    IMMoRTALS:hasStartTimeEpochMilliSec "0"^^xsd:integer;
+    IMMoRTALS:hasEndTimeEpochMilliSec "0"^^xsd:integer.
+
+IMMoRTALS_resources:OutboundMsgLoad--727bc370-d7b1-8470-876a-168d4554d57b IMMoRTALS:name "outbound msg load";
+    a IMMoRTALS_resources:OutboundMsgLoad;
+    IMMoRTALS:base IMMoRTALS_resources:OutboundMsgLoad;
+    IMMoRTALS:hasProfile "[0 20] msg/sec";
+    IMMoRTALS_ptr:specified IMMoRTALS_resources:A1--SendLocMsgRate--73303b1b-caa6-829b-b30c-62529647716f;
+    IMMoRTALS_ptr:dst <http://darpa.mil/immortals/ontology/r1.0.0/resources#Location--bce3cc0d-92a7-2f2a-026f-f8eaf265751f>;
+    IMMoRTALS_ptr:src <http://darpa.mil/immortals/ontology/r1.0.0/resources#MobileA1--b1032662-1c00-52fe-e6be-42f2a130ecfb>.
+
+IMMoRTALS_resources:SpecRecvLocMsgRate--742608c0-0aec-54a1-e9db-6e20c7e6842c IMMoRTALS:name "Spec Recv Loc Msg Rate";
+    a IMMoRTALS_resources:AnticipatedResPerf;
+    IMMoRTALS:base IMMoRTALS_resources:AnticipatedResPerf;
+    IMMoRTALS:hasStartTimeEpochMilliSec "0"^^xsd:integer;
+    IMMoRTALS:hasEndTimeEpochMilliSec "0"^^xsd:integer.
+
+IMMoRTALS_resources:A1--SendLocMsgRate--73303b1b-caa6-829b-b30c-62529647716f IMMoRTALS:name "A1: Send Loc Msg Rate";
+    a IMMoRTALS_resources:AnticipatedResPerf;
+    IMMoRTALS:base IMMoRTALS_resources:AnticipatedResPerf;
+    IMMoRTALS:hasStartTimeEpochMilliSec "0"^^xsd:integer;
+    IMMoRTALS:hasEndTimeEpochMilliSec "0"^^xsd:integer.
+
+IMMoRTALS_resources:InboundMsgLoad--8dd3382e-45ad-d259-a3b1-ab43f61a73a7 IMMoRTALS:name "inbound msg load";
+    a IMMoRTALS_resources:InboundMsgLoad;
+    IMMoRTALS:base IMMoRTALS_resources:InboundMsgLoad;
+    IMMoRTALS:hasProfile "[0 20] msg/sec";
+    IMMoRTALS_ptr:measured IMMoRTALS_resources:ActRecvLocMsgRate--cd02be4d-2d75-4b63-8db7-4b5280913071;
+    IMMoRTALS_ptr:specified IMMoRTALS_resources:SpecRecvLocMsgRate--742608c0-0aec-54a1-e9db-6e20c7e6842c;
+    IMMoRTALS_ptr:src <http://darpa.mil/immortals/ontology/r1.0.0/resources#Location--bce3cc0d-92a7-2f2a-026f-f8eaf265751f>;
+    IMMoRTALS_ptr:dst <http://darpa.mil/immortals/ontology/r1.0.0/resources#MobileA1--b1032662-1c00-52fe-e6be-42f2a130ecfb>.
+
+IMMoRTALS_resources:ActRecvLocMsgRate--cd02be4d-2d75-4b63-8db7-4b5280913071 IMMoRTALS:name "Act Recv Loc Msg Rate";
+    a IMMoRTALS_resources:ObservedResPerf;
+    IMMoRTALS:base IMMoRTALS_resources:ObservedResPerf;
+    IMMoRTALS:hasTimeEpochMilliSec "0"^^xsd:integer.
+
+IMMoRTALS_resources:ReifyDevice--777e825d-40ee-a032-04ec-2443382c06cb IMMoRTALS:name "reify device";
+    a IMMoRTALS_resources:ReifyDevice;
+    IMMoRTALS:base IMMoRTALS_resources:ReifyDevice;
+    IMMoRTALS_ptr:dst <http://darpa.mil/immortals/ontology/r1.0.0/resources#MobileA1--b1032662-1c00-52fe-e6be-42f2a130ecfb>;
+    IMMoRTALS_ptr:src <http://darpa.mil/immortals/ontology/r1.0.0/resources#Nexus7-BtEnabled--abbe7e1d-5843-d072-e3ca-df0f5921f9df>.
+
+IMMoRTALS_image_fidelity:ConstrainedProperty--ff40bdaf-245a-bde9-d5f7-1378e4f12d08 IMMoRTALS:name "Constrained Property";
+    a IMMoRTALS_resources:Property;
+    IMMoRTALS:base IMMoRTALS_resources:Property;
+    IMMoRTALS:hasWidth "1024"^^xsd:integer;
+    IMMoRTALS:hasHeight "1024"^^xsd:integer;
+    IMMoRTALS:hasWidth "1024"^^xsd:integer;
+    IMMoRTALS:hasHeight "1024"^^xsd:integer.

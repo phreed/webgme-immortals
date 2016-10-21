@@ -1,0 +1,91 @@
+{
+  "id": "StreamPlugin",
+  "name": "Stream Processing Plugin",
+  "version": "0.1.0",
+  "description": "This is a external store synchronizer, it posts topics via some streaming tool.",
+  "icon": {
+    "class": "glyphicon glyphicon-cog",
+    "src": ""
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": true,
+  "writeAccessRequired": true,
+  "configStructure": [
+    {
+      "name": "schematicVersion",
+      "displayName": "Schematic Version",
+      "description": "Specify the type and version to be used.",
+      "value": "model-flat:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "schema-tree:1.0.0",
+        "schema-flat:1.0.0",
+        "model-tree:1.0.0",
+        "model-flat:1.0.0"
+      ]
+    },
+    {
+      "name": "syntacticVersion",
+      "displayName": "Syntactic Version",
+      "description": "Specify the type and version to be used for output.",
+      "value": "ttl:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "json:1.0.0",
+        "ttl:1.0.0"
+      ]
+    },
+    {
+      "name": "filter",
+      "displayName": "Filter",
+      "description": "Specify the nodes to retain",
+      "value": "book",
+      "valueType": "string",
+      "valueItems": [
+        "library",
+        "book",
+        "all"
+      ]
+    },
+    {
+      "name": "deliveryMode",
+      "displayName": "Delivery Mode",
+      "description": "Specify the manner of delivery for the serialization",
+      "value": "singlepart:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "file:1.0.0",
+        "singlepart:1.0.0",
+        "multipart:1.0.0",
+        "websocket:1.0.0",
+        "kafka:1.0.0"
+      ]
+    },
+    {
+      "name": "deliveryUrl",
+      "displayName": "Host IP address or name: for delivery modes that require one.",
+      "regex": "^[0-9a-zA-Z:\/'-]+$",
+      "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore!",
+      "description": "What is the ip address or name of the host for the graph database mega-model.",
+      "value": "http://localhost:8088/das/deployment-model",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "fileName",
+      "displayName": "File name: for delivery modes that require one.",
+      "description": "click and drag file .",
+      "value": "immortals_model",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "query",
+      "displayName": "extract sub-model",
+      "description": "Model extraction from system Multi-Model.",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}

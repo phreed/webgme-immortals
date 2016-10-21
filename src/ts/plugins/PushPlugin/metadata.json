@@ -1,0 +1,65 @@
+{
+  "id": "PushPlugin",
+  "name": "Push Plugin",
+  "version": "0.1.1",
+  "description": "Push the model to an alternate repository. \n Example of how to push a data-model from webgme.\nThe active node (i.e. open node on the canvas) will be the starting point, expect when importing a project.",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cloud"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": true,
+  "configStructure": [
+    {
+      "name": "schematicVersion",
+      "displayName": "Schematic Version",
+      "description": "Specify the type and version of the subgraph.",
+      "value": "flat:1.0.0",
+      "valueType": "string",
+      "valueItems": [
+        "tree:1.0.0",
+        "flat:1.0.0"
+      ]
+    },
+    {
+      "name": "deliveryMode",
+      "displayName": "Delivery Mode",
+      "description": "The mechanism to use to deliver the serialization.",
+      "value": "file",
+      "valueType": "string",
+      "valueItems": [
+        "file",
+        "websocket",
+        "rest",
+        "stream"
+      ]
+    },
+    {
+      "name": "deliveryUrl",
+      "displayName": "Host IP address or name for delivery modes which have one.",
+      "regex": "^[0-9a-zA-Z\\.-_]+$|^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+      "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore. It may also be a four part dotted address.",
+      "description": "What is the ip address or name of the host for the graph database mega-model.",
+      "value": "localhost",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "fileName",
+      "displayName": "graph model file name",
+      "description": "click and drag file .",
+      "value": "default_graph.json",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "query",
+      "displayName": "extract sub-model",
+      "description": "Model extraction from system Multi-Model.",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}

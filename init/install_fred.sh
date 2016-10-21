@@ -3,10 +3,11 @@
 # export SYSTEMD_DIR=/usr/local/systemd/system/
 export SYSTEMD_DIR=/lib/systemd/system/
 mkdir -p $SYSTEMD_DIR
-cp webgme.service ${SYSTEMD_DIR}webgme.service
-cp webgme.socket ${SYSTEMD_DIR}webgme.socket
+cp webgme.service.fred ${SYSTEMD_DIR}webgme.service
+cp webgme.socket.fred ${SYSTEMD_DIR}webgme.socket
 
 systemctl --system daemon-reload
+
 systemctl --system stop webgme.socket
 systemctl --system stop webgme.service
 
