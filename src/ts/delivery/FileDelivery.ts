@@ -10,7 +10,7 @@ import { addSytacticSuffix } from "utility/ConfigUtil";
 * @param {}
 */
 
-export function deliverFile(sponsor: PluginBase, config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> {
+export function deliverFile(sponsor: PluginBase, config: Core.GmeConfig, payload: string): Promise<Core.DataObject> {
     sponsor.logger.info(`deliver file of size: ${payload.length}`);
 
     let configDictionary: any = config;

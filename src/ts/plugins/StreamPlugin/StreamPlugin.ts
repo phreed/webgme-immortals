@@ -38,7 +38,7 @@ class StreamPlugin extends PluginBase {
         this.pluginMetadata = JSON.parse(MetaDataStr);
     }
 
-    public loadNodeMap(this: any, rootNode: PluginJS.Node): { [key: string]: any } {
+    public loadNodeMap(this: any, rootNode: Core.Node): { [key: string]: any } {
         let core = this.core;
         return Promise
             .try(() => {
@@ -49,7 +49,7 @@ class StreamPlugin extends PluginBase {
                     return Promise.reject("not a valid array");
                 }
             })
-            .then((nodeArray: PluginJS.Node[]) => {
+            .then((nodeArray: Core.Node[]) => {
                 let nodeMap = new Map<string, any>();
                 for (let node in nodeArray) {
                     nodeMap.set(core.getPath(node), node);
@@ -66,9 +66,9 @@ class StreamPlugin extends PluginBase {
     * - Do NOT put any user interaction logic UI, etc. inside this method.
     * - callback always has to be called even if error happened.
     *
-    * @param {PluginJS.Callback} mainHandler [description]
+    * @param {Core.Callback} mainHandler [description]
     */
-    public main(mainHandler: PluginJS.ResultCallback): void {
+    public main(mainHandler: Core.ResultCallback): void {
         let config = this.getCurrentConfig();
         if (config === null) {
             this.sendNotification("The streaming plugin has failed: no configuration");

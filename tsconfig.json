@@ -25,7 +25,7 @@
     "moduleResolution": "node",
     "removeComments": false,
     "target": "es6",
-    "watch": true,
+    "watch": false,
     "pretty": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",

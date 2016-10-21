@@ -37,9 +37,9 @@ class SerializerServerPlugin extends PluginBase {
     * - Do NOT put any user interaction logic UI, etc. inside this method.
     * - callback always has to be called even if error happened.
     *
-    * @param {PluginJS.Callback} mainHandler [description]
+    * @param {Core.Callback} mainHandler [description]
     */
-    public main(mainHandler: PluginJS.ResultCallback): void {
+    public main(mainHandler: Core.ResultCallback): void {
         let config = this.getCurrentConfig();
         if (config === null) {
             this.sendNotification("The streaming plugin has failed: no configuration");

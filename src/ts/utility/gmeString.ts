@@ -1,13 +1,13 @@
 
 
-export function attrToString(attr: PluginJS.OutAttr): string {
+export function attrToString(attr: Core.OutAttr): string {
     if (typeof attr !== "string") {
         throw new Error("attribute value is not a string");
     }
     return attr;
 }
 
-export function pathToString(path: PluginJS.OutPath): string | boolean {
+export function pathToString(path: Core.OutPath): string | boolean {
     if (path === null) {
         return false;
     }

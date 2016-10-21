@@ -11,14 +11,14 @@ const CONTAINMENT_PREFIX = "";
      * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
      * sponsor function makes extensive use of a dictionary to build up a tree.
      *
-     * @param {PluginJS.Core}     core        [description]
+     * @param {Core.Core}     core        [description]
      * @param {Node}              rootNode    [description]
-     * @param {PluginJS.Callback} mainHandler [description]
+     * @param {Core.Callback} mainHandler [description]
      */
-export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
-    _rootNode: PluginJS.Node, _metaNode: Node): PluginJS.Dictionary {
-    // let config: PluginJS.GmeConfig = sponsor.getCurrentConfig();
-    // let configDictionary: PluginJS.Dictionary = config;
+export function getTreeModel(sponsor: PluginBase, core: Core.Core,
+    _rootNode: Core.Node, _metaNode: Node): Core.Dictionary {
+    // let config: Core.GmeConfig = sponsor.getCurrentConfig();
+    // let configDictionary: Core.Dictionary = config;
 
     /**
     * Visitor function store.
@@ -26,13 +26,13 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
     let fcoName: string = attrToString(core.getAttribute(core.getFCO(sponsor.rootNode), "name"));
     let languageName: string = attrToString(core.getAttribute(sponsor.rootNode, "name"));
     sponsor.logger.info(`get model tree : ${languageName}:${fcoName}`);
-    let rootEntry: PluginJS.Dictionary = {
+    let rootEntry: Core.Dictionary = {
         "version": "0.0.1"
     };
     /**
      * A dictionary: look up nodes based on their path name.
      */
-    let path2entry: PluginJS.Dictionary = { "": rootEntry };
+    let path2entry: Core.Dictionary = { "": rootEntry };
 
     /**
      * The base node makes reference to inheritance.
@@ -40,7 +40,7 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
      * The traverse function follows the containment tree.
      * @type {[type]}
      */
-    let visitFn = (node: Node, done: PluginJS.VoidFn): void => {
+    let visitFn = (node: Node, done: Core.VoidFn): void => {
         let core = sponsor.core;
         // let nodeName = core.getAttribute(node, "name");
 
@@ -48,7 +48,7 @@ export function getTreeModel(sponsor: PluginBase, core: PluginJS.Core,
             ? ":LibraryRoot:"
             : core.getAttribute(core.getBaseType(node), "name");
         let containRel = `${CONTAINMENT_PREFIX}${metaName}`;
-        let sourceEntry: PluginJS.Dictionary = { "lang": `${languageName}:${containRel}` };
+        let sourceEntry: Core.Dictionary = { "lang": `${languageName}:${containRel}` };
         // let baseNode = core.getBase(node);
         let nodePath = core.getPath(node);
         path2entry[nodePath] = sourceEntry;

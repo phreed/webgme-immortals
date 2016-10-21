@@ -21,7 +21,7 @@ const NS2 = "http://darpa.mil/immortals/ontology/r2.0.0";
 
 /**
  * [writeRdfTtlString description]
- * @param  {PluginJS.Dictionary | void} attr [description]
+ * @param  {Core.Dictionary | void} attr [description]
  * @return {string}                          [description]
  */
 
@@ -246,7 +246,7 @@ export class RdfNodeSerializer {
     public ttlStr: string = "none produced";
     private nodeDict: { [guid: string]: nt.Subject };
 
-    constructor(dict: PluginJS.Dictionary, pruningCondition: PruningCondition) {
+    constructor(dict: Core.Dictionary, pruningCondition: PruningCondition) {
         this.nodeDict = dict;
         dict[NA] = {
             "name": {

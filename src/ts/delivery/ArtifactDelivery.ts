@@ -8,7 +8,7 @@ import { addSytacticSuffix } from "utility/ConfigUtil";
 
 * @param {}
 */
-export function deliverArtifact(sponsor: PluginBase, config: PluginJS.GmeConfig, payload: string): Promise<PluginJS.DataObject> {
+export function deliverArtifact(sponsor: PluginBase, config: Core.GmeConfig, payload: string): Promise<Core.DataObject> {
 
     let configDictionary: any = config;
     sponsor.logger.info("deliver artifact");
@@ -46,12 +46,12 @@ export function deliverArtifact(sponsor: PluginBase, config: PluginJS.GmeConfig,
                     sponsor.sendNotification(`adding: ${pushedFileName}`);
                     return artifact.addFile(pushedFileName, payload);
                 })
-                .then((hash: PluginJS.MetadataHash) => {
+                .then((hash: Core.MetadataHash) => {
                     sponsor.sendNotification(`saving: ${hash}`);
                     return artifact.save();
                 });
         })
-        .then((hash: PluginJS.MetadataHash) => {
+        .then((hash: Core.MetadataHash) => {
             sponsor.sendNotification(`adding artifact: ${hash}`);
             sponsor.result.addArtifact(hash);
             sponsor.result.setSuccess(true);

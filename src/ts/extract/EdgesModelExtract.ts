@@ -5,9 +5,9 @@
 * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
 * sponsor function makes extensive use of a dictionary to build tuples.
 *
-* @param {PluginJS.Core}     core        [description]
+* @param {Core.Core}     core        [description]
 * @param {Node}              rootNode    [description]
-* @param {PluginJS.Callback} mainHandler [description]
+* @param {Core.Callback} mainHandler [description]
 */
 
 import Promise = require("bluebird");
@@ -21,8 +21,8 @@ const BLANK = "";
 const NULL_OBJECT = "_OBJECT"
 const NULL_GUID = "00000000-0000-0000-0000-000000000000";
 
-export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
-    _rootNode: PluginJS.Node, _metaNode: Node): PluginJS.Dictionary {
+export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
+    _rootNode: Core.Node, _metaNode: Node): Core.Dictionary {
 
     // let config = sponsor.getCurrentConfig();
     // let configDictionary: any = config;
@@ -53,12 +53,12 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
             "prune": PruningFlag.None,
             "guid": NULL_GUID
         };
-    let nodeGuidMap: PluginJS.Dictionary = {
+    let nodeGuidMap: Core.Dictionary = {
         [NULL_GUID]: rootEntry
     };
 
     sponsor.logger.info("A dictionary: look up nodes based on their path name.");
-    let path2entry: PluginJS.Dictionary = { [BLANK]: rootEntry };
+    let path2entry: Core.Dictionary = { [BLANK]: rootEntry };
 
     /**
      * A filter mechanism to effectively eliminate containment branches.
@@ -73,7 +73,7 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
      * The traverse function follows the containment tree.
      * @type {[type]}
      */
-    let visitFn = (node: Node, done: PluginJS.VoidFn): void => {
+    let visitFn = (node: Node, done: Core.VoidFn): void => {
         try {
             let core = sponsor.core;
             let nodePath: string = core.getPath(node);
@@ -155,7 +155,7 @@ export function getEdgesModel(sponsor: PluginBase, core: PluginJS.Core,
             // set the parent to know its child the root node has no parent
             // if a non-pruned item has a pruned parent then bring it in.
             if (node !== sponsor.rootNode) {
-                let parent: PluginJS.Node = core.getParent(node);
+                let parent: Core.Node = core.getParent(node);
                 let parentPath: string = core.getPath(parent);
 
                 let parentData: nt.Subject = path2entry[parentPath];
