@@ -1,6 +1,9 @@
 
-var config = require("./config.webgme");
-var validateConfig = require("webgme/config/validator");
+
+
+import * as config from "./config.webgme";
+
+let validateConfig = require("webgme/config/validator");
 
 // Add/overwrite any additional settings here
 // config.server.port = 8080;
@@ -50,4 +53,4 @@ config.requirejsPaths["plugins/PushPlugin/metadata"] = "./gen/plugins/PushPlugin
 config.requirejsPaths["plugins/StreamPlugin/metadata"] = "./gen/plugins/StreamPlugin/metadata";
 
 validateConfig(config);
-module.exports = config;
+export = config;

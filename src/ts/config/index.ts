@@ -4,12 +4,9 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-'use strict';
-
-var env = process.env.NODE_ENV || 'default',
-    configFilename = __dirname + '/config.' + env + '.js',
-    config = require(configFilename),
-    validateConfig = require('webgme/config/validator');
+let env = process.env.NODE_ENV || "default";
+let configFilename = `${__dirname}/config.${env}.js`;
+export let config = require(configFilename);
+let validateConfig = require("webgme/config/validator");
 
 validateConfig(configFilename);
-module.exports = config;
