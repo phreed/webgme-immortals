@@ -15,7 +15,7 @@ import { addSytacticSuffix } from "utility/ConfigUtil";
  * 
  */
 export function deliverStream(sponsor: PluginBase,
-    config: Core.GmeConfig, payload: string): Promise<Core.DataObject> {
+    config: Config.GmeConfig, payload: string): Promise<Core.DataObject> {
     sponsor.logger.info("deliver multipart/form-data to URI");
 
     if (!config.hasOwnProperty("deliveryUrl")) {

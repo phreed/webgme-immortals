@@ -15,7 +15,7 @@ import * as url from "url";
  * 
  */
 export function deliverMultipart(sponsor: PluginBase,
-    config: Core.GmeConfig, payload: string): Promise<Core.DataObject> {
+    config: Config.GmeConfig, payload: string): Promise<Core.DataObject> {
     sponsor.logger.info("deliver multipart/form-data to URI");
 
     if (!config.hasOwnProperty("deliveryUrl")) {
@@ -52,7 +52,7 @@ export function deliverMultipart(sponsor: PluginBase,
 
 
 export function deliverSinglepart(sponsor: PluginBase,
-    config: Core.GmeConfig, payload: string): Promise<Core.DataObject> {
+    config: Config.GmeConfig, payload: string): Promise<Core.DataObject> {
     sponsor.logger.info("deliver multipart/form-data to URI");
 
     if (!config.hasOwnProperty("deliveryUrl")) {

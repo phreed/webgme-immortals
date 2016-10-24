@@ -43,7 +43,9 @@
       ]
     }
   },
-  "files": [],
+  "files": [
+    "./src/ts/app_bootstrap.ts"
+  ],
   "include": [
     "./src/ts/**/*.ts"
   ],

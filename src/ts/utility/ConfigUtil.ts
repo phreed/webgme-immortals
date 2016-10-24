@@ -1,7 +1,7 @@
 
 require("plugin/PluginBase");
 
-export function addSytacticSuffix(config: Core.GmeConfig,
+export function addSytacticSuffix(config: Config.GmeConfig,
     baseFilename: string): string {
 
     let configDictionary: any = config;

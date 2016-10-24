@@ -21,7 +21,6 @@ import { getTreeSchema } from "extract/TreeSchemaExtract";
 import { deliverFile } from "delivery/FileDelivery";
 import { deliverMultipart, deliverSinglepart } from "delivery/UriDelivery";
 
-
 class SerializerServerPlugin extends PluginBase {
     pluginMetadata: any;
 

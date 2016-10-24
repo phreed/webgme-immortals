@@ -8,7 +8,7 @@ import { addSytacticSuffix } from "utility/ConfigUtil";
 
 * @param {}
 */
-export function deliverArtifact(sponsor: PluginBase, config: Core.GmeConfig, payload: string): Promise<Core.DataObject> {
+export function deliverArtifact(sponsor: PluginBase, config: Config.GmeConfig, payload: string): Promise<Core.DataObject> {
 
     let configDictionary: any = config;
     sponsor.logger.info("deliver artifact");
