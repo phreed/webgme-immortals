@@ -17,7 +17,7 @@ const CONTAINMENT_PREFIX = "";
      */
 export function getTreeModel(sponsor: PluginBase, core: Core.Core,
     _rootNode: Core.Node, _metaNode: Node): Core.Dictionary {
-    // let config: Core.GmeConfig = sponsor.getCurrentConfig();
+    // let config: Config.GmeConfig = sponsor.getCurrentConfig();
     // let configDictionary: Core.Dictionary = config;
 
     /**

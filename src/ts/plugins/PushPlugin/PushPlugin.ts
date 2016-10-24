@@ -13,7 +13,7 @@ import PluginBase = require("plugin/PluginBase");
 
 import FlatSerializer from "serialize/FlatSerializer";
 import CyjsSerializer from "serialize/CyjsSerializer";
-import {NewSerializer} from "serializer/NewSerializer";
+import { NewSerializer } from "serializer/NewSerializer";
 
 import MetaDataStr = require("text!plugins/PushPlugin/metadata.json");
 
@@ -82,7 +82,7 @@ class PushPlugin extends PluginBase {
     /**
      A function to deliver the serialized object properly.
     */
-    private deliverFile = (config: Core.GmeConfig, payload: string): Promise<Core.DataObject> => {
+    private deliverFile = (config: Config.GmeConfig, payload: string): Promise<Core.DataObject> => {
         let configDictionary: any = config;
 
         if (!config.hasOwnProperty("fileName")) {
@@ -113,7 +113,7 @@ class PushPlugin extends PluginBase {
             });
     }
 
-    private deliverUri = (config: Core.GmeConfig, payload: string): Promise<Core.DataObject> => {
+    private deliverUri = (config: Config.GmeConfig, payload: string): Promise<Core.DataObject> => {
         let configDictionary: any = config;
         this.sendNotification(`not implemented: ${configDictionary} : ${payload}`);
 
