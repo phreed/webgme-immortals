@@ -38,7 +38,7 @@ class StreamPlugin extends PluginBase {
         this.pluginMetadata = JSON.parse(MetaDataStr);
     }
 
-    public loadNodeMap(this: any, rootNode: Core.Node): { [key: string]: any } {
+    public loadNodeMap(this: any, rootNode: Common.Node): { [key: string]: any } {
         let core = this.core;
         return Promise
             .try(() => {
@@ -49,7 +49,7 @@ class StreamPlugin extends PluginBase {
                     return Promise.reject("not a valid array");
                 }
             })
-            .then((nodeArray: Core.Node[]) => {
+            .then((nodeArray: Common.Node[]) => {
                 let nodeMap = new Map<string, any>();
                 for (let node in nodeArray) {
                     nodeMap.set(core.getPath(node), node);

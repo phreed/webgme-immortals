@@ -11,8 +11,8 @@
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 
-import FlatSerializer from "serialize/FlatSerializer";
-import CyjsSerializer from "serialize/CyjsSerializer";
+import { FlatSerializer } from "serializer/FlatSerializer";
+import { CyjsSerializer } from "serializer/CyjsSerializer";
 import { NewSerializer } from "serializer/NewSerializer";
 
 import MetaDataStr = require("text!plugins/PushPlugin/metadata.json");
@@ -41,11 +41,11 @@ class PushPlugin extends PluginBase {
                         return nsExport(this.core, this.activeNode);
 
                     case "flat:1.0.0":
-                        let fsExport = Promise.promisify(FlatSerializer.export);
+                        let fsExport = Promise.promisify(FlatSerializer.exportLibrary);
                         return fsExport(this.core, this.activeNode);
 
                     case "cytoscape:1.0.0":
-                        let cyExport = Promise.promisify(CyjsSerializer.export);
+                        let cyExport = Promise.promisify(CyjsSerializer.exportMegaModel);
                         return cyExport(this.core, this.activeNode);
 
                     default:

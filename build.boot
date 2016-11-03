@@ -23,7 +23,7 @@
     (sift :include #{ #"metadata.json$"})
     (watch :verbose true)
     (copy-files :files {"ts/plugins/PushPlugin/metadata.json" "plugins/PushPlugin/metadata.json"})
-    (target :no-clean true :dir #{"./gen"})))
+    (target :no-clean true :dir #{"./dist"})))
 
 (deftask update-metadata-indirect
   "copy the files from the development directories
@@ -33,4 +33,4 @@
    (sift :include #{ #"metadata.json"})
    (watch :verbose true)
    (show :fileset true)
-   (target :no-clean true :dir #{"./gen"})))
+   (target :no-clean true :dir #{"./dist"})))

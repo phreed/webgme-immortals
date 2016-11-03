@@ -7,6 +7,5 @@ npm-debug.log*
 dist/
 typings/
 *.js.map
-gen/
 .vscode/
 

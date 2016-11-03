@@ -26,7 +26,7 @@ config.requirejsPaths["style"] = "./style/";
 
 config.visualization.extraCss = ["style/immortals.css"];
 
-config.plugin.basePaths.push("./gen/plugins", "./src/ts", "./src/js");
+config.plugin.basePaths.push("./dist/plugins", "./src/ts", "./src/js");
 console.log(config.plugin.basePaths);
 
 config.requirejsPaths["cytoscape"] = "./bower_components/cytoscape/dist/cytoscape.min";
@@ -38,19 +38,17 @@ config.requirejsPaths["bluebird"] = "./node_modules/bluebird/js/browser/bluebird
 // npm run browser
 config.requirejsPaths["n3"] = "node_modules/n3/browser/n3-browserify";
 
-config.requirejsPaths["serialize"] = "./src/js/serialize/";
+config.requirejsPaths["serializer"] = "./dist/serializer/";
+config.requirejsPaths["extract"] = "./dist/extract/";
+config.requirejsPaths["delivery"] = "./dist/delivery/";
+config.requirejsPaths["utility"] = "./dist/utility/";
+// config.requirejsPaths["serializer"] = ["dist/serializer/","src/ts/serializer/"];
 
-config.requirejsPaths["serializer"] = "./gen/serializer/";
-config.requirejsPaths["extract"] = "./gen/extract/";
-config.requirejsPaths["delivery"] = "./gen/delivery/";
-config.requirejsPaths["utility"] = "./gen/utility/";
-// config.requirejsPaths["serializer"] = ["gen/serializer/","src/ts/serializer/"];
+config.requirejsPaths["plugins/SerializerServerPlugin/metadata"] = "./dist/plugins/SerializerServerPlugin/metadata";
+config.requirejsPaths["plugins/SerializerClientPlugin/metadata"] = "./dist/plugins/SerializerClientPlugin/metadata";
 
-config.requirejsPaths["plugins/SerializerServerPlugin/metadata"] = "./gen/plugins/SerializerServerPlugin/metadata";
-config.requirejsPaths["plugins/SerializerClientPlugin/metadata"] = "./gen/plugins/SerializerClientPlugin/metadata";
-
-config.requirejsPaths["plugins/PushPlugin/metadata"] = "./gen/plugins/PushPlugin/metadata";
-config.requirejsPaths["plugins/StreamPlugin/metadata"] = "./gen/plugins/StreamPlugin/metadata";
+config.requirejsPaths["plugins/PushPlugin/metadata"] = "./dist/plugins/PushPlugin/metadata";
+config.requirejsPaths["plugins/StreamPlugin/metadata"] = "./dist/plugins/StreamPlugin/metadata";
 
 validateConfig(config);
 export = config;

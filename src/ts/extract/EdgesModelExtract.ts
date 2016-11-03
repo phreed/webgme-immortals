@@ -22,7 +22,7 @@ const NULL_OBJECT = "_OBJECT"
 const NULL_GUID = "00000000-0000-0000-0000-000000000000";
 
 export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
-    _rootNode: Core.Node, _metaNode: Node): Core.Dictionary {
+    _rootNode: Common.Node, _metaNode: Node): Core.Dictionary {
 
     // let config = sponsor.getCurrentConfig();
     // let configDictionary: any = config;
@@ -155,7 +155,7 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
             // set the parent to know its child the root node has no parent
             // if a non-pruned item has a pruned parent then bring it in.
             if (node !== sponsor.rootNode) {
-                let parent: Core.Node = core.getParent(node);
+                let parent: Common.Node = core.getParent(node);
                 let parentPath: string = core.getPath(parent);
 
                 let parentData: nt.Subject = path2entry[parentPath];

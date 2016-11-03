@@ -16,7 +16,7 @@ const CONTAINMENT_PREFIX = "";
      * @param {Core.Callback} mainHandler [description]
      */
 export function getTreeModel(sponsor: PluginBase, core: Core.Core,
-    _rootNode: Core.Node, _metaNode: Node): Core.Dictionary {
+    _rootNode: Common.Node, _metaNode: Node): Core.Dictionary {
     // let config: Config.GmeConfig = sponsor.getCurrentConfig();
     // let configDictionary: Core.Dictionary = config;
 

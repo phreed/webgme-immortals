@@ -12,7 +12,7 @@
       "node",
       "webgme"
     ],
-    "outDir": "./gen",
+    "outDir": "./dist",
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": true,
@@ -32,14 +32,14 @@
     "rootDirs": [
       "./src/ts",
       "./src/js",
-      "./gen"
+      "./dist"
     ],
     "paths": {
       "*": [
         "*",
         "./src/js/*",
         "./src/ts/*",
-        "./gen/*"
+        "./dist/*"
       ]
     }
   },
