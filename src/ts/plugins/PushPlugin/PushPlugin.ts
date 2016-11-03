@@ -82,7 +82,7 @@ class PushPlugin extends PluginBase {
     /**
      A function to deliver the serialized object properly.
     */
-    private deliverFile = (config: Config.GmeConfig, payload: string): Promise<Core.DataObject> => {
+    private deliverFile = (config: Config.GmeConfig, payload: string): Promise<Core.Result> => {
         let configDictionary: any = config;
 
         if (!config.hasOwnProperty("fileName")) {
@@ -105,7 +105,7 @@ class PushPlugin extends PluginBase {
                         return artifact.save();
                     });
             })
-            .then((hash: Core.MetadataHash) => {
+            .then((hash: Common.MetadataHash) => {
                 this.sendNotification("add artifact to result");
                 this.result.addArtifact(hash);
                 this.result.setSuccess(true);
@@ -113,7 +113,7 @@ class PushPlugin extends PluginBase {
             });
     }
 
-    private deliverUri = (config: Config.GmeConfig, payload: string): Promise<Core.DataObject> => {
+    private deliverUri = (config: Config.GmeConfig, payload: string): Promise<Core.Result> => {
         let configDictionary: any = config;
         this.sendNotification(`not implemented: ${configDictionary} : ${payload}`);
 

@@ -30,11 +30,11 @@ interface FnGuid {
     (raw: string, guid: string): string;
 }
 
-const appendGuid: FnGuid = function (raw: string, guid: string): string {
+const appendGuid: FnGuid = (raw: string, guid: string): string => {
     return `${raw}--${guid}`;
 };
 
-const noGuid: FnGuid = function (raw: string, _guid: string): string {
+const noGuid: FnGuid = (raw: string, _guid: string): string => {
     return raw;
 };
 
@@ -246,7 +246,7 @@ export class RdfNodeSerializer {
     public ttlStr: string = "none produced";
     private nodeDict: { [guid: string]: nt.Subject };
 
-    constructor(dict: Core.Dictionary, pruningCondition: PruningCondition) {
+    constructor(dict: Dictionary<any>, pruningCondition: PruningCondition) {
         this.nodeDict = dict;
         dict[NA] = {
             "name": {

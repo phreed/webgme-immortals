@@ -5,7 +5,7 @@
  * this module implements the node-by-node serialization
  * @author phreed
  */
-import CANON = require("common/util/canon");
+// import CANON = require("common/util/canon");
 import ASSERT = require("common/util/assert");
 
 interface NextCallback {
@@ -19,27 +19,30 @@ interface Dictionary {
 interface Containment {
   [key: string]: Containment;
 }
-
+/*
 interface DataProps {
   attributes: Dictionary;
   registry: Dictionary;
 }
-
+*/
+/*
 interface Sheet {
   [key: string]: DataProps;
   global?: any;
 }
-
+*/
+/*
 interface Sheets {
   [key: string]: Sheet;
 }
-
+*/
+/*
 interface JsonObject {
   items: string[];
   minItems: number[];
   maxItems: number[];
 }
-
+*/
 
 
 interface JsonModel {
@@ -99,6 +102,7 @@ export class CyjsSerializer {
     let myTick: any;
     // necessary functions for the export method
 
+    /*
     function isInLibrary(node: Common.Node): boolean {
       while (node) {
         if (core.getGuid(node) === jsonModel.root.guid) {
@@ -108,7 +112,9 @@ export class CyjsSerializer {
       }
       return false;
     }
+    */
 
+    /*
     function checkForExternalBases(node: Common.Node): void {
       let guid: string;
       let path: string;
@@ -125,7 +131,9 @@ export class CyjsSerializer {
         node = core.getBase(node);
       }
     }
+    */
 
+    /*
     function fillContainment(node: Common.Node): void {
       // first we compute the guid chain up to the library root
       let guidChain: string[] = [];
@@ -152,6 +160,7 @@ export class CyjsSerializer {
         }
       }
     }
+    */
 
     function getAttributesOfNode(node: Common.Node): Dictionary {
       let names = core.getOwnAttributeNames(node).sort();
@@ -166,6 +175,7 @@ export class CyjsSerializer {
       return result;
     }
 
+    /*
     function getRegistryOfNode(node: Common.Node): Dictionary {
       let names = core.getOwnRegistryNames(node).sort();
       let result: Dictionary = {};
@@ -177,6 +187,7 @@ export class CyjsSerializer {
       }
       return result;
     }
+    */
 
     function getPointersOfNode(node: Common.Node): Dictionary {
       // this version only puts paths to target so they need to be either removed or replaced by guid targets
@@ -195,12 +206,13 @@ export class CyjsSerializer {
       return result;
     }
 
+    /*
     function getSetsOfNode(node: Common.Node): any {
       // we collect all set - but we keep only those data which were defined on this given level
       let names = core.getSetNames(node);
       let sets: { [key: string]: { [key: string]: DataProps } } = {};
 
-      let getMemberData = function (setName: string, memberPath: string) {
+      let getMemberData =   (setName: string, memberPath: string) => {
         let data: DataProps = {
           attributes: {},
           registry: {}
@@ -225,7 +237,7 @@ export class CyjsSerializer {
         return data;
       };
 
-      let getOwnMemberData = function (setName: string, memberPath: string): DataProps {
+      let getOwnMemberData =   (setName: string, memberPath: string): DataProps => {
         let base = core.getBase(node);
 
         let data: DataProps = {
@@ -278,7 +290,7 @@ export class CyjsSerializer {
         return data;
 
       };
-      let getSetData = function (setName: string) {
+      let getSetData =   (setName: string) => {
         let data: { [key: string]: DataProps } = {};
         let members = core.getMemberPaths(node, setName);
 
@@ -300,12 +312,13 @@ export class CyjsSerializer {
       }
       return sets;
     }
+    */
 
     function getNodeData(path: string, next: NextCallback) {
-      let jnode: { id?: string;[key: string]: any } = {};
+      let jnode = new Common.Node;
       // let notInComputation = false;
 
-      core.loadByPath(root, path, function (err, node) {
+      core.loadByPath(root, path, (err, node) => {
         if (err || !node) {
           return next(err || new Error(`no node found at given path: ${path}`));
         }
@@ -322,9 +335,9 @@ export class CyjsSerializer {
         });
 
         let attributes = getAttributesOfNode(node);
-        jnode.id = guid;
+        jnode._id = guid;
         for (let pname in attributes) {
-          jnode[pname] = attributes[pname];
+          (<any>jnode)[pname] = attributes[pname];
         }
 
         // jsonNode.registry = getRegistryOfNode(node);
@@ -394,8 +407,9 @@ export class CyjsSerializer {
       callback(null, jsonModel);
     }
 
+    /*
     function getMetaSheetInfo(node: Common.Node) {
-      let getMemberRegistry = function (setname: string, memberpath: string) {
+      let getMemberRegistry =   (setname: string, memberpath: string) => {
         let names = core.getMemberRegistryNames(node, setname, memberpath);
         let registry: Dictionary = {};
         for (let i = 0; i < names.length; i++) {
@@ -407,7 +421,7 @@ export class CyjsSerializer {
         return registry;
       };
 
-      let getMemberAttributes = function (setname: string, memberpath: string) {
+      let getMemberAttributes =   (setname: string, memberpath: string) => {
         let names = core.getMemberAttributeNames(node, setname, memberpath);
         let attributes: Dictionary = {};
         for (let i = 0; i < names.length; i++) {
@@ -419,7 +433,7 @@ export class CyjsSerializer {
         return attributes;
       };
 
-      let getRegistryEntry = function (setname: string) {
+      let getRegistryEntry =   (setname: string) => {
         if (Array.isArray(registry)) {
           let index = registry.length;
 
@@ -457,6 +471,7 @@ export class CyjsSerializer {
       }
       return sheets;
     }
+    */
 
     /**
     There is an expectation that every path has a target guid.
@@ -466,6 +481,7 @@ export class CyjsSerializer {
       edgeObj.data.target = pathCache[edgeObj.data.target];
     }
 
+    /*
     function postProcessMembersOfSets(jsonNodeObject: any) {
       let setNames = Object.keys(jsonNodeObject.sets);
 
@@ -480,10 +496,11 @@ export class CyjsSerializer {
         }
       }
     }
-
+    */
+    /*
     function postProcessMetaOfNode(jsonNodeObject: any) {
       // replacing and removing items...
-      let processMetaPointer = function (jsonPointerObject: JsonObject) {
+      let processMetaPointer =   (jsonPointerObject: JsonObject) => {
         let toRemove: number[] = [];
         for (let i = 0; i < jsonPointerObject.items.length; i++) {
           if (pathCache[jsonPointerObject.items[i]]) {
@@ -502,7 +519,7 @@ export class CyjsSerializer {
         }
       };
       let names = Object.keys(jsonNodeObject.meta.pointers || {});
-      let processChildrenRule = function (jsonChildrenObject: JsonObject) {
+      let processChildrenRule =   (jsonChildrenObject: JsonObject) => {
         let toRemove: number[] = [];
         for (let i = 0; i < jsonChildrenObject.items.length; i++) {
           if (pathCache[jsonChildrenObject.items[i]]) {
@@ -521,7 +538,7 @@ export class CyjsSerializer {
           }
         }
       };
-      let processAspectRule = function (aspectElementArray: string[]) {
+      let processAspectRule =   (aspectElementArray: string[]) => {
         let toRemove: string[] = [];
         for (let i = 0; i < aspectElementArray.length; i++) {
           if (pathCache[aspectElementArray[i]]) {
@@ -553,13 +570,14 @@ export class CyjsSerializer {
       }
 
     }
+    */
 
     // here starts the actual processing
-    myTick = setInterval(function () {
+    myTick = setInterval(() => {
       if (taskList.length > 0 && notInComputation) {
         let task = taskList.shift();
         if (typeof task === "string") {
-          getNodeData(task, function (err: Error) {
+          getNodeData(task, (err: Error) => {
             if (err) {
               console.log(err);
             }

@@ -6,6 +6,7 @@
  * @author phreed / https://github.com/phreed
  */
 import CANON = require("common/util/canon");
+import Promise = require("bluebird");
 
 interface Dictionary {
     [key: string]: string;
@@ -89,7 +90,7 @@ export class FlatSerializer {
         let pathCache: Dictionary = {};
         let root = core.getRoot(libraryRoot);
         let taskList = [core.getPath(libraryRoot)];
-        let notInComputation = true;
+        let inComputation = false;
         let myTick: any;
         // necessary functions for the export method
 
@@ -162,9 +163,9 @@ export class FlatSerializer {
         }
 
         function buildSemanticUriForNode(node: any) {
-            let uriPrefix = core.getAttribute(node, "uriPrefix"); //.trim();
+            let uriPrefix = core.getAttribute(node, "uriPrefix"); // .trim();
             let uriExt = core.getAttribute(node, "uriExt"); // .trim();
-            let uriName = core.getAttribute(node, "uriName"); //.trim();
+            let uriName = core.getAttribute(node, "uriName"); // .trim();
             let name = core.getAttribute(node, "name"); // .trim();
 
             if (typeof uriExt === "string") {
@@ -312,7 +313,7 @@ export class FlatSerializer {
                 return data;
 
             };
-            let getSetData = function (setName: string) {
+            let getSetData = (setName: string) => {
                 let data: Dictionary = {};
                 let members = core.getMemberPaths(node, setName);
 
@@ -333,54 +334,57 @@ export class FlatSerializer {
             return sets;
         }
 
-        function getNodeData(path: any, next: any) {
+        function getNodeData(path: string, next: any) {
             let jsonNode = new JsonNode();
             let guid: string;
-            notInComputation = false;
-            core.loadByPath(root, path, (err, node) => {
-                if (err || !node) {
+            inComputation = true;
+            Promise
+                .try(() => {
+                    return core.loadByPath(root, path);
+                })
+                .then((node) => {
+                    // fill out the basic data and make place in the jsonLibrary for the node
+                    guid = core.getGuid(node);
+                    // ASSERT(!jsonLibrary.nodes[guid]);
+
+                    guidCache[guid] = path;
+                    pathCache[path] = guid;
+                    jsonLibrary.relids[guid] = core.getRelid(node);
+                    jsonLibrary.nodes[guid] = jsonNode;
+
+                    checkForExternalBases(node);
+                    fillContainment(node);
+
+                    /*
+                     meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
+                     */
+
+                    let nname = core.getAttribute(node, "name");
+                    jsonNode.attributes = getAttributesOfNode(node);
+                    jsonNode.derivative = getDerivativeAttrOfNode(node);
+
+                    // jsonNode.registry = getRegistryOfNode(node);
+                    jsonNode.base = core.getBase(node) ? core.getGuid(core.getBase(node)) : null;
+                    jsonNode.parent = core.getParent(node) ? core.getGuid(core.getParent(node)) : null;
+                    jsonNode.pointers = getPointersOfNode(node);
+                    switch (nname) {
+                        case "ROOT":
+                        // jsonNode.sets = { };
+                        // jsonNode.derivative.suppressed = "sets";
+                        // break;
+                        default:
+                            jsonNode.sets = getSetsOfNode(node);
+                    }
+                    jsonNode.meta = core.getOwnJsonMeta(node);
+
+                    // putting children into task list
+                    taskList = taskList.concat(core.getChildrenPaths(node));
+
+                    next(null);
+                })
+                .catch((err) => {
                     return next(err || new Error(`no node found at given path: ${path}`));
-                }
-
-                // fill out the basic data and make place in the jsonLibrary for the node
-                guid = core.getGuid(node);
-                // ASSERT(!jsonLibrary.nodes[guid]);
-
-                guidCache[guid] = path;
-                pathCache[path] = guid;
-                jsonLibrary.relids[guid] = core.getRelid(node);
-                jsonLibrary.nodes[guid] = jsonNode;
-
-                checkForExternalBases(node);
-                fillContainment(node);
-
-                /*
-                 meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
-                 */
-
-                let nname = core.getAttribute(node, "name");
-                jsonNode.attributes = getAttributesOfNode(node);
-                jsonNode.derivative = getDerivativeAttrOfNode(node);
-
-                // jsonNode.registry = getRegistryOfNode(node);
-                jsonNode.base = core.getBase(node) ? core.getGuid(core.getBase(node)) : null;
-                jsonNode.parent = core.getParent(node) ? core.getGuid(core.getParent(node)) : null;
-                jsonNode.pointers = getPointersOfNode(node);
-                switch (nname) {
-                    case "ROOT":
-                    // jsonNode.sets = { };
-                    // jsonNode.derivative.suppressed = "sets";
-                    // break;
-                    default:
-                        jsonNode.sets = getSetsOfNode(node);
-                }
-                jsonNode.meta = core.getOwnJsonMeta(node);
-
-                //putting children into task list
-                taskList = taskList.concat(core.getChildrenPaths(node));
-
-                next(null);
-            });
+                });
         }
 
         function postProcessing() {
@@ -397,7 +401,7 @@ export class FlatSerializer {
 
         function getMetaSheetInfo(node: any) {
             /*
-            let getMemberRegistry = function (setname: string, memberpath: string) {
+            let getMemberRegistry =   (setname: string, memberpath: string) => {
                 let names = core.getMemberRegistryNames(node, setname, memberpath);
 
                 let registry: Dictionary = {};
@@ -407,7 +411,7 @@ export class FlatSerializer {
                 return registry;
             };
             */
-            let getMemberAttributes = function (setname: string, memberpath: string) {
+            let getMemberAttributes = (setname: string, memberpath: string) => {
                 let names = core.getMemberAttributeNames(node, setname, memberpath);
                 let attributes: Dictionary = {};
                 for (let i = 0; i < names.length; i++) {
@@ -419,7 +423,7 @@ export class FlatSerializer {
                 return attributes;
             };
             /*
-            getRegistryEntry = function (setname) {
+            getRegistryEntry =   (setname) => {
                 var index = registry.length;
  
                 while (--index >= 0) {
@@ -509,7 +513,7 @@ export class FlatSerializer {
 
         function postProcessMetaOfNode(jsonNodeObject: any) {
             // replacing and removing items...
-            let processMetaPointer = function (jsonPointerObject: any) {
+            let processMetaPointer = (jsonPointerObject: any) => {
                 let toRemove: number[] = [];
                 for (let i = 0; i < jsonPointerObject.items.length; i++) {
                     if (pathCache[jsonPointerObject.items[i]]) {
@@ -527,7 +531,7 @@ export class FlatSerializer {
             };
 
             let names = Object.keys(jsonNodeObject.meta.pointers || {}),
-                processChildrenRule = function (jsonChildrenObject: any) {
+                processChildrenRule = (jsonChildrenObject: any) => {
                     let toRemove: number[] = [];
                     for (let i = 0; i < jsonChildrenObject.items.length; i++) {
                         if (pathCache[jsonChildrenObject.items[i]]) {
@@ -544,7 +548,7 @@ export class FlatSerializer {
                         jsonChildrenObject.maxItems.splice(i, 1);
                     }
                 },
-                processAspectRule = function (aspectElementArray: any[]) {
+                processAspectRule = (aspectElementArray: any[]) => {
                     let toRemove: any[] = [];
                     for (let i = 0; i < aspectElementArray.length; i++) {
                         if (pathCache[aspectElementArray[i]]) {
@@ -573,18 +577,26 @@ export class FlatSerializer {
         }
 
         // here starts the actual processing
-        myTick = setInterval(function () {
-            if (taskList.length > 0 && notInComputation) {
-                getNodeData(taskList.shift(), function (err: Error) {
+        myTick = setInterval(() => {
+            if (inComputation) {
+                return;
+            }
+            while (taskList.length > 0) {
+                let task = taskList.shift();
+                if (typeof task === "undefined") {
+                    continue;
+                }
+                getNodeData(task, (err: Error) => {
                     if (err) {
                         console.log(err);
                     }
-                    notInComputation = true;
+                    inComputation = false;
                 });
-            } else if (taskList.length === 0) {
-                clearInterval(myTick);
-                postProcessing();
+                return;
             }
+            clearInterval(myTick);
+            postProcessing();
+            return;
         }, 10);
     }
 
@@ -605,12 +617,12 @@ export class FlatSerializer {
         let libraryRootPath = core.getPath(originalLibraryRoot);
 
 
-        let synchronizeRoots = function (oldRoot: Common.Node, newGuid: string) {
+        let synchronizeRoots = (oldRoot: Common.Node, newGuid: string) => {
             core.setGuid(oldRoot, newGuid);
         };
-        let calculateGuidCache = function () {
+        let calculateGuidCache = () => {
             let keys: string[];
-            let addElement = function (guid: string, path: string) {
+            let addElement = (guid: string, path: string) => {
                 if (!guidCache[guid]) {
                     guidCache[guid] = path;
                 }
@@ -640,7 +652,7 @@ export class FlatSerializer {
                 addElement(keys[i], `${libraryRootPath}${getRelativePathByGuid(keys[i], updatedJsonLibrary)}`);
             }
         };
-        let insertEmptyNode = function (guid: string, next: any) {
+        let insertEmptyNode = (guid: string, next: any) => {
             // log(`node ${logId(guid, updatedJsonLibrary)} will be added as an empty object`);
             // first we collect all creation related data
             let relid = updatedJsonLibrary.relids[guid];
@@ -650,7 +662,7 @@ export class FlatSerializer {
             let parent: Common.Node | null = null;
             let base: Common.Node | null = null;
             let error: Error | null = null;
-            let create = function () {
+            let create = () => {
                 if (error) {
                     return next(error);
                 }
@@ -658,7 +670,7 @@ export class FlatSerializer {
                 next(null);
             };
             // then we load the base and the parent of the node
-            core.loadByPath(root, parentPath, function (err: Error, n: Common.Node) {
+            core.loadByPath(root, parentPath, (err: Error, n: Common.Node) => {
                 error = error || err;
                 parent = n;
                 if (--needed === 0) {
@@ -666,7 +678,7 @@ export class FlatSerializer {
                 }
             });
             if (typeof basePath === "string") {
-                core.loadByPath(root, basePath, function (err, n) {
+                core.loadByPath(root, basePath, (err, n) => {
                     error = error || err;
                     base = n;
                     if (--needed === 0) {
@@ -680,7 +692,7 @@ export class FlatSerializer {
             }
 
         };
-        let moveNode = function (guid: string, next: NextCallback) {
+        let moveNode = (guid: string, next: NextCallback) => {
             // we need the node itself and the new parent
             log(`node ${logId(guid, updatedJsonLibrary)} will be moved within the library from ${getRelativePathByGuid(guid, originalJsonLibrary)} to ${getRelativePathByGuid(guid, updatedJsonLibrary)}`);
 
@@ -688,7 +700,7 @@ export class FlatSerializer {
             let parent: Common.Node;
             let needed = 2;
             let error: Error | null = null;
-            let move = function () {
+            let move = () => {
                 if (error) {
                     return next(error);
                 }
@@ -697,24 +709,44 @@ export class FlatSerializer {
                 next(null);
             };
 
-            core.loadByPath(root, guidCache[guid], function (err, n) {
-                error = error || err;
-                node = n;
-                if (--needed === 0) {
-                    move();
-                }
-            });
-            core.loadByPath(root, guidCache[updatedJsonLibrary.nodes[guid].parent], function (err, n) {
-                error = error || err;
-                parent = n;
-                if (--needed === 0) {
-                    move();
-                }
-            });
+            Promise
+                .try(() => {
+                    return core.loadByPath(root, guidCache[guid]);
+                })
+                .then((n) => {
+                    parent = n;
+                    if (--needed === 0) {
+                        move();
+                    }
+                })
+                .catch((err) => {
+                    error = error || err;
+                    // parent = null;
+                    if (--needed === 0) {
+                        move();
+                    }
+                });
+            Promise
+                .try(() => {
+                    return core.loadByPath(root, guidCache[updatedJsonLibrary.nodes[guid].parent]);
+                })
+                .then((n) => {
+                    parent = n;
+                    if (--needed === 0) {
+                        move();
+                    }
+                })
+                .catch((err) => {
+                    error = error || err;
+                    // parent = null;
+                    if (--needed === 0) {
+                        move();
+                    }
+                });
         };
-        let updateNode = function (guid: string, next: NextCallback) {
+        let updateNode = (guid: string, next: NextCallback) => {
             // TODO implement
-            let updateAttributes = function () {
+            let updateAttributes = () => {
                 let oAttributes = originalJsonNode.attributes || {};
                 let uAttributes = updatedJsonNode.attributes || {};
 
@@ -742,7 +774,7 @@ export class FlatSerializer {
                     }
                 }
             };
-            let updateRegistry = function () {
+            let updateRegistry = () => {
                 let oRegistry = originalJsonNode.registry || {};
                 let uREgistry = updatedJsonNode.registry || {};
 
@@ -767,14 +799,14 @@ export class FlatSerializer {
                     }
                 }
             };
-            let updatePointers = function (pNext: NextCallback) {
-                let updatePointer = function (name: string, cb: NextCallback) {
+            let updatePointers = (pNext: NextCallback) => {
+                let updatePointer = (name: string, cb: NextCallback) => {
                     if (updatedJsonNode.pointers[name] === null) {
                         core.setPointer(node, name, null);
                         return cb(null);
                     }
                     core.loadByPath(root, guidCache[updatedJsonNode.pointers[name]],
-                        function (err, target) {
+                        (err, target) => {
                             if (err) {
                                 return cb(err);
                             }
@@ -815,13 +847,13 @@ export class FlatSerializer {
                 if (setList.length === 0) {
                     return pNext(null);
                 }
-                let tick = setInterval(function () {
+                let tick = setInterval(() => {
                     if (!updating) {
                         if (setList.length > 0) {
                             updating = true;
                             let set = setList.shift();
                             if (typeof set === "string") {
-                                updatePointer(set, function (err: Error) {
+                                updatePointer(set, (err: Error) => {
                                     error = error || err;
                                     updating = false;
                                 });
@@ -833,8 +865,8 @@ export class FlatSerializer {
                     }
                 }, 10);
             };
-            let updateSets = function (sNext: NextCallback) {
-                let updateSet = function (name: string, finished: any) {
+            let updateSets = (sNext: NextCallback) => {
+                let updateSet = (name: string, finished: any) => {
                     let oMembers = Object.keys(originalJsonNode.sets[name] || {});
                     let uMembers = Object.keys(updatedJsonNode.sets[name] || {});
                     let toCreate: string[] = [];
@@ -872,13 +904,13 @@ export class FlatSerializer {
                         return finished(null);
                     }
 
-                    tick = setInterval(function () {
+                    tick = setInterval(() => {
                         if (!creating) {
                             if (toCreate.length > 0) {
                                 creating = true;
                                 let create = toCreate.shift();
                                 if (typeof create === "string") {
-                                    addMember(name, create, function (err: Error) {
+                                    addMember(name, create, (err: Error) => {
                                         error = error || err;
                                         creating = false;
                                     });
@@ -890,8 +922,8 @@ export class FlatSerializer {
                         }
                     }, 10);
                 };
-                let addMember = function (setName: string, guid: string, mNext: NextCallback) {
-                    core.loadByPath(root, guidCache[guid], function (err: Error, member: Common.Node) {
+                let addMember = (setName: string, guid: string, mNext: NextCallback) => {
+                    core.loadByPath(root, guidCache[guid], (err: Error, member: Common.Node) => {
 
                         if (err) {
                             return mNext(err);
@@ -910,7 +942,7 @@ export class FlatSerializer {
                         return mNext(null);
                     });
                 };
-                let updateMember = function (setName: string, guid: string) {
+                let updateMember = (setName: string, guid: string) => {
                     let oMember = originalJsonNode.sets[setName][guid] || {};
                     let uMember = updatedJsonNode.sets[setName][guid] || {};
 
@@ -985,13 +1017,13 @@ export class FlatSerializer {
                 }
 
                 // start ticking
-                let tick = setInterval(function () {
+                let tick = setInterval(() => {
                     if (!updating) {
                         if (toUpdate.length > 0) {
                             updating = true;
                             let update = toUpdate.shift();
                             if (typeof update === "string") {
-                                updateSet(update, function (err: Error) {
+                                updateSet(update, (err: Error) => {
                                     error = error || err;
                                     updating = false;
                                 });
@@ -1003,14 +1035,14 @@ export class FlatSerializer {
                     }
                 }, 10);
             };
-            let updateMeta = function (mNext: NextCallback) {
+            let updateMeta = (mNext: NextCallback) => {
 
 
                 // TODO check if some real delta kind of solutions is possible for meta rule definition
                 let meta = updatedJsonNode.meta || {};
-                let addGuidTarget = function (guid: string, finish: NextCallback) {
+                let addGuidTarget = (guid: string, finish: NextCallback) => {
 
-                    core.loadByPath(root, guidCache[guid], function (err: Error, target: Common.Node) {
+                    core.loadByPath(root, guidCache[guid], (err: Error, target: Common.Node) => {
                         if (err) {
                             return finish(err);
                         }
@@ -1050,7 +1082,7 @@ export class FlatSerializer {
                         finish(null);
                     });
                 };
-                let addGuid = function (guid: string) {
+                let addGuid = (guid: string) => {
                     let targetToAdd: string[] = [];
                     if (targetToAdd.indexOf(guid) === -1) {
                         targetToAdd.push(guid);
@@ -1104,13 +1136,13 @@ export class FlatSerializer {
                     }
 
                     // start ticking
-                    let tick = setInterval(function () {
+                    let tick = setInterval(() => {
                         if (!updating) {
                             if (targetToAdd.length > 0) {
                                 updating = true;
                                 let target = targetToAdd.shift();
                                 if (typeof target === "string") {
-                                    addGuidTarget(target, function (err: Error) {
+                                    addGuidTarget(target, (err: Error) => {
                                         error = error || err;
                                         updating = false;
                                     });
@@ -1122,11 +1154,12 @@ export class FlatSerializer {
                         }
                     }, 10);
                 };
-            }
-            let loadNode = function () {
+            };
+
+            let loadNode = () => {
                 let needed = 3;
                 let error: Error | null = null;
-                core.loadByPath(root, guidCache[guid], function (err, n) {
+                core.loadByPath(root, guidCache[guid], (err, n) => {
                     if (err) {
                         return next(err);
                     }
@@ -1138,7 +1171,7 @@ export class FlatSerializer {
                     if (CANON.stringify(originalJsonNode.pointers) !==
                         CANON.stringify(updatedJsonNode.pointers)) {
 
-                        updatePointers(function (err) {
+                        updatePointers((err) => {
                             error = error || err;
                             if (--needed === 0) {
                                 return next(error);
@@ -1148,7 +1181,7 @@ export class FlatSerializer {
                         return next(error);
                     }
                     if (CANON.stringify(originalJsonNode.sets) !== CANON.stringify(updatedJsonNode.sets)) {
-                        updateSets(function (err) {
+                        updateSets((err) => {
                             error = error || err;
                             if (--needed === 0) {
                                 return next(error);
@@ -1158,7 +1191,7 @@ export class FlatSerializer {
                         return next(error);
                     }
                     if (CANON.stringify(originalJsonNode.meta) !== CANON.stringify(updatedJsonNode.meta)) {
-                        updateMeta(function (err) {
+                        updateMeta((err) => {
                             error = error || err;
                             if (--needed === 0) {
                                 return next(error);
@@ -1199,9 +1232,9 @@ export class FlatSerializer {
                 next(null);
             }
         };
-        let removeNode = function (guid: string, next: NextCallback) {
+        let removeNode = (guid: string, next: NextCallback) => {
             log(`node ${logId(guid, originalJsonLibrary)} will be removed - which will cause also the removal of all of its descendant and children`);
-            core.loadByPath(root, guidCache[guid], function (err, node) {
+            core.loadByPath(root, guidCache[guid], (err, node) => {
                 if (err) {
                     return next(err);
                 }
@@ -1209,11 +1242,11 @@ export class FlatSerializer {
                 next(null);
             });
         };
-        let postProcessing = function () {
+        let postProcessing = () => {
             // TODO collect what task we should do as a post processing task - like perist?
             callback(null, logTxt);
         };
-        let getRelativePathByGuid = function (guid: string, library: JsonLibrary) {
+        let getRelativePathByGuid = (guid: string, library: JsonLibrary) => {
             let path = "";
             while (guid !== library.root.guid) {
                 path = `/${library.relids[guid]}${path}`;
@@ -1221,7 +1254,7 @@ export class FlatSerializer {
             }
             return path;
         };
-        let prepareForAddingNodes = function () {
+        let prepareForAddingNodes = () => {
             // we fill up some global variables and fill out the task list
             let oldGuids = Object.keys(originalJsonLibrary.nodes);
             let newGuids = Object.keys(updatedJsonLibrary.nodes);
@@ -1255,7 +1288,7 @@ export class FlatSerializer {
                 }
             }
         };
-        let prepareForMoveNodes = function () {
+        let prepareForMoveNodes = () => {
             // we fill up some global variables and fill out the task list
             let oldGuids = Object.keys(originalJsonLibrary.nodes);
             let newGuids = Object.keys(updatedJsonLibrary.nodes);
@@ -1278,12 +1311,12 @@ export class FlatSerializer {
             }
         };
 
-        let prepareForUpdateNodes = function () {
+        let prepareForUpdateNodes = () => {
             // we fill up some global variables and fill out the task list
             // here we simply add the root to the tasklist as each update will insert the actual node's children
             let taskList: string[] = [updatedJsonLibrary.root.guid];
 
-            let addChildren = function (containment: Containment) {
+            let addChildren = (containment: Containment) => {
                 let children = Object.keys(containment);
                 for (let i = 0; i < children.length; i++) {
                     taskList.push(children[i]);
@@ -1293,7 +1326,7 @@ export class FlatSerializer {
 
             addChildren(updatedJsonLibrary.containment);
         };
-        let prepareForDeleteNodes = function () {
+        let prepareForDeleteNodes = () => {
             // we fill up some global variables and fill out the task list
             let oldGuids = Object.keys(originalJsonLibrary.nodes);
             let newGuids = Object.keys(updatedJsonLibrary.nodes);
@@ -1320,21 +1353,21 @@ export class FlatSerializer {
                 i--;
             }
         };
-        let logId = function (guid: string, library: JsonLibrary) {
+        let logId = (guid: string, library: JsonLibrary) => {
             let txtId = `${guid}`;
             if (library.nodes[guid] && library.nodes[guid].attributes && library.nodes[guid].attributes.name) {
                 txtId = `${library.nodes[guid].attributes.name}(${guid})`;
             }
             return txtId;
         };
-        let log = function (txt: string) {
+        let log = (txt: string) => {
             logTxt += `${txt}\n`;
         };
         let phase = "addnodes";
 
         synchronizeRoots(originalLibraryRoot, updatedJsonLibrary.root.guid);
 
-        FlatSerializer.exportLibrary(core, originalLibraryRoot, function (err: Error, jsonLibrary: JsonLibrary) {
+        FlatSerializer.exportLibrary(core, originalLibraryRoot, (err: Error, jsonLibrary: JsonLibrary) => {
             if (err) {
                 return callback(err);
             }
@@ -1347,7 +1380,7 @@ export class FlatSerializer {
 
             let taskList: string[] = [];
             // first we add the new nodes
-            let myTick = setInterval(function () {
+            let myTick = setInterval(() => {
                 if (notInComputation) {
                     switch (phase) {
                         case "addnodes":
@@ -1355,7 +1388,7 @@ export class FlatSerializer {
                                 notInComputation = false;
                                 let task = taskList.shift();
                                 if (typeof task === "string") {
-                                    insertEmptyNode(task, function (err: Error) {
+                                    insertEmptyNode(task, (err: Error) => {
                                         if (err) {
                                             console.log(err);
                                         }
@@ -1372,7 +1405,7 @@ export class FlatSerializer {
                                 notInComputation = false;
                                 let task = taskList.shift();
                                 if (typeof task === "string") {
-                                    moveNode(task, function (err) {
+                                    moveNode(task, (err) => {
                                         if (err) {
                                             console.log(err);
                                         }
@@ -1389,7 +1422,7 @@ export class FlatSerializer {
                                 notInComputation = false;
                                 let task = taskList.shift();
                                 if (typeof task === "string") {
-                                    updateNode(task, function (err: Error) {
+                                    updateNode(task, (err: Error) => {
                                         if (err) {
                                             console.log(err);
                                         }
@@ -1406,7 +1439,7 @@ export class FlatSerializer {
                                 notInComputation = false;
                                 let task = taskList.shift();
                                 if (typeof task === "string") {
-                                    removeNode(task, function (err: Error) {
+                                    removeNode(task, (err: Error) => {
                                         if (err) {
                                             console.log(err);
                                         }

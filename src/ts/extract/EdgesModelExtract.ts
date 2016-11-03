@@ -18,11 +18,11 @@ import { PruningFlag } from "serializer/filters";
 import * as nt from "utility/NodeType";
 
 const BLANK = "";
-const NULL_OBJECT = "_OBJECT"
+const NULL_OBJECT = "_OBJECT";
 const NULL_GUID = "00000000-0000-0000-0000-000000000000";
 
 export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
-    _rootNode: Common.Node, _metaNode: Node): Core.Dictionary {
+    _rootNode: Common.Node, _metaNode: Node): Dictionary<any> {
 
     // let config = sponsor.getCurrentConfig();
     // let configDictionary: any = config;
@@ -53,12 +53,12 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
             "prune": PruningFlag.None,
             "guid": NULL_GUID
         };
-    let nodeGuidMap: Core.Dictionary = {
+    let nodeGuidMap: Dictionary<nt.Subject> = {
         [NULL_GUID]: rootEntry
     };
 
     sponsor.logger.info("A dictionary: look up nodes based on their path name.");
-    let path2entry: Core.Dictionary = { [BLANK]: rootEntry };
+    let path2entry: Dictionary<nt.Subject> = { [BLANK]: rootEntry };
 
     /**
      * A filter mechanism to effectively eliminate containment branches.
@@ -73,7 +73,7 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
      * The traverse function follows the containment tree.
      * @type {[type]}
      */
-    let visitFn = (node: Node, done: Core.VoidFn): void => {
+    let visitFn = (node: Common.Node, done: Common.VoidFn): void => {
         try {
             let core = sponsor.core;
             let nodePath: string = core.getPath(node);
@@ -206,7 +206,7 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                         .try(() => {
                             return core.loadByPath(sponsor.rootNode, targetPath);
                         })
-                        .then((targetNode: Node) => {
+                        .then((targetNode: Common.Node) => {
                             let targetGuid = core.getGuid(targetNode);
                             if (ptrName === "base") {
                                 sourceEntry.base = {
@@ -214,29 +214,23 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                                     guid: targetGuid
                                 };
                             } else {
-                                let pointers = sourceEntry.pointers;
+
                                 let targetMetaNode = core.getBaseType(targetNode);
                                 let targetMetaName = core.getAttribute(targetMetaNode, "name");
+
+                                let targetEntry = nodeGuidMap[targetGuid];
+                                if (targetEntry === undefined) {
+                                    targetEntry = new nt.Subject(targetGuid);
+                                    nodeGuidMap[targetGuid] = targetEntry;
+                                }
                                 if (typeof targetMetaName === "string") {
-                                    pointers[ptrName] = {
+                                    sourceEntry.pointers[ptrName] = {
                                         name: targetMetaName,
                                         guid: targetGuid
                                     };
+                                    targetEntry.inv_pointers[ptrName] =
+                                        new nt.NGuidType(targetMetaName, sourceGuid);
                                 }
-                                let targetEntry = nodeGuidMap[targetGuid];
-                                if (targetEntry === undefined) {
-                                    targetEntry = {
-                                        "name": {},
-                                        "guid": targetGuid,
-                                        "pointers": {}, "inv_pointers": {},
-                                        "sets": {}, "inv_sets": {}
-                                    };
-                                    nodeGuidMap[targetGuid] = targetEntry;
-                                }
-                                targetEntry.inv_pointers[ptrName] = {
-                                    name: targetMetaName,
-                                    guid: sourceGuid
-                                };
                             }
                         });
                 });
@@ -256,10 +250,18 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                             .try(() => {
                                 return core.loadByPath(sponsor.rootNode, targetPath);
                             })
-                            .then((targetNode: Node) => {
+                            .then((targetNode: Common.Node) => {
                                 let targetGuid = core.getGuid(targetNode);
                                 let sets = sourceEntry.sets;
                                 let targetMetaNode = core.getBaseType(targetNode);
+
+                                let targetEntry = nodeGuidMap[targetGuid];
+                                if (targetEntry === undefined) {
+                                    targetEntry = new nt.Subject(targetGuid);
+                                    nodeGuidMap[targetGuid] = targetEntry;
+                                }
+                                let invSets = targetEntry.inv_sets;
+                                let targetSet = invSets[setName];
                                 let targetMetaName = core.getAttribute(targetMetaNode, "name");
                                 if (typeof targetMetaName === "string") {
                                     let load = {
@@ -272,28 +274,15 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                                     } else {
                                         sourceSet.push(load);
                                     }
-                                }
-                                let targetEntry = nodeGuidMap[targetGuid];
-                                if (targetEntry === undefined) {
-                                    targetEntry = {
-                                        "name": {},
-                                        "guid": targetGuid,
-                                        "pointers": {}, "inv_pointers": {},
-                                        "sets": {}, "inv_sets": {}
+                                    let invLoad =
+                                        new nt.NGuidType(targetMetaName, sourceGuid);
+
+                                    if (targetSet === undefined) {
+                                        invSets[setName] = [invLoad];
+                                    } else {
+                                        targetSet.push(invLoad);
                                     };
-                                    nodeGuidMap[targetGuid] = targetEntry;
                                 }
-                                let invSets = targetEntry.inv_sets;
-                                let targetSet = invSets[setName];
-                                let invLoad = {
-                                    name: targetMetaName,
-                                    guid: sourceGuid
-                                };
-                                if (targetSet === undefined) {
-                                    invSets[setName] = [invLoad];
-                                } else {
-                                    targetSet.push(invLoad);
-                                };
                             })
                             .catch((err: Error) => {
                                 console.log(`difficulty loading target path: ${targetPath} with err: ${err.message}`);

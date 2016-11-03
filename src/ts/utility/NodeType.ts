@@ -18,7 +18,11 @@ export function isNGuidType(arg: any): arg is NGuidType {
     if (arg.guid === undefined) { return false; }
     return true;
 }
-export interface NGuidType {
+export class NGuidType {
+    constructor(name: string, guid: string) {
+        this.name = name;
+        this.guid = guid;
+    }
     name: string;
     guid: GuidType;
 }
@@ -44,7 +48,10 @@ export interface TypeType {
     name?: string;
 }
 
-export interface NameType {
+export class NameType {
+    constructor(name: string) {
+        this.name = name;
+    }
     name: string;
     uriGen: string;
     uriPrefix: string;
@@ -52,7 +59,10 @@ export interface NameType {
     uriExt: string;
 }
 
-export interface Subject {
+export class Subject {
+    constructor(guid: string) {
+        this.guid = guid;
+    }
     guid: string;
     name: NameType;
     type: TypeType;

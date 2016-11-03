@@ -16,7 +16,7 @@ const CONTAINMENT_PREFIX = "";
      * @param {Core.Callback} mainHandler [description]
      */
 export function getTreeModel(sponsor: PluginBase, core: Core.Core,
-    _rootNode: Common.Node, _metaNode: Node): Core.Dictionary {
+    _rootNode: Common.Node, _metaNode: Node): Dictionary<any> {
     // let config: Config.GmeConfig = sponsor.getCurrentConfig();
     // let configDictionary: Core.Dictionary = config;
 
@@ -26,13 +26,13 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
     let fcoName: string = attrToString(core.getAttribute(core.getFCO(sponsor.rootNode), "name"));
     let languageName: string = attrToString(core.getAttribute(sponsor.rootNode, "name"));
     sponsor.logger.info(`get model tree : ${languageName}:${fcoName}`);
-    let rootEntry: Core.Dictionary = {
+    let rootEntry: Dictionary<string> = {
         "version": "0.0.1"
     };
     /**
      * A dictionary: look up nodes based on their path name.
      */
-    let path2entry: Core.Dictionary = { "": rootEntry };
+    let path2entry: Dictionary<any> = { "": rootEntry };
 
     /**
      * The base node makes reference to inheritance.
@@ -40,7 +40,7 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
      * The traverse function follows the containment tree.
      * @type {[type]}
      */
-    let visitFn = (node: Node, done: Core.VoidFn): void => {
+    let visitFn = (node: Common.Node, done: Common.VoidFn): void => {
         let core = sponsor.core;
         // let nodeName = core.getAttribute(node, "name");
 
@@ -48,7 +48,7 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
             ? ":LibraryRoot:"
             : core.getAttribute(core.getBaseType(node), "name");
         let containRel = `${CONTAINMENT_PREFIX}${metaName}`;
-        let sourceEntry: Core.Dictionary = { "lang": `${languageName}:${containRel}` };
+        let sourceEntry: Dictionary<any> = { "lang": `${languageName}:${containRel}` };
         // let baseNode = core.getBase(node);
         let nodePath = core.getPath(node);
         path2entry[nodePath] = sourceEntry;
@@ -77,7 +77,7 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
                     .try(() => {
                         return core.loadByPath(sponsor.rootNode, targetPath);
                     })
-                    .then((targetNode: Node) => {
+                    .then((targetNode: Common.Node) => {
                         if (ptrName === "base") {
                             sourceEntry[`${ptrName}${POINTER_SET_DIV}${fcoName}`]
                                 = core.getGuid(targetNode);
@@ -105,7 +105,7 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
                             .try(() => {
                                 return core.loadByPath(sponsor.rootNode, memberPath);
                             })
-                            .then((memberNode: Node) => {
+                            .then((memberNode: Common.Node) => {
                                 let memberMetaNode = core.getBaseType(memberNode);
                                 let memberMetaName = core.getAttribute(memberMetaNode, "name");
                                 let setAttr = `${setName}${POINTER_SET_DIV}${memberMetaName}`;
