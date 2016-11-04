@@ -20,7 +20,6 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
     public widget: CytoscapeWidget;
     private _client: any;
     private $el: JQuery;
-    private _ActivePanel: IActivePanel;
 
     constructor(layoutManager: Panel.LayoutManager, params: Panel.Params) {
         super({
@@ -30,13 +29,16 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
             NO_SCROLLING: "true"
         }, layoutManager);
 
-        this._ActivePanel = new IActivePanel;
-
         this._client = params.client;
         this._initialize();
         this.logger.debug("CytoscapePanel: constructor finished");
     };
 
+    /**
+     * IActivePanel is not really an interface.
+     * It provides an implementation of the setActive method.
+     * Which, due to the lack of mix-ins in typescript is duplicated here...
+     */
     setActive(isActive: boolean): void {
         if (isActive === true) {
             this.$pEl.addClass(CytoscapePanel.ACTIVE_CLASS);
@@ -45,7 +47,6 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
             this.$pEl.removeClass(CytoscapePanel.ACTIVE_CLASS);
             this.onDeactivate();
         }
-
     }
 
     _initialize = () => {
