@@ -15,27 +15,9 @@ import { GmeConstants, LineStyleArrows, LineStylePatterns } from "./constants/Gm
 import { CytoscapeWidget } from "visualizers/widgets/cytoscape/CytoscapeWidget";
 import "WebGMEGlobal";
 
-/*
-define(["js/constraints",
-    "js/Utils/GMEConcepts",
-    "js/NodePropertyNames",
-    "js/RegistryKeys",
-    "js/Utils/PreferencesHelper",
-    "./cytoscape.constratints",
-    "cytoscape"
-], function (GmeConstants,
-    GMEConcepts,
-    nodePropertyNames,
-    registryKeys,
-    PreferencesHelper,
-    CytoscapeConstants,
-    cytoscape) {
-*/
-
 interface TerritoryRule {
     children: number;
-}
-
+};
 
 export interface CytoscapeControlOptions {
     logger: Core.GmeLogger;
@@ -195,9 +177,24 @@ export class CytoscapeControl {
     _getObjectDescriptor = (nodeId: Common.NodeId): GME.ObjectDescriptor => {
         let nodeObj = this._client.getNode(nodeId);
 
-        if (!nodeObj) { return new GME.ObjectDescriptor; }
+        let objDescriptor: GME.ObjectDescriptor = {
+            id: "",
+            name: "",
+            childrenIds: [],
+            parentId: "",
+            isConnection: false,
+            childrenNum: 0,
+            position: 0,
+            source: "",
+            target: "",
+            pointers: {},
+            srcPos: { x: 0, y: 0 },
+            dstPos: { x: 0, y: 0 },
+            srcObjId: "",
+            dstObjId: "",
+        };
+        if (!nodeObj) { return objDescriptor; }
 
-        let objDescriptor = new GME.ObjectDescriptor;
 
         objDescriptor.id = nodeObj.getId();
         objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
@@ -1090,7 +1087,7 @@ export class CytoscapeControl {
                 `${Math.round(vSize / 2) + 0.5}`);
         }
         
-
+    
         path.attr({
             "arrow-start": startArrow,
             "arrow-end": endArrow,

@@ -8,6 +8,56 @@
 import { CommonConstants } from "./CommonConstants";
 import { ClientConstants } from "./ClientConstants";
 
+export class LineStylePatterns {
+    public static readonly SOLID = "";
+    public static readonly DASH = "-";
+    public static readonly LONGDASH = "- ";
+    public static readonly DOT = ".";
+    public static readonly DASH_DOT = "-.";
+    public static readonly DASH_DOT_DOT = "-..";
+}
+
+export class LineStyleTypes {
+    public static readonly NONE = "";
+    public static readonly BEZIER = "bezier";
+};
+
+export class LineStylePlacements {
+    public static readonly SRC = "src";
+    public static readonly MIDDLE = "mid";
+    public static readonly DST = "dst";
+};
+
+export class LineStyleArrows {
+    public static readonly NONE = "none";
+    public static readonly DIAMOND = "diamond";
+    public static readonly BLOCK = "block";
+    public static readonly CLASSIC = "classic";
+    public static readonly OPEN = "open";
+    public static readonly OVAL = "oval";
+    public static readonly DIAMOND2 = "diamond2";
+    public static readonly INHERITANCE = "inheritance";
+};
+
+export class LineStyle {
+    public static readonly WIDTH = "width";
+    public static readonly COLOR = "color";
+    public static readonly PATTERN = "pattern";
+    public static readonly PATTERNS = new LineStylePatterns;
+
+    public static readonly TYPE = "type";
+    public static readonly TYPES = new LineStyleTypes;
+
+    public static readonly START_ARROW = "start-arrow";
+    public static readonly END_ARROW = "end-arrow";
+    public static readonly CUSTOM_POINTS = "custom-points";
+    public static readonly LABEL_PLACEMENT = "label-placement";
+    public static readonly LABEL_PLACEMENTS = new LineStylePlacements;
+
+    public static readonly LINE_ARROWS = new LineStyleArrows;
+}
+
+
 export class GmeConstants extends CommonConstants {
     public static readonly CLIENT = ClientConstants;
 
@@ -68,59 +118,9 @@ export class GmeConstants extends CommonConstants {
 
     public static readonly PROJECT_ROOT_ID = "ROOT";
 
-    public static readonly TERRITORY_EVENT_LOAD = "load";
-    public static readonly TERRITORY_EVENT_UPDATE = "update";
-    public static readonly TERRITORY_EVENT_UNLOAD = "unload";
+    public static readonly TERRITORY_EVENT_LOAD: GME.TerritoryEventType = "load";
+    public static readonly TERRITORY_EVENT_UPDATE: GME.TerritoryEventType = "update";
+    public static readonly TERRITORY_EVENT_UNLOAD: GME.TerritoryEventType = "unload";
 
     public static readonly GME_ID = "gme";
 };
-
-export class LineStyle {
-    public static readonly WIDTH = "width";
-    public static readonly COLOR = "color";
-    public static readonly PATTERN = "pattern";
-    public static readonly PATTERNS = new LineStylePatterns;
-
-    public static readonly TYPE = "type";
-    public static readonly TYPES = new LineStyleTypes;
-
-    public static readonly START_ARROW = "start-arrow";
-    public static readonly END_ARROW = "end-arrow";
-    public static readonly CUSTOM_POINTS = "custom-points";
-    public static readonly LABEL_PLACEMENT = "label-placement";
-    public static readonly LABEL_PLACEMENTS = new LineStylePlacements;
-
-    public static readonly LINE_ARROWS = new LineStyleArrows;
-}
-
-export class LineStylePatterns {
-    public static readonly SOLID = "";
-    public static readonly DASH = "-";
-    public static readonly LONGDASH = "- ";
-    public static readonly DOT = ".";
-    public static readonly DASH_DOT = "-.";
-    public static readonly DASH_DOT_DOT = "-..";
-}
-
-export class LineStyleTypes {
-    public static readonly NONE = "";
-    public static readonly BEZIER = "bezier";
-};
-
-export class LineStylePlacements {
-    public static readonly SRC = "src";
-    public static readonly MIDDLE = "mid";
-    public static readonly DST = "dst";
-};
-
-export class LineStyleArrows {
-    public static readonly NONE = "none";
-    public static readonly DIAMOND = "diamond";
-    public static readonly BLOCK = "block";
-    public static readonly CLASSIC = "classic";
-    public static readonly OPEN = "open";
-    public static readonly OVAL = "oval";
-    public static readonly DIAMOND2 = "diamond2";
-    public static readonly INHERITANCE = "inheritance";
-};
-

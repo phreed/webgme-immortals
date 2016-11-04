@@ -5,23 +5,22 @@
  */
 
 import PanelBaseWithHeader = require("js/PanelBase/PanelBaseWithHeader");
-import "js/PanelManager/IActivePanel";
+import IActivePanel = require("js/PanelManager/IActivePanel");
 import { CytoscapeWidget } from "visualizers/widgets/cytoscape/CytoscapeWidget";
 import { CytoscapeControl } from "./CytoscapeControl";
 
-export class CytoscapePanel extends PanelBaseWithHeader implements Panel.IActivePanel {
+/**
+ * This could be done better with a Mixin but typescript mixins are 
+ * kind of clunky at present.
+ */
+class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
+    static readonly ACTIVE_CLASS = "active-panel";
+    private $pEl: JQuery;
+
     public widget: CytoscapeWidget;
     private _client: any;
     private $el: JQuery;
-
-
-    setActive(): void {
-        console.log("set active not implemented");
-    }
-    getNodeID(): string {
-        console.log("set active not implemented");
-        return "";
-    }
+    private _ActivePanel: IActivePanel;
 
     constructor(layoutManager: Panel.LayoutManager, params: Panel.Params) {
         super({
@@ -31,16 +30,40 @@ export class CytoscapePanel extends PanelBaseWithHeader implements Panel.IActive
             NO_SCROLLING: "true"
         }, layoutManager);
 
+        this._ActivePanel = new IActivePanel;
+
         this._client = params.client;
         this._initialize();
-        this.logger.debug("ctor finished");
+        this.logger.debug("CytoscapePanel: constructor finished");
     };
+
+    setActive(isActive: boolean): void {
+        if (isActive === true) {
+            this.$pEl.addClass(CytoscapePanel.ACTIVE_CLASS);
+            this.onActivate();
+        } else {
+            this.$pEl.removeClass(CytoscapePanel.ACTIVE_CLASS);
+            this.onDeactivate();
+        }
+
+    }
 
     _initialize = () => {
         this.setTitle("");
         this.widget = new CytoscapeWidget(this.logger, this.$el);
         this.widget.setTitle = (title: string): void => {
             this.setTitle(title);
+        };
+
+        this.widget.onUIActivity = () => {
+            if (typeof WebGMEGlobal.PanelManager === "undefined") {
+                return;
+            }
+            WebGMEGlobal.PanelManager.setActivePanel(this);
+            if (typeof WebGMEGlobal.KeyboardManager === "undefined") {
+                return;
+            }
+            WebGMEGlobal.KeyboardManager.setListener(this.widget);
         };
 
         this.control = new CytoscapeControl({
@@ -72,10 +95,12 @@ export class CytoscapePanel extends PanelBaseWithHeader implements Panel.IActive
         this.widget.destroy();
 
         PanelBaseWithHeader.prototype.destroy.call(this);
+
         let km = WebGMEGlobal.KeyboardManager;
         if (typeof km === "undefined") { return; }
         let tb = WebGMEGlobal.Toolbar;
         if (typeof tb === "undefined") { return; }
+
         km.setListener(undefined);
         tb.refresh();
     };
@@ -84,10 +109,12 @@ export class CytoscapePanel extends PanelBaseWithHeader implements Panel.IActive
         this.widget.onActivate();
         this.control.onActivate();
         this.onResize(this.widget._el.width(), this.widget._el.height());
+
         let km = WebGMEGlobal.KeyboardManager;
         if (typeof km === "undefined") { return; }
         let tb = WebGMEGlobal.Toolbar;
         if (typeof tb === "undefined") { return; }
+
         km.setListener(this.widget);
         tb.refresh();
     };
@@ -95,12 +122,15 @@ export class CytoscapePanel extends PanelBaseWithHeader implements Panel.IActive
     onDeactivate = () => {
         this.widget.onDeactivate();
         this.control.onDeactivate();
+
         let km = WebGMEGlobal.KeyboardManager;
         if (typeof km === "undefined") { return; }
         let tb = WebGMEGlobal.Toolbar;
         if (typeof tb === "undefined") { return; }
+
         km.setListener(undefined);
         tb.refresh();
     };
-
 }
+
+export = CytoscapePanel;

@@ -259,4 +259,6 @@ export class CytoscapeWidget {
     onDeactivate = (): void => {
         this._logger.debug("cytoscapeWidget has been deactivated");
     };
+
+    onUIActivity: () => void;
 }

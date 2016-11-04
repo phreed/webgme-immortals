@@ -23,7 +23,6 @@ config.visualization.visualizerDescriptors.push("./src/ts/visualizers/Visualizer
 
 config.requirejsPaths["visualizers/widgets/cytoscape/CytoscapeWidget"] = "./dist/visualizers/widgets/cytoscape/CytoscapeWidget";
 config.requirejsPaths["panels"] = "./dist/visualizers/panels";
-config.requirejsPaths["panels"] = "./dist/visualizers/panels";
 config.requirejsPaths["widgets"] = "./dist/visualizers/widgets";
 
 config.mongo.uri = "mongodb://127.0.0.1:27017/webgme_immortals";
