@@ -1,8 +1,6 @@
 
 
-
-import * as config from "./config.webgme";
-
+import * as config from "webgme/config/config.default";
 let validateConfig = require("webgme/config/validator");
 
 // Add/overwrite any additional settings here
@@ -13,29 +11,42 @@ let validateConfig = require("webgme/config/validator");
 
 config.client.log.level = "debug";
 
+config.plugin.basePaths.push("./dist/plugins", "./src/ts");
+// console.log(config.plugin.basePaths);
+
+config.requirejsPaths["WebGMEGlobal"] = "./dist/WebGMEGlobal";
+config.requirejsPaths["favicon"] = "img/favicon.ico";
+
+// Visualizer descriptors
+config.visualization.panelPaths.push("./dist/visualizers/panels");
+config.visualization.visualizerDescriptors.push("./src/ts/visualizers/Visualizers.json");
+
+config.requirejsPaths["visualizers/widgets/cytoscape/CytoscapeWidget"] = "./dist/visualizers/widgets/cytoscape/CytoscapeWidget";
+config.requirejsPaths["panels"] = "./dist/visualizers/panels";
+config.requirejsPaths["panels"] = "./dist/visualizers/panels";
+config.requirejsPaths["widgets"] = "./dist/visualizers/widgets";
+
+config.mongo.uri = "mongodb://127.0.0.1:27017/webgme_immortals";
+
 config.plugin.allowBrowserExecution = true;
 config.plugin.allowServerExecution = true;
 
+config.seedProjects.basePaths.push("./src/seeds/immortals");
 config.seedProjects.enable = true;
 config.seedProjects.allowDuplication = true;
 
 config.requirejsPaths["bower"] = "./bower_components/";
-config.requirejsPaths["style"] = "./style/";
-// need to get https://github.com/GeoKnow/Jassa-Bower/archive/v0.9.0-SNAPSHOT.zip
+config.requirejsPaths["style"] = "./style";
+// need to get 
+// https://github.com/GeoKnow/Jassa-Bower/archive/v0.9.0-SNAPSHOT.zip
 // so that there can be interaction with Jena
 
-config.visualization.extraCss = ["style/immortals.css"];
-
-config.plugin.basePaths.push("./dist/plugins", "./src/ts", "./src/js");
-console.log(config.plugin.basePaths);
+// config.visualization.extraCss = ["./visualizers/widgets/cytoscape/styles/CytoscapeWidget.css"];
 
 config.requirejsPaths["cytoscape"] = "./bower_components/cytoscape/dist/cytoscape.min";
 config.requirejsPaths["bluebird"] = "./node_modules/bluebird/js/browser/bluebird";
 // simply installing n3 as an npm module is insufficient
-// npm install n3
-// cd node_modules/n3
-// npm install
-// npm run browser
+//  see the 'package.json' script 'postinstall:n3'.
 config.requirejsPaths["n3"] = "node_modules/n3/browser/n3-browserify";
 
 config.requirejsPaths["serializer"] = "./dist/serializer/";

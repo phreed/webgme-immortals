@@ -24,7 +24,7 @@
     },
     "visualizers": {
       "cytoscape": {
-        "src": "panels/cytoscape/cytoscapePanel",
+        "src": "panels/cytoscape/CytoscapePanel",
         "title": "cytoscape",
         "panel": "src/js/visualizers/panels/cytoscape",
         "secondary": false,
