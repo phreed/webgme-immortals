@@ -106,6 +106,7 @@ export class CytoscapeControl {
     // One major concept here is with managing the territory. The territory
     // defines the parts of the project that the visualizer is interested in
     // (this allows the browser to then only load those relevant parts).
+
     selectedObjectChanged = (nodeId: string) => {
         let desc = this._getObjectDescriptor(nodeId);
 
@@ -115,7 +116,7 @@ export class CytoscapeControl {
         this._widget._cy.remove("node");
         this._widget._cy.remove("edge");
 
-        // clean up local hash map
+        // clean up local dictionaries and arrays
         this._GMEModels = [];
         this._GMEConnections = [];
 
@@ -136,41 +137,40 @@ export class CytoscapeControl {
         this._currentNodeId = nodeId;
         this._currentNodeParentId = undefined;
 
-        if (this._currentNodeId ||
-            this._currentNodeId === GmeConstants.PROJECT_ROOT_ID) {
+        // Test to see if the node-id looks like a path
+        if (typeof this._currentNodeId !== "string") { return; }
 
-            // Put new node"s info into territory rules
-            this._thisPatterns = {};
-            this._thisPatterns[nodeId] = {
-                children: 0
-            }; // Territory "rule"
+        // Put new node"s info into territory rules
+        this._thisPatterns = {};
+        this._thisPatterns[nodeId] = {
+            children: 0
+        }; // Territory "rule"
 
-            if (typeof desc.name === "string") {
-                this._widget.setTitle(desc.name);
-            }
-            // save active node (current active container)
-            this._widget.setActiveNode(nodeId);
-
-            if (desc.parentId || desc.parentId === GmeConstants.PROJECT_ROOT_ID) {
-                this._toolbarItems.btnModelHierarchyUp.show();
-            } else {
-                this._toolbarItems.btnModelHierarchyUp.hide();
-            }
-
-            this._currentNodeParentId = desc.parentId;
-
-            this._territoryId = this._client.addUI(this, (events: GME.Event[]) => {
-                this._eventCallback(events);
-            });
-
-            // Update the territory
-            this._client.updateTerritory(this._territoryId, this._thisPatterns);
-
-            this._thisPatterns[nodeId] = {
-                children: 1
-            };
-            this._client.updateTerritory(this._territoryId, this._thisPatterns);
+        if (typeof desc.name === "string") {
+            this._widget.setTitle(desc.name);
         }
+        // save active node (current active container)
+        this._widget.setActiveNode(nodeId);
+
+        if (desc.parentId || desc.parentId === GmeConstants.PROJECT_ROOT_ID) {
+            this._toolbarItems.btnModelHierarchyUp.show();
+        } else {
+            this._toolbarItems.btnModelHierarchyUp.hide();
+        }
+
+        this._currentNodeParentId = desc.parentId;
+
+        this._territoryId = this._client.addUI(this, (events: GME.Event[]) => {
+            this._eventCallback(events);
+        });
+
+        // Update the territory
+        this._client.updateTerritory(this._territoryId, this._thisPatterns);
+
+        this._thisPatterns[nodeId] = {
+            children: 1
+        };
+        this._client.updateTerritory(this._territoryId, this._thisPatterns);
     };
 
     // This next function retrieves the relevant node information for the widget
@@ -193,6 +193,7 @@ export class CytoscapeControl {
             srcObjId: "",
             dstObjId: "",
         };
+        if (nodeId === "") { return objDescriptor; }
         if (!nodeObj) { return objDescriptor; }
 
 
@@ -223,109 +224,109 @@ export class CytoscapeControl {
         return objDescriptor;
     };
 
-    _getCytoscapeData = (desc: GME.ObjectDescriptor) => {
+    _getCytoscapeData = (desc: GME.ObjectDescriptor): any[] => {
         let data: any[] = [];
-        if (desc) {
+        if (!desc) {
+            return data;
+        }
+        if (desc.isConnection) {
+            /***** this section is used to create hyper edges *****/
 
-            if (desc.isConnection) {
-                /***** this section is used to create hyper edges *****/
-
-                if (desc.pointers) {
-                    let x = desc.srcPos.x + desc.dstPos.x;
-                    let y = desc.srcPos.y + desc.dstPos.y;
-                    let n = 2;
-                    for (let i in desc.pointers) {
-                        if (!desc.pointers[i].to) { continue; }
-                        if (!this._GmeID2ComponentID.hasOwnProperty(desc.pointers[i].to)) { continue; }
-                        n++;
-                        let pos = this._client.getNode(desc.pointers[i].to).getRegistry(registryKeys.POSITION);
-                        x += pos.x;
-                        y += pos.y;
-                    }
-                    data.push({
-                        group: "nodes",
-                        data: {
-                            id: desc.id,
-                            name: desc.name
-                        },
-                        position: {
-                            x: x / n,
-                            y: y / n
-                        }
-                    });
-
-                    data.push({
-                        group: "edges",
-                        data: {
-                            id: `${desc.id}src`,
-                            name: "src",
-                            source: desc.id,
-                            target: desc.srcObjId
-                        }
-                    });
-
-                    data.push({
-                        group: "edges",
-                        data: {
-                            id: `${desc.id}dst`,
-                            name: "dst",
-                            source: desc.id,
-                            target: desc.dstObjId
-                        }
-                    });
-                } else {
-                    data.push({
-                        group: "edges",
-                        data: {
-                            id: desc.id,
-                            name: desc.name,
-                            source: desc.srcObjId,
-                            target: desc.dstObjId
-                        }
-                    });
+            if (desc.pointers) {
+                let x = desc.srcPos.x + desc.dstPos.x;
+                let y = desc.srcPos.y + desc.dstPos.y;
+                let n = 2;
+                for (let i in desc.pointers) {
+                    if (!desc.pointers[i].to) { continue; }
+                    if (!this._GmeID2ComponentID.hasOwnProperty(desc.pointers[i].to)) { continue; }
+                    n++;
+                    let pos = this._client.getNode(desc.pointers[i].to).getRegistry(registryKeys.POSITION);
+                    x += pos.x;
+                    y += pos.y;
                 }
-
-                /*****/
-
-
-                // data.push({
-                //     group: "edges",
-                //     data: { id: desc.id, source: desc.source.to, target: desc.target.to}
-                // });
-            } else {
                 data.push({
                     group: "nodes",
                     data: {
                         id: desc.id,
                         name: desc.name
                     },
-                    position: desc.position
+                    position: {
+                        x: x / n,
+                        y: y / n
+                    }
                 });
 
-                // for (let i = 0; i < desc.childrenIds.length; ++i) {
-                //     data.push({
-                //         group: "nodes",
-                //         data: {
-                //             id: desc.childrenIds[i],
-                //             parent: desc.id
-                //         }
-                //     });
-                // }
+                data.push({
+                    group: "edges",
+                    data: {
+                        id: `${desc.id}src`,
+                        name: "src",
+                        source: desc.id,
+                        target: desc.srcObjId
+                    }
+                });
+
+                data.push({
+                    group: "edges",
+                    data: {
+                        id: `${desc.id}dst`,
+                        name: "dst",
+                        source: desc.id,
+                        target: desc.dstObjId
+                    }
+                });
+            } else {
+                data.push({
+                    group: "edges",
+                    data: {
+                        id: desc.id,
+                        name: desc.name,
+                        source: desc.srcObjId,
+                        target: desc.dstObjId
+                    }
+                });
             }
 
-            if (desc.pointers) {
-                for (let i in desc.pointers) {
-                    if (desc.pointers[i].to) {
-                        data.push({
-                            group: "edges",
-                            data: {
-                                name: i,
-                                id: `${desc.id}${i}`,
-                                source: desc.id,
-                                target: desc.pointers[i].to
-                            }
-                        });
-                    }
+            /*****/
+
+
+            // data.push({
+            //     group: "edges",
+            //     data: { id: desc.id, source: desc.source.to, target: desc.target.to}
+            // });
+        } else {
+            data.push({
+                group: "nodes",
+                data: {
+                    id: desc.id,
+                    name: desc.name
+                },
+                position: desc.position
+            });
+
+            // for (let i = 0; i < desc.childrenIds.length; ++i) {
+            //     data.push({
+            //         group: "nodes",
+            //         data: {
+            //             id: desc.childrenIds[i],
+            //             parent: desc.id
+            //         }
+            //     });
+            // }
+        }
+
+        if (desc.pointers) {
+            for (let i in desc.pointers) {
+                if (desc.pointers[i].to) {
+                    data.push({
+                        group: "edges",
+                        data: {
+                            name: i,
+                            id: `${desc.id}${i}`,
+                            source: desc.id,
+                            target: desc.pointers[i].to
+                        }
+                    });
                 }
             }
         }
@@ -366,7 +367,6 @@ export class CytoscapeControl {
     }
 
     _dispatchEvents = (events: GME.Event[]) => {
-        let i = events.length;
         let territoryChanged = false;
         let MAX_VAL = 999999999;
 
@@ -392,7 +392,7 @@ export class CytoscapeControl {
             }
         }
         if (this._delayedPointingObjects && this._delayedPointingObjects.length > 0) {
-            for (i = 0; i < this._delayedPointingObjects.length; i += 1) {
+            for (let i = 0; i < this._delayedPointingObjects.length; i += 1) {
                 orderedItemEvents.push({
                     etype: GmeConstants.TERRITORY_EVENT_LOAD,
                     eid: this._delayedPointingObjects[i],
@@ -405,7 +405,7 @@ export class CytoscapeControl {
         this._delayedPointingObjects = [];
 
         let unloadEvents: GME.Event[] = [];
-        i = events.length;
+        let i = events.length;
         while (i--) {
             let e: GME.Event = events[i];
 
@@ -575,100 +575,108 @@ export class CytoscapeControl {
         this.processNextInQueue();
     };
 
-    _onLoad = (gmeID: string, objD: GME.ObjectDescriptor | undefined) => {
-        if (typeof objD === "undefined") { return; }
-        let territoryChanged = false;
+    _onLoad = (gmeId: string, objD: GME.ObjectDescriptor | undefined): boolean => {
+        if (typeof objD === "undefined") {
+            return false;
+        }
 
         // component loaded
         // we are interested in the load of sub_components of the opened component
-        if (this._currentNodeId !== gmeID) {
-            if (objD) {
-                if (objD.parentId === this._currentNodeId) {
-                    let objDesc = _.extend({}, objD);
-                    this._GmeID2ComponentID[gmeID] = [];
-
-                    let pointersLoaded = this._areAllPointersLoaded(objDesc);
-
-                    if (!objDesc.isConnection) {
-
-                        if (pointersLoaded) {
-                            this.createCyObject(objDesc);
-
-                            this._GMEModels.push(gmeID);
-
-                            objDesc.control = this;
-                            objDesc.metaInfo = {};
-                            objDesc.metaInfo[GmeConstants.GME_ID] = gmeID;
-                            objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-
-                            this._GmeID2ComponentID[gmeID].push(gmeID);
-                            this._ComponentID2GmeID[gmeID] = gmeID;
-                        } else {
-                            this._delayedPointingObjects.push(gmeID);
-                        }
-
-                    } else {
-
-                        this._GMEConnections.push(gmeID);
-
-                        let srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source.to, objDesc.target.to);
-                        let sources = srcDst.sources;
-                        let destinations = srcDst.destinations;
-
-                        // guards 
-                        // when the connection is present, but no valid endpoint on canvas
-                        // preserve the connection
-                        if (sources.length < 1) {
-                            this._delayedConnections.push(gmeID);
-                        } else if (destinations.length < 1) {
-                            this._delayedConnections.push(gmeID);
-                        } else if (!pointersLoaded) {
-                            this._delayedConnections.push(gmeID);
-                        } else {
-                            for (let source of sources.reverse()) {
-                                for (let destination of destinations.reverse()) {
-                                    objDesc.srcObjId = source.objId;
-                                    objDesc.srcSubCompId = source.subCompId;
-                                    objDesc.dstObjId = destination.objId;
-                                    objDesc.dstSubCompId = destination.subCompId;
-                                    objDesc.reconnectable = true;
-                                    objDesc.editable = true;
-
-                                    objDesc.srcPos = this._client.getNode(objDesc.srcObjId).getRegistry(registryKeys.POSITION);
-                                    objDesc.dstPos = this._client.getNode(objDesc.dstObjId).getRegistry(registryKeys.POSITION);
-
-
-                                    delete objDesc.source;
-                                    delete objDesc.target;
-
-                                    this.createCyObject(objDesc);
-
-                                    this._logger.debug(`Connection: ${gmeID} for GME object: ${objDesc.id}`);
-
-                                    this._GmeID2ComponentID[gmeID].push(gmeID);
-                                    this._ComponentID2GmeID[gmeID] = gmeID;
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // supposed to be the grandchild of the currently open node
-                    // --> load of port
-                    /* 
-                     if(this._GMEModels.indexOf(objD.parentId) !== -1){
-                     this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
-                     }
-                    */
-                    this._checkComponentDependency(gmeID, GmeConstants.TERRITORY_EVENT_LOAD);
-                }
-            }
-        } else {
+        if (this._currentNodeId === gmeId) {
             // currently opened node
             //  this._updateSheetName(objD.name);
             //  this._updateAspects();
+            return false;
         }
 
-        return territoryChanged;
+        if (!objD) {
+            return false;
+        }
+
+        if (objD.parentId !== this._currentNodeId) {
+            // supposed to be the grandchild of the currently open node
+            // --> load of port
+            /* 
+             if(this._GMEModels.indexOf(objD.parentId) !== -1){
+             this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
+             }
+            */
+            this._checkComponentDependency(gmeId, GmeConstants.TERRITORY_EVENT_LOAD);
+            return false;
+        }
+
+        let objDesc = _.extend({}, objD);
+        this._GmeID2ComponentID[gmeId] = [];
+
+        let pointersLoaded = this._areAllPointersLoaded(objDesc);
+
+        if (!objDesc.isConnection) {
+
+            if (pointersLoaded) {
+                this.createCyObject(objDesc);
+
+                this._GMEModels.push(gmeId);
+
+                objDesc.control = this;
+                objDesc.metaInfo = {};
+                objDesc.metaInfo[GmeConstants.GME_ID] = gmeId;
+                objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+
+                this._GmeID2ComponentID[gmeId].push(gmeId);
+                this._ComponentID2GmeID[gmeId] = gmeId;
+            } else {
+                this._delayedPointingObjects.push(gmeId);
+            }
+
+        } else {
+
+            this._GMEConnections.push(gmeId);
+
+            let srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source.to, objDesc.target.to);
+            let sources = srcDst.sources;
+            let destinations = srcDst.destinations;
+
+            // guards 
+            // when the connection is present, but no valid endpoint on canvas
+            // preserve the connection
+            if (sources.length < 1) {
+                this._delayedConnections.push(gmeId);
+                return false;
+            }
+            if (destinations.length < 1) {
+                this._delayedConnections.push(gmeId);
+                return false;
+            }
+            if (!pointersLoaded) {
+                this._delayedConnections.push(gmeId);
+                return false;
+            }
+
+            for (let source of sources.reverse()) {
+                for (let destination of destinations.reverse()) {
+                    objDesc.srcObjId = source.objId;
+                    objDesc.srcSubCompId = source.subCompId;
+                    objDesc.dstObjId = destination.objId;
+                    objDesc.dstSubCompId = destination.subCompId;
+                    objDesc.reconnectable = true;
+                    objDesc.editable = true;
+
+                    objDesc.srcPos = this._client.getNode(objDesc.srcObjId).getRegistry(registryKeys.POSITION);
+                    objDesc.dstPos = this._client.getNode(objDesc.dstObjId).getRegistry(registryKeys.POSITION);
+
+                    delete objDesc.source;
+                    delete objDesc.target;
+
+                    this.createCyObject(objDesc);
+
+                    this._logger.debug(`Connection: ${gmeId} for GME object: ${objDesc.id}`);
+
+                    this._GmeID2ComponentID[gmeId].push(gmeId);
+                    this._ComponentID2GmeID[gmeId] = gmeId;
+                }
+            }
+        }
+        return true;
     };
 
     _checkComponentDependency = (gmeID: string, action: string): void => {
@@ -1087,7 +1095,7 @@ export class CytoscapeControl {
                 `${Math.round(vSize / 2) + 0.5}`);
         }
         
-    
+     
         path.attr({
             "arrow-start": startArrow,
             "arrow-end": endArrow,

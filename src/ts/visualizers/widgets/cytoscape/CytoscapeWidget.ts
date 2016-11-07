@@ -1,4 +1,8 @@
 
+/**
+ * The cytoscape widget describes the visual elements drawn on the cytoscape panel.
+ * 
+ */
 
 import cytoscape = require("cytoscape");
 import "jquery";
@@ -63,7 +67,7 @@ export class CytoscapeWidget {
         let nodeStyle: Cy.Stylesheet = {
             selector: "node",
             css: {
-                "background-color": "#666",
+                "background-color": "red",
                 "label": "data(name)"
                 // "shape": "rectangle",
                 // "width": "label"
@@ -73,8 +77,8 @@ export class CytoscapeWidget {
             selector: "edge",
             css: {
                 "width": 3,
-                "line-color": "#ccc",
-                "target-arrow-color": "#ccc",
+                "line-color": "blue",
+                "target-arrow-color": "orange",
                 "target-arrow-shape": "triangle",
                 "label": "data(name)"
             }
@@ -96,6 +100,10 @@ export class CytoscapeWidget {
                 "text-opacity": 0
             }
         };
+        let layout: Cy.CircleLayoutOptions = {
+            name: "circle",
+            padding: 10
+        };
         let options: Cy.CytoscapeOptions = {
 
             container: this._el.get(0),
@@ -103,10 +111,7 @@ export class CytoscapeWidget {
             elements: [],
             style: [nodeStyle, edgeStyle, selectedStyle, fadeStyle],
 
-            layout: {
-                name: "circle",
-                padding: 10
-            }
+            layout: layout
         };
 
         this._cy = cytoscape(options);
