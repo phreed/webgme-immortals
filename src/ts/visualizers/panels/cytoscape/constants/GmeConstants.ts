@@ -116,7 +116,7 @@ export class GmeConstants extends CommonConstants {
     // the id defined in Visualizers.json.
     public static readonly VISUALIZER_PANEL_IDENTIFIER = "VISUALIZER_PANEL_IDENTIFIER";
 
-    public static readonly PROJECT_ROOT_ID = "ROOT";
+    public static readonly PROJECT_ROOT_ID = "";
 
     public static readonly TERRITORY_EVENT_LOAD: GME.TerritoryEventType = "load";
     public static readonly TERRITORY_EVENT_UPDATE: GME.TerritoryEventType = "update";

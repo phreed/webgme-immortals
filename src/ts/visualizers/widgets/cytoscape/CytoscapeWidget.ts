@@ -118,11 +118,13 @@ export class CytoscapeWidget {
     };
 
     initializeEventListeners = (): void => {
+
         this._cy.on("tap", (evt: Cy.EventObject): void => {
             let pm = WebGMEGlobal.PanelManager;
             let state = WebGMEGlobal.State;
             if (typeof pm === "undefined") { return; }
             if (typeof state === "undefined") { return; }
+
             let control = pm.getActivePanel().control;
             let isEdge = false;
             let isNode = false;
@@ -178,26 +180,25 @@ export class CytoscapeWidget {
 
     // Adding/Removing/Updating items
     addNode = (cyData: Cy.ElementDefinition[]): void => {
+        if (!cyData) { return; }
 
-        if (cyData && cyData.length) {
-            cyData.forEach((d: Cy.ElementDefinition): void => {
-                this._cy.add(d);
-            });
-            // Add node to a table of nodes
-            // let node = document.createElement("div");
-            // let label = "children";
+        cyData.forEach((d: Cy.ElementDefinition): void => {
+            this._cy.add(d);
+        });
+        // Add node to a table of nodes
+        // let node = document.createElement("div");
+        // let label = "children";
 
-            // if (desc.childrenIds.length === 1) {
-            //     label = "child";
-            // }
+        // if (desc.childrenIds.length === 1) {
+        //     label = "child";
+        // }
 
-            // this.nodes[desc.id] = desc;
-            // node.innerHTML = `Adding node "${desc.name}" (click to view). 
-            //       It has ${desc.childrenIds.length} ${label}.`;
+        // this.nodes[desc.id] = desc;
+        // node.innerHTML = `Adding node "${desc.name}" (click to view). 
+        //       It has ${desc.childrenIds.length} ${label}.`;
 
-            // this._el.append(node);
-            // node.onclick = this.onNodeClick.bind(this, desc.id);
-        }
+        // this._el.append(node);
+        // node.onclick = this.onNodeClick.bind(this, desc.id);
     };
 
     setActiveNode = (nodeId: string): void => {
@@ -211,10 +212,10 @@ export class CytoscapeWidget {
     };
 
     updateNode = (desc: GME.ObjectDescriptor): void => {
-        if (desc) {
-            this._logger.debug("Updating node:", desc.name);
-            // this._el.append(`<div>Updating node "$desc.name}"</div>`);
-        }
+        if (!desc) { return; }
+
+        this._logger.debug("Updating node:", desc.name);
+        // this._el.append(`<div>Updating node "$desc.name}"</div>`);
     };
 
     beginUpdate = (): void => {
