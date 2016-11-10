@@ -7,7 +7,7 @@
 import cytoscape = require("cytoscape");
 import "jquery";
 import "WebGMEGlobal";
-import { CytoscapeControl } from "visualizers/panels/cytoscape/CytoscapeControl";
+import { CytoscapeControl, ObjectDescriptor } from "visualizers/panels/cytoscape/CytoscapeControl";
 
 // import css = require("css!./styles/cytoscapeWidget.css");
 
@@ -211,7 +211,7 @@ export class CytoscapeWidget {
         delete this.nodes[gmeId];
     };
 
-    updateNode = (desc: GME.ObjectDescriptor): void => {
+    updateNode = (desc: ObjectDescriptor): void => {
         if (!desc) { return; }
 
         this._logger.debug("Updating node:", desc.name);

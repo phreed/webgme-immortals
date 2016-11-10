@@ -16,7 +16,57 @@ import { GmeConstants, LineStyleArrows, LineStylePatterns } from "./constants/Gm
 import { CytoscapeWidget } from "visualizers/widgets/cytoscape/CytoscapeWidget";
 import "WebGMEGlobal";
 
+export class ObjectDescriptor {
+    constructor() {
+        this.id = "";
+        this.name = "";
+        this.childrenIds = [];
+        this.parentId = "";
+        this.isConnection = false;
+        this.childrenNum = 0;
+        this.position = 0;
+        this.source = "";
+        this.target = "";
+        this.pointers = {};
+        this.srcPos = { x: 0, y: 0 };
+        this.dstPos = { x: 0, y: 0 };
+        this.srcObjId = "";
+        this.dstObjId = "";
+    }
+    id: string;
+    name: string;
+    childrenIds: string[];
+    parentId: string;
+    isConnection: boolean;
+    childrenNum: number;
+    position: number;
+    source: string;
+    target: string;
+    pointers: Dictionary<Common.Pointer>;
+    srcPos: GME.Pos2D;
+    dstPos: GME.Pos2D;
+    srcObjId: string;
+    dstObjId: string;
 
+    control?: GME.VisualizerControl;
+    metaInfo?: Dictionary<string>;
+    preferencesHelper?: GME.PreferenceHelper;
+    srcSubCompId?: string;
+    dstSubCompId?: string;
+    reconnectable?: boolean;
+    editable?: boolean;
+}
+
+export class DescEvent implements GME.Event {
+    id?: string;
+    etype: GME.TerritoryEventType;
+    eid: Common.GUID;
+    desc?: ObjectDescriptor;
+    constructor(event: GME.Event) {
+        this.etype = event.etype;
+        this.eid = event.eid;
+    }
+}
 
 export interface CytoscapeControlOptions {
     logger: Core.GmeLogger;
@@ -50,7 +100,7 @@ export class CytoscapeControl {
     private _widget: CytoscapeWidget;
     private _currentNodeId: string | null;
     private _currentNodeParentId: string | undefined;
-    public eventQueue: GME.Event[][];
+    public eventQueue: DescEvent[][];
 
     private _GMEModels: any[];
     private _GMEConnections: any[];
@@ -178,25 +228,10 @@ export class CytoscapeControl {
     };
 
     // This next function retrieves the relevant node information for the widget
-    _getObjectDescriptor = (nodeId: Common.NodeId): GME.ObjectDescriptor => {
+    _getObjectDescriptor = (nodeId: Common.NodeId): ObjectDescriptor => {
         let nodeObj = this._client.getNode(nodeId);
 
-        let objDescriptor: GME.ObjectDescriptor = {
-            id: "",
-            name: "",
-            childrenIds: [],
-            parentId: "",
-            isConnection: false,
-            childrenNum: 0,
-            position: 0,
-            source: "",
-            target: "",
-            pointers: {},
-            srcPos: { x: 0, y: 0 },
-            dstPos: { x: 0, y: 0 },
-            srcObjId: "",
-            dstObjId: "",
-        };
+        let objDescriptor = new ObjectDescriptor;
         if (nodeId === "") { return objDescriptor; }
         if (!nodeObj) { return objDescriptor; }
 
@@ -237,7 +272,7 @@ export class CytoscapeControl {
         return objDescriptor;
     };
 
-    _getCytoscapeData = (desc: GME.ObjectDescriptor): any[] => {
+    _getCytoscapeData = (desc: ObjectDescriptor): any[] => {
         let data: any[] = [];
         if (!desc) {
             return data;
@@ -381,7 +416,7 @@ export class CytoscapeControl {
         }
     }
 
-    _dispatchEvents = (events: GME.Event[]) => {
+    _dispatchEvents = (events: DescEvent[]) => {
         let MAX_VAL = Number.MAX_VALUE;
 
         this._logger.debug(`_dispatchEvents ${events[0].etype}`);
@@ -405,7 +440,7 @@ export class CytoscapeControl {
         /** 1: items first, no dependency **/
         /** 2: connections second, dependency if a connection is connected to an other connection **/
 
-        let orderedConnectionEvents: GME.Event[] = [];
+        let orderedConnectionEvents: DescEvent[] = [];
 
         if (this._delayedConnectionLoads) {
             /*this._logger.warn(`_delayedConnections: ${this._delayedConnections.length}` );*/
@@ -419,7 +454,7 @@ export class CytoscapeControl {
         }
         this._delayedConnectionLoads = [];
 
-        let orderedItemEvents: GME.Event[] = [];
+        let orderedItemEvents: DescEvent[] = [];
         if (this._delayedPointingObjectLoads) {
             for (let ptrObjectId of this._delayedPointingObjectLoads) {
                 orderedItemEvents.push({
@@ -431,7 +466,7 @@ export class CytoscapeControl {
         }
         this._delayedPointingObjectLoads = [];
 
-        let unloadEvents: GME.Event[] = [];
+        let unloadEvents: DescEvent[] = [];
         for (let evt of events) {
 
             if (evt.etype === GmeConstants.TERRITORY_EVENT_UPDATE) {
@@ -577,7 +612,7 @@ export class CytoscapeControl {
      * True indicates that the territory changed.
      */
     _onLoadEntity
-    = (gmeId: string, pointersLoaded: boolean, objDesc: GME.ObjectDescriptor): boolean => {
+    = (gmeId: string, pointersLoaded: boolean, objDesc: ObjectDescriptor): boolean => {
         if (!pointersLoaded) {
             this._delayedPointingObjectLoads.push(gmeId);
             return false;
@@ -603,7 +638,7 @@ export class CytoscapeControl {
      * True indicates that the territory changed.
      */
     _onLoadConnection
-    = (gmeId: string, pointersLoaded: boolean, objDesc: GME.ObjectDescriptor): boolean => {
+    = (gmeId: string, pointersLoaded: boolean, objDesc: ObjectDescriptor): boolean => {
         this._GMEConnections.push(gmeId);
         let srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
         let sources = srcDst.sources;
@@ -659,7 +694,7 @@ export class CytoscapeControl {
      * True indicates that the territory changed.
      */
     _onLoad
-    = (gmeId: string, objDesc: GME.ObjectDescriptor | undefined): boolean => {
+    = (gmeId: string, objDesc: ObjectDescriptor | undefined): boolean => {
         if (typeof objDesc === "undefined") {
             return false;
         }
@@ -758,7 +793,7 @@ export class CytoscapeControl {
      * This function checks that all pointers that point 
      * point to something have been loaded. 
      */
-    _areAllPointersLoaded = (desc: GME.ObjectDescriptor) => {
+    _areAllPointersLoaded = (desc: ObjectDescriptor) => {
         let pointers = desc.pointers;
         if (!pointers) {
             return true;
@@ -788,7 +823,7 @@ export class CytoscapeControl {
     //     }
     // };
 
-    _onUpdate(gmeId: string, desc?: GME.ObjectDescriptor): void {
+    _onUpdate(gmeId: string, desc?: ObjectDescriptor): void {
         if (typeof desc === "undefined") {
             let description = this._getObjectDescriptor(gmeId);
             this._widget.updateNode(description);
