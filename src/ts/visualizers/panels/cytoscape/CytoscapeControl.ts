@@ -61,10 +61,11 @@ export class DescEvent implements GME.Event {
     id?: string;
     etype: GME.TerritoryEventType;
     eid: Common.GUID;
-    desc?: ObjectDescriptor;
+    desc: ObjectDescriptor;
     constructor(event: GME.Event) {
         this.etype = event.etype;
         this.eid = event.eid;
+        this.desc = new ObjectDescriptor;
     }
 }
 
@@ -100,29 +101,27 @@ export class CytoscapeControl {
     private _widget: CytoscapeWidget;
     private _currentNodeId: string | null;
     private _currentNodeParentId: string | undefined;
-    public eventQueue: DescEvent[][];
+    public eventQueue: GME.Event[];
 
     private _GMEModels: any[];
     private _GMEConnections: any[];
 
-    private _GmeID2ComponentID: Dictionary<any>;
-    private _ComponentID2GmeID: Dictionary<any>;
+    private _GmeID2ComponentID: Dictionary<string[]>;
+    private _ComponentID2GmeID: Dictionary<string>;
 
-    private _GMEID2Subcomponent: Dictionary<any>;
-    private _Subcomponent2GMEID: Dictionary<any>;
+    private _GMEID2Subcomponent: Dictionary<string[]>;
+    private _Subcomponent2GMEID: Dictionary<string>;
 
     /**
      * The objects pointing cannot be loaded until
      * the things which they point at.
      */
-    private _delayedConnectionLoads: any[];
-    private _delayedPointingObjectLoads: any[];
+    private _pendingEvents: DescEvent[];
 
     private _territoryId: GME.TerritoryId;
     private _patterns: Dictionary<GME.TerritoryPattern>;
     private _toolbarItems: ToolbarItems;
 
-    private _notifyPackage: Dictionary<any>;
     private _toolbarInitialized = false;
 
     private _progressCounter = 0;
@@ -180,8 +179,7 @@ export class CytoscapeControl {
         this._GMEID2Subcomponent = {};
         this._Subcomponent2GMEID = {};
 
-        this._delayedConnectionLoads = [];
-        this._delayedPointingObjectLoads = [];
+        this._pendingEvents = [];
 
         // Remove current territory patterns
         if (this._currentNodeId) {
@@ -215,9 +213,9 @@ export class CytoscapeControl {
             if (events.length < 1) { return; }
 
             this._logger.debug(`_eventCallback "${events.length}" items`);
-            this.eventQueue.push(events);
+            this.eventQueue = this.eventQueue.concat(events);
 
-            this.processNextInQueue();
+            this.processEventQueue();
         });
 
         // Update the territory
@@ -390,220 +388,88 @@ export class CytoscapeControl {
     /**
      * update the object descriptions of the events and dispatch them.
      */
-    processNextInQueue = (): void => {
+    processEventQueue = (): void => {
         try {
-            if (this.eventQueue.length < 1) { return; }
-
-            let batch = this.eventQueue.pop();
-            if (typeof batch === "undefined") { return; }
-
-            for (let ix = batch.length; ix--; ix) {
-                let event = batch[ix];
-
-                let desc = this._getObjectDescriptor(event.eid);
-                if (event.etype === GmeConstants.TERRITORY_EVENT_LOAD) {
-                    event.desc = desc;
-                    continue;
-                }
-                if (event.etype === GmeConstants.TERRITORY_EVENT_UPDATE) {
-                    event.desc = desc;
-                    continue;
-                }
+            let events = this.eventQueue;
+            if (events.length < 1) {
+                this._logger.error(`_dispatchEvents was called with no items`);
+                return;
             }
-            this._dispatchEvents(batch);
+            if (events.length < 2) {
+                if (events[0].etype === GmeConstants.TERRITORY_EVENT_COMPLETE) {
+                    this._progressCounter--;
+                    this._logger.error(`_dispatchEvents no progress`);
+                    return;
+                }
+            } else {
+                this._progressCounter = 0;
+            }
+            this._logger.debug(`_dispatchEvents "${events.length}" items`);
+
+            /**
+             * add new events to the pending event queue.
+             */
+            for (let event = events.pop(); event; event = events.pop()) {
+                this._pendingEvents.push({
+                    etype: event.etype,
+                    eid: event.eid,
+                    desc: this._getObjectDescriptor(event.eid)
+                });
+            }
+
+            /********** ORDER EVENTS BASED ON DEPENDENCY ************/
+            /** 
+             * relations which imply dependency
+             *  * containment : except for containment in the context-node
+             *  * pointers : but only those starting at children of the context-node
+             *  * sets : same as for pointers
+             *  * inherit/mixin : ignored for now
+             */
+            let orderedEvents = this._pendingEvents;
+            this._pendingEvents = [];
+
+            let territoryChanged = false;
+            this._widget.beginUpdate();
+            try {
+                // 
+                for (let event of orderedEvents) {
+                    switch (event.etype) {
+                        case GmeConstants.TERRITORY_EVENT_LOAD:
+                            territoryChanged = this._onLoad(event) || territoryChanged;
+                            break;
+                        case GmeConstants.TERRITORY_EVENT_UPDATE:
+                            this._onUpdate(event);
+                            break;
+                        case GmeConstants.TERRITORY_EVENT_UNLOAD:
+                            territoryChanged = this._onUnload(event) || territoryChanged;
+                            break;
+                        case GmeConstants.TERRITORY_EVENT_COMPLETE:
+                            break;
+                    }
+                }
+            } finally {
+                this._widget.endUpdate();
+            }
+
+            // update the territory
+            Promise
+                .try(() => {
+                    if (territoryChanged) { return true; }
+                    if (this._pendingEvents.length > 0) { return true; }
+                    return false;
+                })
+                .then((territoryChanged: boolean) => {
+                    if (!territoryChanged) { return; }
+
+                    this._logger.warn("Updating territory with ruleset from decorators: " +
+                        JSON.stringify(this._patterns));
+                    this._client.updateTerritory(this._territoryId, this._patterns);
+                });
+
         } catch (err) {
             this._logger.error(`problem processing queue`);
         }
     }
-
-    _dispatchEvents = (events: DescEvent[]) => {
-        let MAX_VAL = Number.MAX_VALUE;
-
-        this._logger.debug(`_dispatchEvents ${events[0].etype}`);
-
-        if (events.length < 1) {
-            this._logger.error(`_dispatchEvents should never be called with no items`);
-            return;
-        }
-        if (events.length < 2) {
-            if (events[0].etype === GmeConstants.TERRITORY_EVENT_COMPLETE) {
-                this._progressCounter--;
-                this._logger.error(`_dispatchEvents no progress`);
-                return;
-            }
-        } else {
-            this._progressCounter = 0;
-        }
-        this._logger.debug(`_dispatchEvents "${events.length}" items`);
-
-        /********** ORDER EVENTS BASED ON DEPENDENCY ************/
-        /** 1: items first, no dependency **/
-        /** 2: connections second, dependency if a connection is connected to an other connection **/
-
-        let orderedConnectionEvents: DescEvent[] = [];
-
-        if (this._delayedConnectionLoads) {
-            /*this._logger.warn(`_delayedConnections: ${this._delayedConnections.length}` );*/
-            for (let connObjectId of this._delayedConnectionLoads) {
-                orderedConnectionEvents.push({
-                    etype: GmeConstants.TERRITORY_EVENT_LOAD,
-                    eid: connObjectId,
-                    desc: this._getObjectDescriptor(connObjectId)
-                });
-            }
-        }
-        this._delayedConnectionLoads = [];
-
-        let orderedItemEvents: DescEvent[] = [];
-        if (this._delayedPointingObjectLoads) {
-            for (let ptrObjectId of this._delayedPointingObjectLoads) {
-                orderedItemEvents.push({
-                    etype: GmeConstants.TERRITORY_EVENT_LOAD,
-                    eid: ptrObjectId,
-                    desc: this._getObjectDescriptor(ptrObjectId)
-                });
-            }
-        }
-        this._delayedPointingObjectLoads = [];
-
-        let unloadEvents: DescEvent[] = [];
-        for (let evt of events) {
-
-            if (evt.etype === GmeConstants.TERRITORY_EVENT_UPDATE) {
-                unloadEvents.push(evt);
-                continue;
-            }
-            if (typeof evt.desc === "undefined") {
-                continue;
-            }
-            if (!evt.desc.isConnection) {
-                orderedItemEvents.push(evt);
-                continue;
-            }
-            if (this._currentNodeId === evt.eid) {
-                orderedItemEvents.push(evt);
-                continue;
-            }
-            if (evt.desc.parentId !== this._currentNodeId) {
-                orderedItemEvents.push(evt);
-                continue;
-            }
-
-            // check to see if SRC and DST is another connection
-            // if so, put this guy AFTER them
-            let srcGMEID = evt.desc.source;
-            let dstGMEID = evt.desc.target;
-            let srcConnIdx = -1;
-            let dstConnIdx = -1;
-            for (let jx = orderedConnectionEvents.length; jx > -1; jx--) {
-                let ce = orderedConnectionEvents[jx];
-                if (ce.id === srcGMEID || ce.id === dstGMEID) {
-                    srcConnIdx = jx;
-                }
-
-                if (srcConnIdx !== -1 && dstConnIdx !== -1) {
-                    break;
-                }
-            }
-
-            let insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
-
-            // check to see if this guy is a DEPENDENT of any 
-            // already processed CONNECTION insert BEFORE THEM
-            let depSrcConnIdx = MAX_VAL;
-            let depDstConnIdx = MAX_VAL;
-            for (let jx = orderedConnectionEvents.length; jx > -1; jx--) {
-                let ce = orderedConnectionEvents[jx];
-                if (typeof ce.desc === "undefined") { continue; }
-
-                if (evt.desc.id === ce.desc.source) {
-                    depSrcConnIdx = jx;
-                } else if (evt.desc.id === ce.desc.target) {
-                    depDstConnIdx = jx;
-                }
-
-                if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
-                    break;
-                }
-            }
-
-            let insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
-            if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
-                orderedConnectionEvents.push(evt);
-            } else {
-                if (insertIdxAfter !== -1 &&
-                    insertIdxBefore === MAX_VAL) {
-                    orderedConnectionEvents.splice(insertIdxAfter + 1, 0, evt);
-                } else if (insertIdxAfter === -1 &&
-                    insertIdxBefore !== MAX_VAL) {
-                    orderedConnectionEvents.splice(insertIdxBefore, 0, evt);
-                } else if (insertIdxAfter !== -1 &&
-                    insertIdxBefore !== MAX_VAL) {
-                    orderedConnectionEvents.splice(insertIdxBefore, 0, evt);
-                }
-            }
-
-        }
-        this._notifyPackage = {};
-
-        let territoryChanged = false;
-        this._widget.beginUpdate();
-        try {
-            // 
-            for (let evt of unloadEvents.concat(orderedItemEvents)) {
-                switch (evt.etype) {
-                    case GmeConstants.TERRITORY_EVENT_LOAD:
-                        territoryChanged = this._onLoad(evt.eid, evt.desc) || territoryChanged;
-                        break;
-                    case GmeConstants.TERRITORY_EVENT_UPDATE:
-                        this._onUpdate(evt.eid, evt.desc);
-                        break;
-                    case GmeConstants.TERRITORY_EVENT_UNLOAD:
-                        territoryChanged = this._onUnload(evt.eid) || territoryChanged;
-                        break;
-                    case GmeConstants.TERRITORY_EVENT_COMPLETE:
-                        break;
-                }
-            }
-
-            // 
-            for (let evt of orderedConnectionEvents) {
-                switch (evt.etype) {
-                    case GmeConstants.TERRITORY_EVENT_LOAD:
-                        this._onLoad(evt.eid, evt.desc);
-                        break;
-                    case GmeConstants.TERRITORY_EVENT_UPDATE:
-                        this._onUpdate(evt.eid, evt.desc);
-                        break;
-                    case GmeConstants.TERRITORY_EVENT_UNLOAD:
-                        this._onUnload(evt.eid);
-                        break;
-                    case GmeConstants.TERRITORY_EVENT_COMPLETE:
-                        break;
-                }
-            }
-        } finally {
-            this._widget.endUpdate();
-        }
-
-        // update the territory
-        Promise
-            .try(() => {
-                if (territoryChanged) { return true; }
-                if (this._delayedConnectionLoads.length > 0) { return true; }
-                if (this._delayedPointingObjectLoads.length > 0) { return true; }
-                return false;
-            })
-            .then((territoryChanged: boolean) => {
-                if (!territoryChanged) { return; }
-
-                this._logger.warn("Updating territory with ruleset from decorators: " +
-                    JSON.stringify(this._patterns));
-                this._client.updateTerritory(this._territoryId, this._patterns);
-            });
-        // continue processing event queue
-        this.processNextInQueue();
-    };
 
     /**
      * an entity is a node with no pointers
@@ -611,10 +477,13 @@ export class CytoscapeControl {
      * return true if the object was seccessfully loaded (false otherwise)
      * True indicates that the territory changed.
      */
-    _onLoadEntity
-    = (gmeId: string, pointersLoaded: boolean, objDesc: ObjectDescriptor): boolean => {
+    _onLoadEntity = (event: DescEvent, pointersLoaded: boolean): boolean => {
+        // gmeId: Common.GUID, pointersLoaded: boolean, objDesc: ObjectDescriptor): boolean => {
+        let gmeId = event.eid;
+        let objDesc = event.desc;
+
         if (!pointersLoaded) {
-            this._delayedPointingObjectLoads.push(gmeId);
+            this._pendingEvents.push(event);
             return false;
         }
         this._widget.addNode(this._getCytoscapeData(objDesc));
@@ -637,8 +506,10 @@ export class CytoscapeControl {
      * return true if the object was seccessfully loaded (false otherwise)
      * True indicates that the territory changed.
      */
-    _onLoadConnection
-    = (gmeId: string, pointersLoaded: boolean, objDesc: ObjectDescriptor): boolean => {
+    _onLoadConnection = (event: DescEvent, pointersLoaded: boolean): boolean => {
+        let gmeId = event.eid;
+        let objDesc = event.desc;
+
         this._GMEConnections.push(gmeId);
         let srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
         let sources = srcDst.sources;
@@ -648,15 +519,15 @@ export class CytoscapeControl {
         // when the connection is present, but no valid endpoint on canvas
         // preserve the connection
         if (sources.length < 1) {
-            this._delayedConnectionLoads.push(gmeId);
+            this._pendingEvents.push(event);
             return false;
         }
         if (destinations.length < 1) {
-            this._delayedConnectionLoads.push(gmeId);
+            this._pendingEvents.push(event);
             return false;
         }
         if (!pointersLoaded) {
-            this._delayedConnectionLoads.push(gmeId);
+            this._pendingEvents.push(event);
             return false;
         }
 
@@ -693,8 +564,9 @@ export class CytoscapeControl {
      * return true if the object was seccessfully loaded (false otherwise)
      * True indicates that the territory changed.
      */
-    _onLoad
-    = (gmeId: string, objDesc: ObjectDescriptor | undefined): boolean => {
+    _onLoad = (event: DescEvent): boolean => {
+        let gmeId = event.eid;
+        let objDesc = event.desc;
         if (typeof objDesc === "undefined") {
             return false;
         }
@@ -720,9 +592,9 @@ export class CytoscapeControl {
         }
 
         if (objDesc.isConnection) {
-            return this._onLoadConnection(gmeId, pointersLoaded, objDesc);
+            return this._onLoadConnection(event, pointersLoaded);
         } else {
-            return this._onLoadEntity(gmeId, pointersLoaded, objDesc);
+            return this._onLoadEntity(event, pointersLoaded);
         }
     };
 
@@ -815,25 +687,21 @@ export class CytoscapeControl {
         return true;
     }
 
-    // _onLoad = (gmeId) => {
-    //     if (this._currentNodeId !== gmeId) {
-    //         var description = this._getObjectDescriptor(gmeId);
-    //         var cyData = this._getCytoscapeData(description);
-    //         this._widget.addNode(cyData);
-    //     }
-    // };
-
-    _onUpdate(gmeId: string, desc?: ObjectDescriptor): void {
+    _onUpdate(event: DescEvent): boolean {
+        let gmeId = event.eid;
+        let desc = event.desc;
         if (typeof desc === "undefined") {
             let description = this._getObjectDescriptor(gmeId);
             this._widget.updateNode(description);
-            return;
+            return true;
         }
         this._widget.updateNode(desc);
+        return true;
     };
 
-    _onUnload = (gmeId: string) => {
-        this._widget.removeNode(gmeId);
+    _onUnload = (event: DescEvent): boolean => {
+        this._widget.removeNode(event.eid);
+        return true;
     };
 
     _stateActiveObjectChanged = (_model: any, activeObjectId: string) => {
