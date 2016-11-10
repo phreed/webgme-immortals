@@ -182,23 +182,9 @@ export class CytoscapeWidget {
     addNode = (cyData: Cy.ElementDefinition[]): void => {
         if (!cyData) { return; }
 
-        cyData.forEach((d: Cy.ElementDefinition): void => {
-            this._cy.add(d);
+        cyData.forEach((desc: Cy.ElementDefinition): void => {
+            this._cy.add(desc);
         });
-        // Add node to a table of nodes
-        // let node = document.createElement("div");
-        // let label = "children";
-
-        // if (desc.childrenIds.length === 1) {
-        //     label = "child";
-        // }
-
-        // this.nodes[desc.id] = desc;
-        // node.innerHTML = `Adding node "${desc.name}" (click to view). 
-        //       It has ${desc.childrenIds.length} ${label}.`;
-
-        // this._el.append(node);
-        // node.onclick = this.onNodeClick.bind(this, desc.id);
     };
 
     setActiveNode = (nodeId: string): void => {
@@ -206,8 +192,6 @@ export class CytoscapeWidget {
     };
 
     removeNode = (gmeId: string): void => {
-        // let desc = this.nodes[gmeId];
-        // this._el.append(`<div>Removing node "${desc.name}"</div>`);
         delete this.nodes[gmeId];
     };
 
@@ -215,7 +199,6 @@ export class CytoscapeWidget {
         if (!desc) { return; }
 
         this._logger.debug("Updating node:", desc.name);
-        // this._el.append(`<div>Updating node "$desc.name}"</div>`);
     };
 
     beginUpdate = (): void => {
@@ -238,9 +221,6 @@ export class CytoscapeWidget {
         this._logger.debug("endUpdate");
 
         this._updating = false;
-        // this._tryRefreshScreen();
-
-        // this.searchManager.applyLastSearch();
     };
 
     /* * * * * * * * Visualizer event handlers * * * * * * * */
