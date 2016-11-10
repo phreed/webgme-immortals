@@ -65,8 +65,8 @@ export class CytoscapeControl {
      * The objects pointing cannot be loaded until
      * the things which they point at.
      */
-    private _delayedConnections: any[];
-    private _delayedPointingObjects: any[];
+    private _delayedConnectionLoads: any[];
+    private _delayedPointingObjectLoads: any[];
 
     private _territoryId: GME.TerritoryId;
     private _patterns: Dictionary<GME.TerritoryPattern>;
@@ -74,6 +74,8 @@ export class CytoscapeControl {
 
     private _notifyPackage: Dictionary<any>;
     private _toolbarInitialized = false;
+
+    private _progressCounter = 0;
 
     constructor(options: CytoscapeControlOptions) {
 
@@ -128,8 +130,8 @@ export class CytoscapeControl {
         this._GMEID2Subcomponent = {};
         this._Subcomponent2GMEID = {};
 
-        this._delayedConnections = [];
-        this._delayedPointingObjects = [];
+        this._delayedConnectionLoads = [];
+        this._delayedPointingObjectLoads = [];
 
         // Remove current territory patterns
         if (this._currentNodeId) {
@@ -383,43 +385,54 @@ export class CytoscapeControl {
         let MAX_VAL = Number.MAX_VALUE;
 
         this._logger.debug(`_dispatchEvents ${events[0].etype}`);
-        events.shift();
 
+        if (events.length < 1) {
+            this._logger.error(`_dispatchEvents should never be called with no items`);
+            return;
+        }
+        if (events.length < 2) {
+            if (events[0].etype === GmeConstants.TERRITORY_EVENT_COMPLETE) {
+                this._progressCounter--;
+                this._logger.error(`_dispatchEvents no progress`);
+                return;
+            }
+        } else {
+            this._progressCounter = 0;
+        }
         this._logger.debug(`_dispatchEvents "${events.length}" items`);
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
         /** 2: connections second, dependency if a connection is connected to an other connection **/
-        let orderedItemEvents: GME.Event[] = [];
+
         let orderedConnectionEvents: GME.Event[] = [];
 
-        if (this._delayedConnections) {
+        if (this._delayedConnectionLoads) {
             /*this._logger.warn(`_delayedConnections: ${this._delayedConnections.length}` );*/
-            for (let connId of this._delayedConnections) {
+            for (let connObjectId of this._delayedConnectionLoads) {
                 orderedConnectionEvents.push({
                     etype: GmeConstants.TERRITORY_EVENT_LOAD,
-                    eid: connId,
-                    desc: this._getObjectDescriptor(connId)
+                    eid: connObjectId,
+                    desc: this._getObjectDescriptor(connObjectId)
                 });
             }
         }
-        this._delayedConnections = [];
+        this._delayedConnectionLoads = [];
 
-        if (this._delayedPointingObjects) {
-            for (let ptrId of this._delayedPointingObjects) {
+        let orderedItemEvents: GME.Event[] = [];
+        if (this._delayedPointingObjectLoads) {
+            for (let ptrObjectId of this._delayedPointingObjectLoads) {
                 orderedItemEvents.push({
                     etype: GmeConstants.TERRITORY_EVENT_LOAD,
-                    eid: ptrId,
-                    desc: this._getObjectDescriptor(ptrId)
+                    eid: ptrObjectId,
+                    desc: this._getObjectDescriptor(ptrObjectId)
                 });
             }
         }
-        this._delayedPointingObjects = [];
+        this._delayedPointingObjectLoads = [];
 
         let unloadEvents: GME.Event[] = [];
-
-        for (let ix = events.length; ix--; ix) {
-            let evt = events[ix];
+        for (let evt of events) {
 
             if (evt.etype === GmeConstants.TERRITORY_EVENT_UPDATE) {
                 unloadEvents.push(evt);
@@ -513,6 +526,8 @@ export class CytoscapeControl {
                     case GmeConstants.TERRITORY_EVENT_UNLOAD:
                         territoryChanged = this._onUnload(evt.eid) || territoryChanged;
                         break;
+                    case GmeConstants.TERRITORY_EVENT_COMPLETE:
+                        break;
                 }
             }
 
@@ -528,6 +543,8 @@ export class CytoscapeControl {
                     case GmeConstants.TERRITORY_EVENT_UNLOAD:
                         this._onUnload(evt.eid);
                         break;
+                    case GmeConstants.TERRITORY_EVENT_COMPLETE:
+                        break;
                 }
             }
         } finally {
@@ -538,8 +555,8 @@ export class CytoscapeControl {
         Promise
             .try(() => {
                 if (territoryChanged) { return true; }
-                if (this._delayedConnections.length > 0) { return true; }
-                if (this._delayedPointingObjects.length > 0) { return true; }
+                if (this._delayedConnectionLoads.length > 0) { return true; }
+                if (this._delayedPointingObjectLoads.length > 0) { return true; }
                 return false;
             })
             .then((territoryChanged: boolean) => {
@@ -562,7 +579,7 @@ export class CytoscapeControl {
     _onLoadEntity
     = (gmeId: string, pointersLoaded: boolean, objDesc: GME.ObjectDescriptor): boolean => {
         if (!pointersLoaded) {
-            this._delayedPointingObjects.push(gmeId);
+            this._delayedPointingObjectLoads.push(gmeId);
             return false;
         }
         this._widget.addNode(this._getCytoscapeData(objDesc));
@@ -596,15 +613,15 @@ export class CytoscapeControl {
         // when the connection is present, but no valid endpoint on canvas
         // preserve the connection
         if (sources.length < 1) {
-            this._delayedConnections.push(gmeId);
+            this._delayedConnectionLoads.push(gmeId);
             return false;
         }
         if (destinations.length < 1) {
-            this._delayedConnections.push(gmeId);
+            this._delayedConnectionLoads.push(gmeId);
             return false;
         }
         if (!pointersLoaded) {
-            this._delayedConnections.push(gmeId);
+            this._delayedConnectionLoads.push(gmeId);
             return false;
         }
 
@@ -660,22 +677,12 @@ export class CytoscapeControl {
             return false;
         }
 
-        if (objDesc.parentId !== this._currentNodeId) {
-            // supposed to be the grandchild of the currently open node
-            // --> load of port
-            /* 
-             if(this._GMEModels.indexOf(objD.parentId) !== -1){
-             this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
-             }
-            */
-            this._checkComponentDependency(gmeId, GmeConstants.TERRITORY_EVENT_LOAD);
-            return false;
-        }
-
-
         this._GmeID2ComponentID[gmeId] = [];
 
         let pointersLoaded = this._areAllPointersLoaded(objDesc);
+        if (objDesc.parentId !== this._currentNodeId) {
+            pointersLoaded = true;
+        }
 
         if (objDesc.isConnection) {
             return this._onLoadConnection(gmeId, pointersLoaded, objDesc);
@@ -683,12 +690,6 @@ export class CytoscapeControl {
             return this._onLoadEntity(gmeId, pointersLoaded, objDesc);
         }
     };
-
-    _checkComponentDependency
-    = (gmeID: string, action: string): void => {
-        this._logger.error(`check-component-dependency not implemented ${gmeID} ${action}`);
-        return;
-    }
 
     _getAllSourceDestinationPairsForConnection
     = (GMESrcId: string, GMEDstId: string): GMEConcepts.ConnectionCollectionPair => {
