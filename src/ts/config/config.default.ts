@@ -60,5 +60,7 @@ config.requirejsPaths["plugins/SerializerClientPlugin/metadata"] = "./dist/plugi
 config.requirejsPaths["plugins/PushPlugin/metadata"] = "./dist/plugins/PushPlugin/metadata";
 config.requirejsPaths["plugins/StreamPlugin/metadata"] = "./dist/plugins/StreamPlugin/metadata";
 
+config.storage.disableHashChecks = false;
+
 validateConfig(config);
 export = config;

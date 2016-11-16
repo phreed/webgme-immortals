@@ -1,0 +1,27 @@
+{
+    "apps": [
+        {
+            "name": "webgme-immortals",
+            "script": "./dist/app_bootstrap.js",
+            "source_map_support": true,
+            "instances": 1,
+            "exec_mode": "fork_mode",
+            "watch": [
+                "dist"
+            ],
+            "ignore_watch": [
+                "node_modules",
+                "src"
+            ],
+            "watch_options": {
+                "followSymlinks": false
+            },
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "env_production": {
+                "NODE_ENV": "production"
+            }
+        }
+    ]
+}
