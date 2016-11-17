@@ -13,8 +13,8 @@ import PreferencesHelper = require("js/Utils/PreferencesHelper");
 import { CytoscapeConstants } from "./constants/CytoscapeConstants";
 import { GmeConstants, LineStyleArrows, LineStylePatterns } from "./constants/GmeConstants";
 import { CytoscapeWidget } from "visualizers/widgets/cytoscape/CytoscapeWidget";
-import "WebGMEGlobal";
-// import { Sort } from "toposort";
+
+import { Toposort, NodeMethods } from "toposort";
 
 export class ObjectDescriptor {
     constructor() {
@@ -58,10 +58,10 @@ export class ObjectDescriptor {
 }
 
 export class DescEvent implements GME.Event {
-    id?: string;
-    etype: GME.TerritoryEventType;
-    eid: Common.GUID;
-    desc: ObjectDescriptor;
+    public id?: string;
+    public etype: GME.TerritoryEventType;
+    public eid: Common.GUID;
+    public desc: ObjectDescriptor;
     constructor(event: GME.Event) {
         this.etype = event.etype;
         this.eid = event.eid;
@@ -93,6 +93,46 @@ export class ToolbarItems {
     cpTextColor: Toolbar.ToolbarColorPicker;
 }
 
+class EventMethods implements NodeMethods<DescEvent> {
+    nullNode(key: string): DescEvent {
+        let result = new DescEvent(
+            {
+                "etype": GmeConstants.TERRITORY_EVENT_LOAD,
+                "eid": "1",
+                "desc": new ObjectDescriptor
+            });
+        result.desc.id = key;
+        return result;
+    }
+    /**
+     * The key for the node is not the event.eid but
+     * the event.desc.id which is the object descriptor id.
+     */
+    keyFn(event: DescEvent): string {
+        if (typeof event.desc === "undefined") {
+            throw new Error(`cannot make key for node`);
+        }
+        return event.desc.id;
+    }
+    /**
+     * This includes:
+     *   [x] pointers,
+     *   [ ] containment, 
+     *   [ ] sets, and 
+     *   [ ] inheritance.
+     */
+    depsFn(event: DescEvent): string[] {
+        let pointers = event.desc.pointers;
+        let result: string[] = [];
+        for (let key in pointers) {
+            result.push(pointers[key].to);
+        }
+        return result;
+    }
+    cycleFn(_node: DescEvent): void {
+        throw new Error(`a cycle exists, you should handle this`);
+    }
+}
 
 export class CytoscapeControl {
 
@@ -348,15 +388,15 @@ export class CytoscapeControl {
         }
 
         if (desc.pointers) {
-            for (let i in desc.pointers) {
-                if (!desc.pointers[i].to) { continue; }
+            for (let ptrId in desc.pointers) {
+                if (!desc.pointers[ptrId].to) { continue; }
                 data.push({
                     group: "edges",
                     data: {
-                        name: i,
-                        id: `${desc.id}${i}`,
+                        name: ptrId,
+                        id: `${desc.id}${ptrId}`,
                         source: desc.id,
-                        target: desc.pointers[i].to
+                        target: desc.pointers[ptrId].to
                     }
                 });
             }
@@ -407,7 +447,9 @@ export class CytoscapeControl {
              *  * sets : same as for pointers
              *  * inherit/mixin : ignored for now
              */
-            let orderedEvents = this._pendingEvents;
+            const eventMethods = new EventMethods;
+            let orderedEvents = Toposort(this._pendingEvents, eventMethods);
+            // let orderedEvents = this._pendingEvents;
             this._pendingEvents = [];
 
             let territoryChanged = false;
@@ -721,31 +763,22 @@ export class CytoscapeControl {
 
     /* * * * * * * * * * Updating the toolbar * * * * * * * * * */
     _displayToolbarItems = () => {
-
         if (this._toolbarInitialized === true) {
-            for (let [, v] of this._toolbarItems.items) {
-                v.show();
-            }
+            this._toolbarItems.items.forEach((v) => { v.show(); });
         } else {
             this._initializeToolbar();
         }
     };
 
     _hideToolbarItems = () => {
-
         if (this._toolbarInitialized === true) {
-            for (let [, v] of this._toolbarItems.items) {
-                v.hide();
-            }
+            this._toolbarItems.items.forEach((v) => { v.hide(); });
         }
     };
 
     _removeToolbarItems = () => {
-
         if (this._toolbarInitialized === true) {
-            for (let [, v] of this._toolbarItems.items) {
-                v.destroy();
-            }
+            this._toolbarItems.items.forEach((v) => { v.destroy(); });
         }
     };
 

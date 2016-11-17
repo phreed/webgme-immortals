@@ -14,11 +14,11 @@ export class CommonConstants {
     /*
      * TERRITORY EVENTS
      */
-    public static readonly TERRITORY_EVENT_LOAD = "load";
-    public static readonly TERRITORY_EVENT_UPDATE = "update";
-    public static readonly TERRITORY_EVENT_UNLOAD = "unload";
-    public static readonly TERRITORY_EVENT_COMPLETE = "complete";
-    public static readonly TERRITORY_EVENT_INCOMPLETE = "incomplete";
+    public static readonly TERRITORY_EVENT_LOAD: GME.TerritoryEventType = "load";
+    public static readonly TERRITORY_EVENT_UPDATE: GME.TerritoryEventType = "update";
+    public static readonly TERRITORY_EVENT_UNLOAD: GME.TerritoryEventType = "unload";
+    public static readonly TERRITORY_EVENT_COMPLETE: GME.TerritoryEventType = "complete";
+    public static readonly TERRITORY_EVENT_INCOMPLETE: GME.TerritoryEventType = "incomplete";
 
     /*
      * GME_ID = wherever a GME object ID needs to be present

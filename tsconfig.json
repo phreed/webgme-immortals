@@ -6,13 +6,22 @@
   "buildOnSave": true,
   "compilerOptions": {
     "typeRoots": [
-      "node_modules/@types"
+      "./node_modules/@types"
     ],
     "types": [
       "node",
-      "webgme"
+      "webgme",
+      "WebGMEGlobal",
+      "jquery"
     ],
     "outDir": "./dist",
+    "lib": [
+      "dom",
+      "es2015.promise",
+      "es5",
+      "es2015.core",
+      "es2015.collection"
+    ],
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": true,
@@ -20,6 +29,7 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noResolve": false,
     "strictNullChecks": true,
     "module": "amd",
     "moduleResolution": "node",
