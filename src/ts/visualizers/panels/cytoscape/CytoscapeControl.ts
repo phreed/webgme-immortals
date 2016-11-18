@@ -516,14 +516,15 @@ export class CytoscapeControl {
         if (pointers.size < 1) {
             return true;
         }
+        let status = true;
         pointers.forEach((pointer) => {
-            if (!pointer.to) { return; }
-            if (!this._GmeID2ComponentID.has(pointer.to)) { return; }
+            if (pointer.to === null) { return; }
+            if (this._GmeID2ComponentID.has(pointer.to)) { return; }
 
             this._patterns.set(pointer.to, { children: 0 });
-            return false;
+            status = false;
         });
-        return true;
+        return status;
     }
 
     _onUpdate(event: DescEvent): boolean {
