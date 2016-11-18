@@ -68,19 +68,22 @@ export class CytoscapeWidget {
             selector: "node",
             css: {
                 "background-color": "red",
-                "label": "data(name)"
-                // "shape": "rectangle",
-                // "width": "label"
+                "border-width": 3,
+                "border-color": "black",
+                "label": "data(name)",
+                "shape": "rectangle",
+                "width": "label"
             }
         };
         let edgeStyle: Cy.Stylesheet = {
             selector: "edge",
-            css: {
-                "width": 3,
+            css: <Cy.Css.EdgeLine>{
+                "width": 1,
                 "line-color": "blue",
-                "target-arrow-color": "orange",
-                "target-arrow-shape": "triangle",
-                "label": "data(name)"
+                "mid-target-arrow-color": "blue",
+                "mid-target-arrow-shape": "triangle",
+                "label": "data(name)",
+                "curve-style": "haystack"
             }
         };
         let selectedStyle: Cy.Stylesheet = {
@@ -88,8 +91,8 @@ export class CytoscapeWidget {
             css: {
                 "background-color": "gold",
                 "line-color": "gold",
-                "target-arrow-color": "gold",
-                "source-arrow-color": "gold",
+                "mid-target-arrow-color": "gold",
+                "mid-target-arrow-shape": "triangle",
                 "opacity": 1
             }
         };
