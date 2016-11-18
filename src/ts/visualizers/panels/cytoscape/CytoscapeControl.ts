@@ -3,7 +3,7 @@
  * Example indicating how to construct a 2D graph visualization.
  */
 
-import _ = require("underscore");
+// import _ = require("underscore");
 import Promise = require("bluebird");
 import nodePropertyNames = require("js/NodePropertyNames");
 import GMEConcepts = require("js/Utils/GMEConcepts");
@@ -16,43 +16,36 @@ import { CytoscapeWidget } from "visualizers/widgets/cytoscape/CytoscapeWidget";
 
 import { Toposort, NodeMethods } from "toposort";
 
+export class StrMap<V> extends Map<string, V> {
+    toObj() {
+        let obj = Object.create(null);
+        this.forEach((value, key) => {
+            obj[key] = value;
+        });
+        return obj;
+    }
+}
 export class ObjectDescriptor {
     constructor() {
         this.id = "";
         this.name = "";
         this.childrenIds = [];
         this.parentId = "";
-        this.isConnection = false;
         this.childrenNum = 0;
-        this.position = 0;
-        this.source = "";
-        this.target = "";
-        this.pointers = {};
-        this.srcPos = { x: 0, y: 0 };
-        this.dstPos = { x: 0, y: 0 };
-        this.srcObjId = "";
-        this.dstObjId = "";
+        this.position = { x: 0, y: 0 };
+        this.pointers = new Map<string, Common.Pointer>();
     }
     id: string;
     name: string;
     childrenIds: string[];
     parentId: string;
-    isConnection: boolean;
     childrenNum: number;
-    position: number;
-    source: string;
-    target: string;
-    pointers: Dictionary<Common.Pointer>;
-    srcPos: GME.Pos2D;
-    dstPos: GME.Pos2D;
-    srcObjId: string;
-    dstObjId: string;
+    position: GME.Pos2D;
+    pointers: Map<string, Common.Pointer>;
 
     control?: GME.VisualizerControl;
-    metaInfo?: Dictionary<string>;
+    metaInfo?: Map<string, string>;
     preferencesHelper?: GME.PreferenceHelper;
-    srcSubCompId?: string;
-    dstSubCompId?: string;
     reconnectable?: boolean;
     editable?: boolean;
 }
@@ -93,13 +86,12 @@ export class ToolbarItems {
     cpTextColor: Toolbar.ToolbarColorPicker;
 }
 
-class EventMethods implements NodeMethods<DescEvent> {
+class EventMethods extends NodeMethods<DescEvent> {
     nullNode(key: string): DescEvent {
         let result = new DescEvent(
             {
-                "etype": GmeConstants.TERRITORY_EVENT_LOAD,
-                "eid": "1",
-                "desc": new ObjectDescriptor
+                "etype": GmeConstants.TERRITORY_EVENT_INCOMPLETE,
+                "eid": key
             });
         result.desc.id = key;
         return result;
@@ -108,7 +100,13 @@ class EventMethods implements NodeMethods<DescEvent> {
      * The key for the node is not the event.eid but
      * the event.desc.id which is the object descriptor id.
      */
-    keyFn(event: DescEvent): string {
+    keyFn(event: DescEvent): string | null {
+        if (event.etype === GmeConstants.TERRITORY_EVENT_COMPLETE) {
+            return null;
+        }
+        if (event.etype === GmeConstants.TERRITORY_EVENT_INCOMPLETE) {
+            return null;
+        }
         if (typeof event.desc === "undefined") {
             throw new Error(`cannot make key for node`);
         }
@@ -121,18 +119,19 @@ class EventMethods implements NodeMethods<DescEvent> {
      *   [ ] sets, and 
      *   [ ] inheritance.
      */
-    depsFn(event: DescEvent): string[] {
+    predsFn(event: DescEvent): string[] {
         let pointers = event.desc.pointers;
         let result: string[] = [];
-        for (let key in pointers) {
-            result.push(pointers[key].to);
-        }
+        pointers.forEach((value) => {
+            result.push(value.to);
+        });
         return result;
     }
     cycleFn(_node: DescEvent): void {
         throw new Error(`a cycle exists, you should handle this`);
     }
 }
+
 
 export class CytoscapeControl {
 
@@ -146,11 +145,11 @@ export class CytoscapeControl {
     private _GMEModels: any[];
     private _GMEConnections: any[];
 
-    private _GmeID2ComponentID: Dictionary<string[]>;
-    private _ComponentID2GmeID: Dictionary<string>;
+    private _GmeID2ComponentID: Map<string, string[]>;
+    private _ComponentID2GmeID: Map<string, string>;
 
-    private _GMEID2Subcomponent: Dictionary<string[]>;
-    private _Subcomponent2GMEID: Dictionary<string>;
+    private _GMEID2Subcomponent: Map<string, string[]>;
+    private _Subcomponent2GMEID: Map<string, string>;
 
     /**
      * The objects pointing cannot be loaded until
@@ -159,7 +158,7 @@ export class CytoscapeControl {
     private _pendingEvents: DescEvent[];
 
     private _territoryId: GME.TerritoryId;
-    private _patterns: Dictionary<GME.TerritoryPattern>;
+    private _patterns: StrMap<GME.TerritoryPattern>;
     private _toolbarItems: ToolbarItems;
 
     private _toolbarInitialized = false;
@@ -180,6 +179,14 @@ export class CytoscapeControl {
         this._currentNodeId = null;
         this._currentNodeParentId = undefined;
         this.eventQueue = [];
+
+        this._GmeID2ComponentID = new Map<string, string[]>();
+        this._ComponentID2GmeID = new Map<string, string>();
+
+        this._GMEID2Subcomponent = new Map<string, string[]>();
+        this._Subcomponent2GMEID = new Map<string, string>();
+
+        this._patterns = new StrMap<GME.TerritoryPattern>();
 
         this._initWidgetEventHandlers();
 
@@ -215,11 +222,11 @@ export class CytoscapeControl {
         this._GMEModels = [];
         this._GMEConnections = [];
 
-        this._GmeID2ComponentID = {};
-        this._ComponentID2GmeID = {};
+        this._GmeID2ComponentID.clear();
+        this._ComponentID2GmeID.clear();
 
-        this._GMEID2Subcomponent = {};
-        this._Subcomponent2GMEID = {};
+        this._GMEID2Subcomponent.clear();
+        this._Subcomponent2GMEID.clear();
 
         this._pendingEvents = [];
 
@@ -262,9 +269,9 @@ export class CytoscapeControl {
 
         // Update the territory
         // Put new node's info into territory pattern set
-        this._patterns = {};
-        this._patterns[nodeId] = { children: 1 };
-        this._client.updateTerritory(this._territoryId, this._patterns);
+        this._patterns.clear();
+        this._patterns.set(nodeId, { children: 1 });
+        this._client.updateTerritory(this._territoryId, this._patterns.toObj());
     };
 
     // This next function retrieves the relevant node information for the widget
@@ -284,123 +291,68 @@ export class CytoscapeControl {
         objDescriptor.childrenIds = nodeObj.getChildrenIds();
         objDescriptor.childrenNum = (typeof objDescriptor.childrenIds === "undefined") ? 0 : objDescriptor.childrenIds.length;
         objDescriptor.parentId = nodeObj.getParentId();
-        objDescriptor.isConnection = GMEConcepts.isConnection(nodeObj);
-        // GMEConcepts can be helpful
-        // objDescriptor.isConnection = Boolean(nodeObj.getPointer("src") && nodeObj.getPointer("dst"));
         objDescriptor.position = nodeObj.getRegistry(registryKeys.POSITION);
-        if (objDescriptor.isConnection) {
-            let outSourceId = nodeObj.getPointer("src");
-            if (typeof outSourceId === "string") {
-                objDescriptor.source = outSourceId;
-            }
-            let outTargetId = nodeObj.getPointer("dst");
-            if (typeof outTargetId === "string") {
-                objDescriptor.target = outTargetId;
-            }
-        }
 
-        let pointers = nodeObj.getPointerNames();
-        for (let ix = 0; ix < pointers.length; ++ix) {
-            if (((pointers[ix] !== "src" && pointers[ix] !== "dst") || !objDescriptor.isConnection)
-                && pointers[ix] !== "base") {
-                if (!objDescriptor.pointers) {
-                    objDescriptor.pointers = {};
-                }
-                objDescriptor.pointers[pointers[ix]] = nodeObj.getPointer(pointers[ix]);
-            }
-        }
+        nodeObj.getPointerNames().forEach((name) => {
+            if (name === "base") { return; }
+            objDescriptor.pointers.set(name, nodeObj.getPointer(name));
+        });
         return objDescriptor;
     };
 
+    /**
+     * This builds the cytoscape elements associated with a node.
+     */
     _getCytoscapeData = (desc: ObjectDescriptor): any[] => {
         let data: any[] = [];
         if (!desc) {
             return data;
         }
-        if (!desc.isConnection) {
-            data.push({
-                group: "nodes",
-                data: {
-                    id: desc.id,
-                    name: desc.name
-                },
-                position: desc.position
-            });
-        }
-        else if (!desc.pointers) {
-            /***** this section is used to create hyper edges *****/
-            data.push({
-                group: "edges",
-                data: {
-                    id: desc.id,
-                    name: desc.name,
-                    source: desc.srcObjId,
-                    target: desc.dstObjId
-                }
-            });
-        }
-        else {
-            let x = desc.srcPos.x + desc.dstPos.x;
-            let y = desc.srcPos.y + desc.dstPos.y;
-            let n = 2;
-            for (let key in desc.pointers) {
-                if (desc.pointers.hasOwnProperty(key)) { continue; }
-                let pointer = desc.pointers[key];
-                if (!pointer.to) { continue; }
-                if (!this._GmeID2ComponentID.hasOwnProperty(pointer.to)) { continue; }
+        // the node data needs to be added before the edges.
+        let nodeData = {
+            group: "nodes",
+            data: {
+                id: desc.id,
+                name: desc.name
+            },
+            position: desc.position
+        };
+        data.push(nodeData);
 
-                ++n;
-                let pos = this._client.getNode(pointer.to).getRegistry(registryKeys.POSITION);
+        // ... now you can load the edges...
+        let activePointerCnt = 0;
+        let x = 0;
+        let y = 0;
+        if (desc.pointers.size > 0) {
+            desc.pointers.forEach((pointer, ptrKey) => {
+                if (!pointer.to) { return; }
+                if (!this._GmeID2ComponentID.has(pointer.to)) { return; }
+
+                let pos: GME.Pos2D = this._client.getNode(pointer.to).getRegistry(registryKeys.POSITION);
+                activePointerCnt++;
                 x += pos.x;
                 y += pos.y;
-            }
-            data.push({
-                group: "nodes",
-                data: {
-                    id: desc.id,
-                    name: desc.name
-                },
-                position: {
-                    x: x / n,
-                    y: y / n
-                }
-            });
 
-            data.push({
-                group: "edges",
-                data: {
-                    id: `${desc.id}src`,
-                    name: "src",
-                    source: desc.id,
-                    target: desc.srcObjId
-                }
-            });
-
-            data.push({
-                group: "edges",
-                data: {
-                    id: `${desc.id}dst`,
-                    name: "dst",
-                    source: desc.id,
-                    target: desc.dstObjId
-                }
-            });
-        }
-
-        if (desc.pointers) {
-            for (let ptrId in desc.pointers) {
-                if (!desc.pointers[ptrId].to) { continue; }
                 data.push({
                     group: "edges",
                     data: {
-                        name: ptrId,
-                        id: `${desc.id}${ptrId}`,
+                        id: `${desc.id}_${ptrKey}`,
+                        name: ptrKey,
                         source: desc.id,
-                        target: desc.pointers[ptrId].to
+                        target: pointer.to
                     }
                 });
-            }
+            });
         }
+
+        // ...update the position of the node if there were edges
+        if (activePointerCnt > 0) {
+            nodeData.position = {
+                x: x / activePointerCnt,
+                y: y / activePointerCnt
+            };
+        }
+
         return data;
     };
 
@@ -449,14 +401,12 @@ export class CytoscapeControl {
              */
             const eventMethods = new EventMethods;
             let orderedEvents = Toposort(this._pendingEvents, eventMethods);
-            // let orderedEvents = this._pendingEvents;
             this._pendingEvents = [];
 
             let territoryChanged = false;
             this._widget.beginUpdate();
             try {
-                // 
-                for (let event = orderedEvents.pop(); event; event = orderedEvents.pop()) {
+                orderedEvents.forEach((event) => {
                     switch (event.etype) {
                         case GmeConstants.TERRITORY_EVENT_LOAD:
                             territoryChanged = this._onLoad(event) || territoryChanged;
@@ -469,8 +419,10 @@ export class CytoscapeControl {
                             break;
                         case GmeConstants.TERRITORY_EVENT_COMPLETE:
                             break;
+                        case GmeConstants.TERRITORY_EVENT_INCOMPLETE:
+                            break;
                     }
-                }
+                });
             } finally {
                 this._widget.endUpdate();
             }
@@ -487,7 +439,7 @@ export class CytoscapeControl {
 
                     this._logger.warn("Updating territory with ruleset from decorators: " +
                         JSON.stringify(this._patterns));
-                    this._client.updateTerritory(this._territoryId, this._patterns);
+                    this._client.updateTerritory(this._territoryId, this._patterns.toObj());
                 });
 
         } catch (err) {
@@ -495,106 +447,23 @@ export class CytoscapeControl {
         }
     }
 
-    /**
-     * an entity is a node with no pointers
+    /** 
+     * return true if the object was seccessfully loaded (false otherwise)
+     * True indicates that the territory changed.
+     * 
+     * An entity is a node with no pointers
      * realize that a node should not be added if...
      * return true if the object was seccessfully loaded (false otherwise)
      * True indicates that the territory changed.
      */
-    _onLoadEntity = (event: DescEvent, pointersLoaded: boolean): boolean => {
-        // gmeId: Common.GUID, pointersLoaded: boolean, objDesc: ObjectDescriptor): boolean => {
-        let gmeId = event.eid;
-        let objDesc = event.desc;
-
-        if (!pointersLoaded) {
-            this._pendingEvents.push(event);
-            return false;
-        }
-        this._widget.addNode(this._getCytoscapeData(objDesc));
-
-        this._GMEModels.push(gmeId);
-
-        objDesc.control = this;
-        objDesc.metaInfo = {};
-        objDesc.metaInfo[GmeConstants.GME_ID] = gmeId;
-        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-
-        this._GmeID2ComponentID[gmeId].push(gmeId);
-        this._ComponentID2GmeID[gmeId] = gmeId;
-
-        return true;
-    };
-
-    /**
-     * a connection is a node that has pointers
-     * return true if the object was seccessfully loaded (false otherwise)
-     * True indicates that the territory changed.
-     */
-    _onLoadConnection = (event: DescEvent, pointersLoaded: boolean): boolean => {
-        let gmeId = event.eid;
-        let objDesc = event.desc;
-
-        this._GMEConnections.push(gmeId);
-        let srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
-        let sources = srcDst.sources;
-        let destinations = srcDst.destinations;
-
-        // guards 
-        // when the connection is present, but no valid endpoint on canvas
-        // preserve the connection
-        if (sources.length < 1) {
-            this._pendingEvents.push(event);
-            return false;
-        }
-        if (destinations.length < 1) {
-            this._pendingEvents.push(event);
-            return false;
-        }
-        if (!pointersLoaded) {
-            this._pendingEvents.push(event);
-            return false;
-        }
-
-        for (let ix = sources.length; ix--; ix) {
-            let source = sources[ix];
-            for (let jx = destinations.length; jx--; jx) {
-                let destination = destinations[jx];
-
-                objDesc.srcObjId = source.objId;
-                objDesc.srcSubCompId = source.subCompId;
-                objDesc.dstObjId = destination.objId;
-                objDesc.dstSubCompId = destination.subCompId;
-                objDesc.reconnectable = true;
-                objDesc.editable = true;
-
-                objDesc.srcPos = this._client.getNode(objDesc.srcObjId).getRegistry(registryKeys.POSITION);
-                objDesc.dstPos = this._client.getNode(objDesc.dstObjId).getRegistry(registryKeys.POSITION);
-
-                delete objDesc.source;
-                delete objDesc.target;
-
-                this._widget.addNode(this._getCytoscapeData(objDesc));
-
-                this._logger.debug(`Connection: ${gmeId} for GME object: ${objDesc.id}`);
-
-                this._GmeID2ComponentID[gmeId].push(gmeId);
-                this._ComponentID2GmeID[gmeId] = gmeId;
-            }
-        }
-        return true;
-    }
-
-    /** 
-     * return true if the object was seccessfully loaded (false otherwise)
-     * True indicates that the territory changed.
-     */
     _onLoad = (event: DescEvent): boolean => {
-        let gmeId = event.eid;
+
         let objDesc = event.desc;
         if (typeof objDesc === "undefined") {
             return false;
         }
 
+        let gmeId = event.eid;
         // component loaded
         // we are interested in the load of sub_components of the opened component
         if (this._currentNodeId === gmeId) {
@@ -608,81 +477,34 @@ export class CytoscapeControl {
             return false;
         }
 
-        this._GmeID2ComponentID[gmeId] = [];
+        this._GmeID2ComponentID.set(gmeId, []);
 
         let pointersLoaded = this._areAllPointersLoaded(objDesc);
         if (objDesc.parentId !== this._currentNodeId) {
             pointersLoaded = true;
         }
 
-        if (objDesc.isConnection) {
-            return this._onLoadConnection(event, pointersLoaded);
-        } else {
-            return this._onLoadEntity(event, pointersLoaded);
+        if (!pointersLoaded) {
+            this._pendingEvents.push(event);
+            return false;
         }
-    };
+        this._widget.addNode(this._getCytoscapeData(objDesc));
 
-    _getAllSourceDestinationPairsForConnection
-    = (GMESrcId: string, GMEDstId: string): GMEConcepts.ConnectionCollectionPair => {
+        this._GMEModels.push(gmeId);
 
-        let sources: GMEConcepts.ComposeChain[] = [];
-        let destinations: GMEConcepts.ComposeChain[] = [];
+        objDesc.control = this;
+        objDesc.metaInfo = new Map<string, string>();
+        objDesc.metaInfo.set(GmeConstants.GME_ID, gmeId);
+        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
 
-        if (this._GmeID2ComponentID.hasOwnProperty(GMESrcId)) {
-            // src is a DesignerItem
-            let compIds = this._GmeID2ComponentID[GMESrcId];
-            for (let ix = compIds.length; ix--; ix) {
-                let compId = compIds[ix];
-
-                sources.push({
-                    objId: compId,
-                    subCompId: undefined
-                });
-            }
-        } else {
-            // src is not a DesignerItem
-            // must be a sub_components somewhere, find the corresponding designerItem
-            if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMESrcId)) {
-                for (let i in this._GMEID2Subcomponent[GMESrcId]) {
-                    if (this._GMEID2Subcomponent[GMESrcId].hasOwnProperty(i)) {
-                        sources.push({
-                            objId: i,
-                            subCompId: this._GMEID2Subcomponent[GMESrcId][i]
-                        });
-                    }
-                }
-            }
+        this._ComponentID2GmeID.set(gmeId, gmeId);
+        let componentIds = this._GmeID2ComponentID.get(gmeId);
+        if (typeof componentIds !== "undefined") {
+            componentIds.push(gmeId);
+            this._GmeID2ComponentID.set(gmeId, componentIds);
         }
 
-        if (this._GmeID2ComponentID.hasOwnProperty(GMEDstId)) {
-            let compIds = this._GmeID2ComponentID[GMEDstId];
-            for (let ix = compIds.length; ix--; ix) {
-                let compId = compIds[ix];
-
-                destinations.push({
-                    objId: compId,
-                    subCompId: undefined
-                });
-            }
-        } else {
-            // dst is not a DesignerItem
-            // must be a sub_components somewhere, find the corresponding designerItem
-            if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMEDstId)) {
-                for (let ix in this._GMEID2Subcomponent[GMEDstId]) {
-                    if (this._GMEID2Subcomponent[GMEDstId].hasOwnProperty(ix)) {
-                        destinations.push({
-                            objId: ix,
-                            subCompId: this._GMEID2Subcomponent[GMEDstId][ix]
-                        });
-                    }
-                }
-            }
-        }
-
-        return {
-            sources: sources,
-            destinations: destinations
-        };
+        return true;
     };
 
     /**
@@ -691,23 +513,16 @@ export class CytoscapeControl {
      */
     _areAllPointersLoaded = (desc: ObjectDescriptor) => {
         let pointers = desc.pointers;
-        if (_.isEmpty(pointers)) {
+        if (pointers.size < 1) {
             return true;
         }
-        for (let key in pointers) {
-            if (!(key in pointers)) {
-                return false;
-            }
-            let pointer = pointers[key];
-            if (!pointer.to) {
-                continue;
-            }
-            if (pointer.to in this._GmeID2ComponentID) {
-                continue;
-            }
-            this._patterns[pointer.to] = { children: 0 };
+        pointers.forEach((pointer) => {
+            if (!pointer.to) { return; }
+            if (!this._GmeID2ComponentID.has(pointer.to)) { return; }
+
+            this._patterns.set(pointer.to, { children: 0 });
             return false;
-        }
+        });
         return true;
     }
 
