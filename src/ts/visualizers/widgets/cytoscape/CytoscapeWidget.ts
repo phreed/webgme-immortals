@@ -66,7 +66,7 @@ export class CytoscapeWidget {
     _initializeCytoscape = (): void => {
         let nodeStyle: Cy.Stylesheet = {
             selector: "node",
-            css: {
+            css: <Cy.Css.Node>{
                 "background-color": "red",
                 "border-width": 3,
                 "border-color": "black",
@@ -77,7 +77,7 @@ export class CytoscapeWidget {
         };
         let edgeStyle: Cy.Stylesheet = {
             selector: "edge",
-            css: <Cy.Css.EdgeLine>{
+            css: <Cy.Css.Edge>{
                 "width": 1,
                 "line-color": "blue",
                 "mid-target-arrow-color": "blue",

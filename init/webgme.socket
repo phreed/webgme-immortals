@@ -10,8 +10,8 @@ Description=WebGME Listen Socket"
 # Requires=webgme.service
 
 [Socket]
-ListenStream=3000
-ListenStream=0.0.0.0:3000
+ListenStream=8955
+ListenStream=0.0.0.0:8955
 Service=webgme.service
 
 # man systemd.special
