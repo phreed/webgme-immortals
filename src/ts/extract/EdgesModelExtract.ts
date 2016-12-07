@@ -5,7 +5,7 @@
 * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
 * sponsor function makes extensive use of a dictionary to build tuples.
 *
-* @param {Core.Core}     core        [description]
+* @param {GmeClasses.Core}     core        [description]
 * @param {Node}              rootNode    [description]
 * @param {Core.Callback} mainHandler [description]
 */
@@ -21,8 +21,8 @@ const BLANK = "";
 const NULL_OBJECT = "_OBJECT";
 const NULL_GUID = "00000000-0000-0000-0000-000000000000";
 
-export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
-    _rootNode: Common.Node, _metaNode: Node): Dictionary<any> {
+export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
+    _rootNode: Core.Node, _metaNode: Node): GmeCommon.Dictionary<any> {
 
     // let config = sponsor.getCurrentConfig();
     // let configDictionary: any = config;
@@ -53,12 +53,12 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
             "prune": PruningFlag.None,
             "guid": NULL_GUID
         };
-    let nodeGuidMap: Dictionary<nt.Subject> = {
+    let nodeGuidMap: GmeCommon.Dictionary<nt.Subject> = {
         [NULL_GUID]: rootEntry
     };
 
     sponsor.logger.info("A dictionary: look up nodes based on their path name.");
-    let path2entry: Dictionary<nt.Subject> = { [BLANK]: rootEntry };
+    let path2entry: GmeCommon.Dictionary<nt.Subject> = { [BLANK]: rootEntry };
 
     /**
      * A filter mechanism to effectively eliminate containment branches.
@@ -73,17 +73,17 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
      * The traverse function follows the containment tree.
      * @type {[type]}
      */
-    let visitFn = (node: Common.Node, done: Common.VoidFn): void => {
+    let visitFn = (node: Core.Node, done: GmeCommon.VoidFn): void => {
         try {
             let core = sponsor.core;
             let nodePath: string = core.getPath(node);
 
             let prunedRootPath: string | null = null;
-            for (let pl of pruneList) {
-                if (nodePath.indexOf(pl) !== 0) { continue; }
+            pruneList.forEach((pl) => {
+                if (nodePath.indexOf(pl) !== 0) { return; }
                 // console.log(`pruned: ${nodePath}::${pl}`);
                 prunedRootPath = pl;
-            }
+            });
 
             let nodeNameAttr = core.getAttribute(node, "name");
             if (typeof nodeNameAttr !== "string") { return; }
@@ -155,7 +155,10 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
             // set the parent to know its child the root node has no parent
             // if a non-pruned item has a pruned parent then bring it in.
             if (node !== sponsor.rootNode) {
-                let parent: Common.Node = core.getParent(node);
+                let parent: Core.Node | null = core.getParent(node);
+                if (parent === null) {
+                    return;
+                }
                 let parentPath: string = core.getPath(parent);
 
                 let parentData: nt.Subject = path2entry[parentPath];
@@ -206,7 +209,7 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                         .try(() => {
                             return core.loadByPath(sponsor.rootNode, targetPath);
                         })
-                        .then((targetNode: Common.Node) => {
+                        .then((targetNode: Core.Node) => {
                             let targetGuid = core.getGuid(targetNode);
                             if (ptrName === "base") {
                                 sourceEntry.base = {
@@ -242,7 +245,7 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                 })
                 .map((setName: string) => {
                     let targetMemberPathsRaw = core.getMemberPaths(node, setName);
-                    for (let targetMemberPath of targetMemberPathsRaw) {
+                    targetMemberPathsRaw.forEach((targetMemberPath) => {
                         if (typeof targetMemberPath !== "string") { return; }
                         let targetPath: string = targetMemberPath;
 
@@ -250,7 +253,7 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                             .try(() => {
                                 return core.loadByPath(sponsor.rootNode, targetPath);
                             })
-                            .then((targetNode: Common.Node) => {
+                            .then((targetNode: Core.Node) => {
                                 let targetGuid = core.getGuid(targetNode);
                                 let sets = sourceEntry.sets;
                                 let targetMetaNode = core.getBaseType(targetNode);
@@ -297,7 +300,7 @@ export function getEdgesModel(sponsor: PluginBase, core: Core.Core,
                                     sourceSet.push(load);
                                 }
                             });
-                    }
+                    });
                 });
         } finally {
             done();

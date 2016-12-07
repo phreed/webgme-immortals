@@ -25,7 +25,7 @@ class PushPlugin extends PluginBase {
         this.pluginMetadata = JSON.parse(MetaDataStr);
     }
 
-    public main(mainHandler: Core.ResultCallback): void {
+    public main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): void {
         let config = this.getCurrentConfig();
         this.sendNotification(`The push plugin function is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = config;
@@ -82,7 +82,7 @@ class PushPlugin extends PluginBase {
     /**
      A function to deliver the serialized object properly.
     */
-    private deliverFile = (config: Config.GmeConfig, payload: string): Promise<Core.Result> => {
+    private deliverFile = (config: GmeConfig.GmeConfig, payload: string): Promise<GmeClasses.Result> => {
         let configDictionary: any = config;
 
         if (!config.hasOwnProperty("fileName")) {
@@ -105,7 +105,7 @@ class PushPlugin extends PluginBase {
                         return artifact.save();
                     });
             })
-            .then((hash: Common.MetadataHash) => {
+            .then((hash: GmeCommon.MetadataHash) => {
                 this.sendNotification("add artifact to result");
                 this.result.addArtifact(hash);
                 this.result.setSuccess(true);
@@ -113,7 +113,7 @@ class PushPlugin extends PluginBase {
             });
     }
 
-    private deliverUri = (config: Config.GmeConfig, payload: string): Promise<Core.Result> => {
+    private deliverUri = (config: GmeConfig.GmeConfig, payload: string): Promise<GmeClasses.Result> => {
         let configDictionary: any = config;
         this.sendNotification(`not implemented: ${configDictionary} : ${payload}`);
 

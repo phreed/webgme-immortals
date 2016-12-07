@@ -37,7 +37,7 @@ class SerializerClientPlugin extends PluginBase {
     *
     * @param {Core.Callback} mainHandler [description]
     */
-    public main(mainHandler: Core.ResultCallback): void {
+    public main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): void {
         let config = this.getCurrentConfig();
         if (config === null) {
             this.sendNotification("The streaming plugin has failed: no configuration");

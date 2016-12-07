@@ -16,7 +16,7 @@ export class CytoscapeWidget {
     private readonly WIDGET_CLASS = "cytoscape";
     public _cy: Cy.Instance;
 
-    private _logger: Core.GmeLogger;
+    private _logger: Global.GmeLogger;
     private _activeNode: any;
     private _updating = false;
     public _selectedCyObject: Cy.ElementGroup | Cy.CollectionElements | null;
@@ -33,7 +33,7 @@ export class CytoscapeWidget {
     public setTitle: { (title: string): void };
     public _el: JQuery;
 
-    constructor(logger: Core.GmeLogger, container: JQuery) {
+    constructor(logger: Global.GmeLogger, container: JQuery) {
         this._logger = logger.fork("Widget", false);
 
         this._el = container;

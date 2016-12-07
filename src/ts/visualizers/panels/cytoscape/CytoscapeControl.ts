@@ -33,29 +33,29 @@ export class ObjectDescriptor {
         this.parentId = "";
         this.childrenNum = 0;
         this.position = { x: 0, y: 0 };
-        this.pointers = new Map<string, Common.Pointer>();
+        this.pointers = new Map<string, GmeCommon.Pointer>();
     }
     id: string;
     name: string;
     childrenIds: string[];
     parentId: string;
     childrenNum: number;
-    position: GME.Pos2D;
-    pointers: Map<string, Common.Pointer>;
+    position: Gme.Pos2D;
+    pointers: Map<string, GmeCommon.Pointer>;
 
-    control?: GME.VisualizerControl;
+    control?: Gme.VisualizerControl;
     metaInfo?: Map<string, string>;
-    preferencesHelper?: GME.PreferenceHelper;
+    preferencesHelper?: Gme.PreferenceHelper;
     reconnectable?: boolean;
     editable?: boolean;
 }
 
-export class DescEvent implements GME.Event {
+export class DescEvent implements Gme.Event {
     public id?: string;
-    public etype: GME.TerritoryEventType;
-    public eid: Common.GUID;
+    public etype: Gme.TerritoryEventType;
+    public eid: Core.GUID;
     public desc: ObjectDescriptor;
-    constructor(event: GME.Event) {
+    constructor(event: Gme.Event) {
         this.etype = event.etype;
         this.eid = event.eid;
         this.desc = new ObjectDescriptor;
@@ -63,8 +63,8 @@ export class DescEvent implements GME.Event {
 }
 
 export interface CytoscapeControlOptions {
-    logger: Core.GmeLogger;
-    client: GME.Client;
+    logger: Global.GmeLogger;
+    client: Gme.Client;
     widget: CytoscapeWidget;
 };
 
@@ -135,12 +135,12 @@ class EventMethods extends NodeMethods<DescEvent> {
 
 export class CytoscapeControl {
 
-    private _logger: Core.GmeLogger;
-    private _client: GME.Client;
+    private _logger: Global.GmeLogger;
+    private _client: Gme.Client;
     private _widget: CytoscapeWidget;
     private _currentNodeId: string | null;
     private _currentNodeParentId: string | undefined;
-    public eventQueue: GME.Event[];
+    public eventQueue: Gme.Event[];
 
     private _GMEModels: any[];
     private _GMEConnections: any[];
@@ -157,8 +157,8 @@ export class CytoscapeControl {
      */
     private _pendingEvents: DescEvent[];
 
-    private _territoryId: GME.TerritoryId;
-    private _patterns: StrMap<GME.TerritoryPattern>;
+    private _territoryId: Gme.TerritoryId;
+    private _patterns: StrMap<Gme.TerritoryPattern>;
     private _toolbarItems: ToolbarItems;
 
     private _toolbarInitialized = false;
@@ -186,7 +186,7 @@ export class CytoscapeControl {
         this._GMEID2Subcomponent = new Map<string, string[]>();
         this._Subcomponent2GMEID = new Map<string, string>();
 
-        this._patterns = new StrMap<GME.TerritoryPattern>();
+        this._patterns = new StrMap<Gme.TerritoryPattern>();
 
         this._initWidgetEventHandlers();
 
@@ -257,7 +257,7 @@ export class CytoscapeControl {
 
         this._currentNodeParentId = desc.parentId;
 
-        this._territoryId = this._client.addUI(this, (events: GME.Event[]) => {
+        this._territoryId = this._client.addUI(this, (events: Gme.Event[]) => {
             if (!events) { return; }
             if (events.length < 1) { return; }
 
@@ -275,7 +275,7 @@ export class CytoscapeControl {
     };
 
     // This next function retrieves the relevant node information for the widget
-    _getObjectDescriptor = (nodeId: Common.NodeId): ObjectDescriptor => {
+    _getObjectDescriptor = (nodeId: GmeCommon.NodeId): ObjectDescriptor => {
         let nodeObj = this._client.getNode(nodeId);
 
         let objDescriptor = new ObjectDescriptor;
@@ -328,7 +328,7 @@ export class CytoscapeControl {
                 if (!pointer.to) { return; }
                 if (!this._GmeID2ComponentID.has(pointer.to)) { return; }
 
-                let pos: GME.Pos2D = this._client.getNode(pointer.to).getRegistry(registryKeys.POSITION);
+                let pos: Gme.Pos2D = this._client.getNode(pointer.to).getRegistry(registryKeys.POSITION);
                 activePointerCnt++;
                 x += pos.x;
                 y += pos.y;
@@ -672,7 +672,7 @@ export class CytoscapeControl {
                     startArrow: startArrowCy
                 },
                 clickFn: (data: GMEConcepts.ConnectionStyle) => {
-                    let p: Dictionary<string> = {};
+                    let p: GmeCommon.Dictionary<string> = {};
                     if (data.endArrow) {
                         p[CytoscapeConstants.LINE_END_ARROW] = data.endArrow;
                     }
@@ -691,7 +691,7 @@ export class CytoscapeControl {
                     (<any>LineStylePatterns)[pattern], null, null, null),
                 data: { pattern: pattern },
                 clickFn: (data: { pattern: string }) => {
-                    let p: Dictionary<string> = {};
+                    let p: GmeCommon.Dictionary<string> = {};
                     p[CytoscapeConstants.LINE_PATTERN] =
                         (<any>LineStylePatterns)[data.pattern];
                     this._setCyObjectProperty(p);
@@ -720,7 +720,7 @@ export class CytoscapeControl {
             title: "Straight",
             icon: this._createLineStyleMenuItem(null, null, null, null, null, null),
             clickFn: (/*data*/) => {
-                let p: Dictionary<string> = {};
+                let p: GmeCommon.Dictionary<string> = {};
                 p[CytoscapeConstants.LINE_TYPE] = CytoscapeConstants.LINE_TYPES.NONE;
                 this._setCyObjectProperty(p);
             }
@@ -731,7 +731,7 @@ export class CytoscapeControl {
             icon: this._createLineStyleMenuItem(null, null, null, null, null,
                 CytoscapeConstants.LINE_TYPES.BEZIER),
             clickFn: (/*data*/) => {
-                let p: Dictionary<string> = {};
+                let p: GmeCommon.Dictionary<string> = {};
                 p[CytoscapeConstants.LINE_TYPE] = CytoscapeConstants.LINE_TYPES.BEZIER;
                 this._setCyObjectProperty(p);
             }
@@ -745,7 +745,7 @@ export class CytoscapeControl {
                     CytoscapeConstants.LINE_PATTERNS.SOLID, null, null, null),
                 data: { width: width },
                 clickFn: (data: { width: string }) => {
-                    let p: Dictionary<string> = {};
+                    let p: GmeCommon.Dictionary<string> = {};
                     p[CytoscapeConstants.LINE_WIDTH] = data.width;
                     this._setCyObjectProperty(p);
                 }
@@ -769,7 +769,7 @@ export class CytoscapeControl {
             icon: "glyphicon glyphicon-tint",
             title: "Fill color",
             colorChangedFn: (color: string) => {
-                let p: Dictionary<string> = {};
+                let p: GmeCommon.Dictionary<string> = {};
                 let cyObj = this._widget._selectedCyObject;
                 if (cyObj === null) {
                     this._logger.warn("selected cytoscape object is null");
@@ -796,7 +796,7 @@ export class CytoscapeControl {
             icon: "glyphicon glyphicon-font",
             title: "Text color",
             colorChangedFn: (color: string) => {
-                let p: Dictionary<string> = {};
+                let p: GmeCommon.Dictionary<string> = {};
                 p[CytoscapeConstants.LABEL_COLOR] = color;
                 this._setCyObjectProperty(p);
             }

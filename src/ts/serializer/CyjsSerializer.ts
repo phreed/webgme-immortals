@@ -68,7 +68,7 @@ export class CyjsSerializer {
   constructor() {
   }
   // export-global variables and their initialization
-  static exportMegaModel(core: Core.Core, libraryRoot: any, callback: any) {
+  static exportMegaModel(core: GmeClasses.Core, libraryRoot: any, callback: any) {
 
     let jsonModel: JsonModel = {
       format_version: "1.0",
@@ -95,7 +95,7 @@ export class CyjsSerializer {
     };
     let guidCache: Dictionary = {};
     let pathCache: Dictionary = {};
-    let nodeCache: { [key: string]: Common.Node } = {};
+    let nodeCache: { [key: string]: Core.Node } = {};
     let root = core.getRoot(libraryRoot);
     let taskList = [core.getPath(libraryRoot)];
     let notInComputation = true;
@@ -103,7 +103,7 @@ export class CyjsSerializer {
     // necessary functions for the export method
 
     /*
-    function isInLibrary(node: Common.Node): boolean {
+    function isInLibrary(node: Core.Node): boolean {
       while (node) {
         if (core.getGuid(node) === jsonModel.root.guid) {
           return true;
@@ -115,7 +115,7 @@ export class CyjsSerializer {
     */
 
     /*
-    function checkForExternalBases(node: Common.Node): void {
+    function checkForExternalBases(node: Core.Node): void {
       let guid: string;
       let path: string;
       while (node) {
@@ -134,7 +134,7 @@ export class CyjsSerializer {
     */
 
     /*
-    function fillContainment(node: Common.Node): void {
+    function fillContainment(node: Core.Node): void {
       // first we compute the guid chain up to the library root
       let guidChain: string[] = [];
       let actualGuid: string = core.getGuid(node);
@@ -162,7 +162,7 @@ export class CyjsSerializer {
     }
     */
 
-    function getAttributesOfNode(node: Common.Node): Dictionary {
+    function getAttributesOfNode(node: Core.Node): Dictionary {
       let names = core.getOwnAttributeNames(node).sort();
 
       let result: Dictionary = {};
@@ -176,7 +176,7 @@ export class CyjsSerializer {
     }
 
     /*
-    function getRegistryOfNode(node: Common.Node): Dictionary {
+    function getRegistryOfNode(node: Core.Node): Dictionary {
       let names = core.getOwnRegistryNames(node).sort();
       let result: Dictionary = {};
       for (let i = 0; i < names.length; i++) {
@@ -189,7 +189,7 @@ export class CyjsSerializer {
     }
     */
 
-    function getPointersOfNode(node: Common.Node): Dictionary {
+    function getPointersOfNode(node: Core.Node): Dictionary {
       // this version only puts paths to target so they need to be either removed or replaced by guid targets
       // The 'base' pointer is a redundant artifact
       // and should not appear in the export file.
@@ -207,7 +207,7 @@ export class CyjsSerializer {
     }
 
     /*
-    function getSetsOfNode(node: Common.Node): any {
+    function getSetsOfNode(node: Core.Node): any {
       // we collect all set - but we keep only those data which were defined on this given level
       let names = core.getSetNames(node);
       let sets: { [key: string]: { [key: string]: DataProps } } = {};
@@ -315,7 +315,7 @@ export class CyjsSerializer {
     */
 
     function getNodeData(path: string, next: NextCallback) {
-      let jnode = new Common.Node;
+      let jnode = new Core.Node;
       // let notInComputation = false;
 
       core.loadByPath(root, path, (err, node) => {
@@ -389,7 +389,7 @@ export class CyjsSerializer {
 
     function postProcessing() {
       // let guids = Object.keys(jsonModel.elements.edges);
-      for (let edge of jsonModel.elements.edges) {
+      jsonModel.elements.edges.forEach((edge) => {
         switch (edge.data.type) {
           case "points-to":
             postProcessPointerTargetEdge(edge);
@@ -403,12 +403,12 @@ export class CyjsSerializer {
         }
         // postProcessMembersOfSets(jsonModel.nodes[guids[i]]);
         // postProcessMetaOfNode(jsonModel.nodes[guids[i]]);
-      }
+      });
       callback(null, jsonModel);
     }
 
     /*
-    function getMetaSheetInfo(node: Common.Node) {
+    function getMetaSheetInfo(node: Core.Node) {
       let getMemberRegistry =   (setname: string, memberpath: string) => {
         let names = core.getMemberRegistryNames(node, setname, memberpath);
         let registry: Dictionary = {};

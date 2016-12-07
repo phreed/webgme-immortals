@@ -18,17 +18,8 @@ import PluginBase = require("plugin/PluginBase");
 
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
 
-import * as nlv from "serializer/NodeListVisitor";
-import { RdfNodeSerializer } from "serializer/RdfTtlSerializer";
-import { PruningCondition, PruningFlag } from "serializer/filters";
 
-import { getEdgesModel } from "extract/EdgesModelExtract";
-import { getEdgesSchema } from "extract/EdgesSchemaExtract";
-import { getTreeModel } from "extract/TreeModelExtract";
-import { getTreeSchema } from "extract/TreeSchemaExtract";
-
-import { deliverFile } from "delivery/FileDelivery";
-import { deliverMultipart, deliverSinglepart } from "delivery/UriDelivery";
+import { Producer, KeyedMessage, Client } from "kafka-node";
 
 class StreamPlugin extends PluginBase {
     pluginMetadata: any;
@@ -36,27 +27,6 @@ class StreamPlugin extends PluginBase {
     constructor() {
         super();
         this.pluginMetadata = JSON.parse(MetaDataStr);
-    }
-
-    public loadNodeMap(this: any, rootNode: Common.Node): { [key: string]: any } {
-        let core = this.core;
-        return Promise
-            .try(() => {
-                let nodeArray = core.loadSubTree(rootNode);
-                if (nodeArray instanceof Array) {
-                    return nodeArray;
-                } else {
-                    return Promise.reject("not a valid array");
-                }
-            })
-            .then((nodeArray: Common.Node[]) => {
-                let nodeMap = new Map<string, any>();
-                for (let node in nodeArray) {
-                    nodeMap.set(core.getPath(node), node);
-                }
-                return nodeMap;
-            });
-
     }
 
     /**
@@ -68,124 +38,74 @@ class StreamPlugin extends PluginBase {
     *
     * @param {Core.Callback} mainHandler [description]
     */
-    public main(mainHandler: Core.ResultCallback): void {
+    public main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): void {
         let config = this.getCurrentConfig();
         if (config === null) {
             this.sendNotification("The streaming plugin has failed: no configuration");
             mainHandler(null, this.result);
         }
-        this.sendNotification(`This streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
+        this.sendNotification(`The streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = config;
+        let core = this.core;
+        let project = this.project;
 
+        /**
+         * Get the most recent commit id.
+         */
+
+        /**
+         * Push the commits into a KeyedMessage.
+         * These are only those more recent commits.
+         */
+        let payload: any | null = null;
         Promise
             .try(() => {
-                return this.loadNodeMap(this.rootNode);
-            })
-            .then((nodes: Map<string, any>) => {
-                for (let key in nodes.keys()) {
-                    this.logger.info("%s", key);
-                }
-                this.result.setSuccess(true);
-                mainHandler(null, this.result);
-            })
-            .catch((err: Error) => {
-                this.logger.error("%s", err.stack);
-                mainHandler(err, this.result);
+                let branch = configDictionary["branch"];
+                Promise
+                    .try(() => {
+                        return project.getHistory(branch, 1);
+                    })
+                    .then((commit) => {
+                        if (commit === null) {
+                            return;
+                        }
+                        let km = new KeyedMessage("key", commit.message);
+                        payload = [
+                            { topic: "topic1", messages: "hi", partition: 0 },
+                            { topic: "topic2", messages: ["oi", "world", km], partition: 0 }
+                        ];
+                    });
             });
 
         /**
-        Push the current data-model into a JSON structure.
-        */
+         * Deliver the payload to the stream.
+         */
+        let producer: Producer | null = null;
         Promise
             .try(() => {
-                switch (configDictionary["schematicVersion"]) {
-                    case "schema-tree:1.0.0":
-                        this.sendNotification("get schema tree");
-                        return getTreeSchema(this, this.core, this.rootNode, this.META);
-
-                    case "schema-flat:1.0.0":
-                        this.sendNotification("get schema edges");
-                        return getEdgesSchema(this, this.core, this.rootNode, this.META);
-
-                    case "model-tree:1.0.0":
-                        this.sendNotification("get model tree");
-                        return getTreeModel(this, this.core, this.rootNode, this.META);
-
-                    case "model-flat:1.0.0":
-                        this.sendNotification("get model edges");
-                        return getEdgesModel(this, this.core, this.rootNode, this.META);
-
-                    default:
-                        return Promise.reject(new Error("no serializer matches typed version"));
-                }
-
+                let connStr = configDictionary["deliveryUrl"];
+                return new Client(connStr, "kafka-node-client");
             })
-            .then((jsonObject) => {
-                switch (configDictionary["syntacticVersion"]) {
-                    case "json:1.0.0":
-                        this.sendNotification("serializing json");
+            .then((client) => {
+                producer = new Producer(client);
 
-                        let jsonStr = JSON.stringify(jsonObject, null, 4);
-                        if (jsonStr == null) {
-                            return Promise.reject(new Error("no payload produced"));
-                        }
-                        return jsonStr;
+                producer.on("error", () => {
+                    return Promise.reject(new Error("no payload produced"));
+                });
 
-                    case "ttl:1.0.0":
-                        this.sendNotification("serializing ttl");
-
-                        let pruningCondition: PruningCondition = new PruningCondition();
-                        switch (configDictionary["filter"]) {
-                            case "library":
-                                pruningCondition.flag = PruningFlag.Library;
-                                pruningCondition.cond = true;
-                                break;
-                            case "book":
-                                pruningCondition.flag = PruningFlag.Library;
-                                pruningCondition.cond = false;
-                                break;
-                            case "all":
-                            default:
-                                pruningCondition.flag = PruningFlag.None;
-                                pruningCondition.cond = false;
-                        }
-                        let accumulator = new RdfNodeSerializer(jsonObject, pruningCondition);
-                        nlv.visit(jsonObject, accumulator.visitNode);
-                        accumulator.complete();
-                        return accumulator.ttlStr;
-
-                    default:
-                        return Promise.reject(new Error("no output writer matches typed version"));
-                }
-            })
-            .then((payload) => {
-                switch (configDictionary["deliveryMode"]) {
-                    case "file:1.0.0":
-                        this.sendNotification("deliver as file on server");
-                        return deliverFile(this, config, payload);
-
-                    case "multipart:1.0.0":
-                        this.sendNotification("deliver as multipart/form-data");
-                        return deliverMultipart(this, config, payload);
-
-                    case "singlepart:1.0.0":
-                        this.sendNotification("deliver as text/plain");
-                        return deliverSinglepart(this, config, payload);
-
-                    default:
-                        return Promise.reject(new Error(`unknown delivery mode: ${configDictionary["deliveryMode"]}`));
-                }
+                return Promise.promisify(producer.on)("ready");
             })
             .then(() => {
-                this.logger.info("successful completion");
-                this.sendNotification("The streaming plugin has completed successfully.");
-                mainHandler(null, this.result);
+                if (producer === null) {
+                    return Promise.reject(new Error("no payload produced"));
+                }
+                return Promise.promisify(producer.send)(payload);
+            })
+            .then((data) => {
+                console.log(`sucessfully sent the data ${data}`);
             })
             .catch((err: Error) => {
-                this.logger.info(`failed: ${err.stack}`);
-                console.log(`streaming plugin failed: ${err.stack}`);
-                this.sendNotification(`The streaming plugin has failed: ${err.message}`);
-                mainHandler(err, this.result);
+                console.log(`failed sending the payload because ${err}`);
             });
     }
 }

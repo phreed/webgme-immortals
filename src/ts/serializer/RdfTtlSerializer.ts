@@ -246,7 +246,7 @@ export class RdfNodeSerializer {
     public ttlStr: string = "none produced";
     private nodeDict: { [guid: string]: nt.Subject };
 
-    constructor(dict: Dictionary<any>, pruningCondition: PruningCondition) {
+    constructor(dict: GmeCommon.Dictionary<any>, pruningCondition: PruningCondition) {
         this.nodeDict = dict;
         dict[NA] = {
             "name": {
@@ -408,7 +408,7 @@ export class RdfNodeSerializer {
         let sets: nt.Sets = subject.sets;
         for (let kind in sets) {
             let members = sets[kind];
-            for (let member of members) {
+            members.forEach((member) => {
                 if (nt.isFaultType(member)) {
                     console.log(`faulty member ${kind}`);
                 } else if (nt.isNGuidType(member)) {
@@ -430,7 +430,7 @@ export class RdfNodeSerializer {
                         });
                     }
                 }
-            }
+            });
         }
 
         // console.log("write subject children");
@@ -439,7 +439,7 @@ export class RdfNodeSerializer {
             // console.log(`child keys: ${key}`);
             let child = children[key];
             // console.log(`guids: ${child.length}`);
-            for (let guid of child) {
+            child.forEach((guid) => {
                 // console.log(`guid: ${guid}`);
                 let objective = this.nodeDict[guid];
                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
@@ -476,7 +476,7 @@ export class RdfNodeSerializer {
                         // let predicateName: string = `${objectName}${acase.bactrian(key)}`;
                         let predicateName = predicateByNode(key);
                         let valueRawArray = sets[key];
-                        for (let value of valueRawArray) {
+                        valueRawArray.forEach((value) => {
                             if (nt.isNGuidType(value)) {
                                 let objective = this.nodeDict[value.guid];
                                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
@@ -488,7 +488,7 @@ export class RdfNodeSerializer {
                                     object: objectName
                                 });
                             }
-                        }
+                        });
                     }
                 }
                 if (!objIsAtom || !objIsCollection) {
@@ -500,7 +500,7 @@ export class RdfNodeSerializer {
                         object: objectName
                     });
                 }
-            }
+            });
         }
     }
 

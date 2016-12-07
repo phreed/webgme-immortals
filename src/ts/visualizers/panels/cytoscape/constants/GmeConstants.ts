@@ -5,7 +5,7 @@
  * ./node_modules/webgme/src/client/js/Constants.js
  * https://github.com/webgme/webgme/blob/master/src/client/js/Constants.js
  */
-import { CommonConstants } from "./CommonConstants";
+import { GmeCommonConstants } from "./CommonConstants";
 import { ClientConstants } from "./ClientConstants";
 
 export class LineStylePatterns {
@@ -58,7 +58,7 @@ export class LineStyle {
 }
 
 
-export class GmeConstants extends CommonConstants {
+export class GmeConstants extends GmeCommonConstants {
     public static readonly CLIENT = ClientConstants;
 
     /*

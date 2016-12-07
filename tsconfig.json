@@ -5,14 +5,10 @@
   "compileOnSave": true,
   "buildOnSave": true,
   "compilerOptions": {
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
     "types": [
       "node",
-      "webgme",
-      "WebGMEGlobal",
-      "jquery"
+      "jquery",
+      "webgme"
     ],
     "outDir": "./dist",
     "lib": [
@@ -46,10 +42,7 @@
     ],
     "paths": {
       "*": [
-        "*",
-        "./src/js/*",
-        "./src/ts/*",
-        "./dist/*"
+        "./src/ts/*"
       ]
     }
   },
@@ -60,8 +53,6 @@
     "./src/ts/**/*.ts"
   ],
   "exclude": [
-    "./src/ts/plugins/FilingPlugin/FilingPlugin.ts",
-    "./src/ts/serializer/delivery.ts",
     "node_modules",
     "bower_components",
     "jspm_packages",

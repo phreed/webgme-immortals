@@ -11,13 +11,13 @@ const CONTAINMENT_PREFIX = "";
      * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
      * sponsor function makes extensive use of a dictionary to build up a tree.
      *
-     * @param {Core.Core}     core        [description]
+     * @param {GmeClasses.Core}     core        [description]
      * @param {Node}              rootNode    [description]
      * @param {Core.Callback} mainHandler [description]
      */
-export function getTreeModel(sponsor: PluginBase, core: Core.Core,
-    _rootNode: Common.Node, _metaNode: Node): Dictionary<any> {
-    // let config: Config.GmeConfig = sponsor.getCurrentConfig();
+export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
+    _rootNode: Core.Node, _metaNode: Node): GmeCommon.Dictionary<any> {
+    // let config: GmeConfig.GmeConfig = sponsor.getCurrentConfig();
     // let configDictionary: Core.Dictionary = config;
 
     /**
@@ -26,13 +26,13 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
     let fcoName: string = attrToString(core.getAttribute(core.getFCO(sponsor.rootNode), "name"));
     let languageName: string = attrToString(core.getAttribute(sponsor.rootNode, "name"));
     sponsor.logger.info(`get model tree : ${languageName}:${fcoName}`);
-    let rootEntry: Dictionary<string> = {
+    let rootEntry: GmeCommon.Dictionary<string> = {
         "version": "0.0.1"
     };
     /**
      * A dictionary: look up nodes based on their path name.
      */
-    let path2entry: Dictionary<any> = { "": rootEntry };
+    let path2entry: GmeCommon.Dictionary<any> = { "": rootEntry };
 
     /**
      * The base node makes reference to inheritance.
@@ -40,7 +40,7 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
      * The traverse function follows the containment tree.
      * @type {[type]}
      */
-    let visitFn = (node: Common.Node, done: Common.VoidFn): void => {
+    let visitFn = (node: Core.Node, done: GmeCommon.VoidFn): void => {
         let core = sponsor.core;
         // let nodeName = core.getAttribute(node, "name");
 
@@ -48,12 +48,13 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
             ? ":LibraryRoot:"
             : core.getAttribute(core.getBaseType(node), "name");
         let containRel = `${CONTAINMENT_PREFIX}${metaName}`;
-        let sourceEntry: Dictionary<any> = { "lang": `${languageName}:${containRel}` };
+        let sourceEntry: GmeCommon.Dictionary<any> = { "lang": `${languageName}:${containRel}` };
         // let baseNode = core.getBase(node);
         let nodePath = core.getPath(node);
         path2entry[nodePath] = sourceEntry;
 
         let parent = core.getParent(node);
+        if (parent === null) { return; }
         let parentPath = core.getPath(parent);
         let parentData = path2entry[parentPath];
         parentData[containRel] = parentData[containRel] || [];
@@ -77,7 +78,7 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
                     .try(() => {
                         return core.loadByPath(sponsor.rootNode, targetPath);
                     })
-                    .then((targetNode: Common.Node) => {
+                    .then((targetNode: Core.Node) => {
                         if (ptrName === "base") {
                             sourceEntry[`${ptrName}${POINTER_SET_DIV}${fcoName}`]
                                 = core.getGuid(targetNode);
@@ -105,7 +106,7 @@ export function getTreeModel(sponsor: PluginBase, core: Core.Core,
                             .try(() => {
                                 return core.loadByPath(sponsor.rootNode, memberPath);
                             })
-                            .then((memberNode: Common.Node) => {
+                            .then((memberNode: Core.Node) => {
                                 let memberMetaNode = core.getBaseType(memberNode);
                                 let memberMetaName = core.getAttribute(memberMetaNode, "name");
                                 let setAttr = `${setName}${POINTER_SET_DIV}${memberMetaName}`;

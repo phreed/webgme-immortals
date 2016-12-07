@@ -8,17 +8,17 @@
  */
 import { CoreConstants } from "./CoreConstants";
 
-export class CommonConstants {
+export class GmeCommonConstants {
     public static readonly CORE: CoreConstants;
 
     /*
      * TERRITORY EVENTS
      */
-    public static readonly TERRITORY_EVENT_LOAD: GME.TerritoryEventType = "load";
-    public static readonly TERRITORY_EVENT_UPDATE: GME.TerritoryEventType = "update";
-    public static readonly TERRITORY_EVENT_UNLOAD: GME.TerritoryEventType = "unload";
-    public static readonly TERRITORY_EVENT_COMPLETE: GME.TerritoryEventType = "complete";
-    public static readonly TERRITORY_EVENT_INCOMPLETE: GME.TerritoryEventType = "incomplete";
+    public static readonly TERRITORY_EVENT_LOAD: Gme.TerritoryEventType = "load";
+    public static readonly TERRITORY_EVENT_UPDATE: Gme.TerritoryEventType = "update";
+    public static readonly TERRITORY_EVENT_UNLOAD: Gme.TerritoryEventType = "unload";
+    public static readonly TERRITORY_EVENT_COMPLETE: Gme.TerritoryEventType = "complete";
+    public static readonly TERRITORY_EVENT_INCOMPLETE: Gme.TerritoryEventType = "incomplete";
 
     /*
      * GME_ID = wherever a GME object ID needs to be present

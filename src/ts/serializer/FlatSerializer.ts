@@ -68,7 +68,7 @@ export class FlatSerializer {
     constructor() {
     }
 
-    static exportLibrary(core: Core.Core, libraryRoot: any, callback: any): void {
+    static exportLibrary(core: GmeClasses.Core, libraryRoot: any, callback: any): void {
         if (callback) {
             console.error("callback is provided");
         }
@@ -601,7 +601,7 @@ export class FlatSerializer {
     }
 
 
-    static importLibrary(core: Core.Core, originalLibraryRoot: Common.Node,
+    static importLibrary(core: GmeClasses.Core, originalLibraryRoot: Core.Node,
         updatedJsonLibrary: any, callback: any): void {
         if (callback) {
             console.error("callback is provided");
@@ -617,7 +617,7 @@ export class FlatSerializer {
         let libraryRootPath = core.getPath(originalLibraryRoot);
 
 
-        let synchronizeRoots = (oldRoot: Common.Node, newGuid: string) => {
+        let synchronizeRoots = (oldRoot: Core.Node, newGuid: string) => {
             core.setGuid(oldRoot, newGuid);
         };
         let calculateGuidCache = () => {
@@ -659,8 +659,8 @@ export class FlatSerializer {
             let parentPath = guidCache[updatedJsonLibrary.nodes[guid].parent];
             let basePath = guidCache[updatedJsonLibrary.nodes[guid].base];
             let needed = 2;
-            let parent: Common.Node | null = null;
-            let base: Common.Node | null = null;
+            let parent: Core.Node | null = null;
+            let base: Core.Node | null = null;
             let error: Error | null = null;
             let create = () => {
                 if (error) {
@@ -670,7 +670,7 @@ export class FlatSerializer {
                 next(null);
             };
             // then we load the base and the parent of the node
-            core.loadByPath(root, parentPath, (err: Error, n: Common.Node) => {
+            core.loadByPath(root, parentPath, (err: Error, n: Core.Node) => {
                 error = error || err;
                 parent = n;
                 if (--needed === 0) {
@@ -696,8 +696,8 @@ export class FlatSerializer {
             // we need the node itself and the new parent
             log(`node ${logId(guid, updatedJsonLibrary)} will be moved within the library from ${getRelativePathByGuid(guid, originalJsonLibrary)} to ${getRelativePathByGuid(guid, updatedJsonLibrary)}`);
 
-            let node: Common.Node;
-            let parent: Common.Node;
+            let node: Core.Node;
+            let parent: Core.Node;
             let needed = 2;
             let error: Error | null = null;
             let move = () => {
@@ -923,7 +923,7 @@ export class FlatSerializer {
                     }, 10);
                 };
                 let addMember = (setName: string, guid: string, mNext: NextCallback) => {
-                    core.loadByPath(root, guidCache[guid], (err: Error, member: Common.Node) => {
+                    core.loadByPath(root, guidCache[guid], (err: Error, member: Core.Node) => {
 
                         if (err) {
                             return mNext(err);
@@ -1042,7 +1042,7 @@ export class FlatSerializer {
                 let meta = updatedJsonNode.meta || {};
                 let addGuidTarget = (guid: string, finish: NextCallback) => {
 
-                    core.loadByPath(root, guidCache[guid], (err: Error, target: Common.Node) => {
+                    core.loadByPath(root, guidCache[guid], (err: Error, target: Core.Node) => {
                         if (err) {
                             return finish(err);
                         }
@@ -1155,7 +1155,6 @@ export class FlatSerializer {
                     }, 10);
                 };
             };
-
             let loadNode = () => {
                 let needed = 3;
                 let error: Error | null = null;
@@ -1203,7 +1202,7 @@ export class FlatSerializer {
                 });
             };
 
-            let node: Common.Node;
+            let node: Core.Node;
             let originalJsonNode: any;
             let updatedJsonNode = updatedJsonLibrary.nodes[guid];
 

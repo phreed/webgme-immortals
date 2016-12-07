@@ -10,7 +10,7 @@ import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/PullPlugin/metadata.json");
 
-interface Config {
+interface ConfigDict {
   mode?: string;
   file?: string;
   deliveryUrl?: string;
@@ -47,11 +47,11 @@ class PullPlugin extends PluginBase {
    * @param {function(string, plugin.PluginResult)} callback - the result callback
    */
 
-  public main(callback: Core.ResultCallback): void {
+  public main(callback: GmeCommon.ResultCallback<GmeClasses.Result>): void {
     // let baseNode = self.core.getBase();
     let currentConfig = this.getCurrentConfig();
     this.sendNotification(`The push plugin function is running: ${new Date(Date.now()).toTimeString()}`);
-    let configDictionary: Config = currentConfig;
+    let configDictionary: ConfigDict = currentConfig;
 
     switch (configDictionary.mode) {
       case "file":
