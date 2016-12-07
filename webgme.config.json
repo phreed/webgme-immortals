@@ -2,12 +2,12 @@
     "apps": [
         {
             "name": "webgme-immortals",
-            "script": "./dist/app_bootstrap.js",
+            "script": "./dist-client/app_bootstrap.js",
             "source_map_support": true,
             "instances": 1,
             "exec_mode": "fork_mode",
             "watch": [
-                "dist"
+                "dist-client"
             ],
             "ignore_watch": [
                 "node_modules",

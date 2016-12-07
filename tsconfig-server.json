@@ -10,7 +10,7 @@
       "jquery",
       "webgme"
     ],
-    "outDir": "./dist-client",
+    "outDir": "./dist-server",
     "lib": [
       "dom",
       "es2015.promise",
@@ -27,7 +27,7 @@
     "noUnusedParameters": true,
     "noResolve": false,
     "strictNullChecks": true,
-    "module": "amd",
+    "module": "commonjs",
     "moduleResolution": "node",
     "removeComments": false,
     "target": "es6",
@@ -37,7 +37,7 @@
     "baseUrl": ".",
     "rootDirs": [
       "./src/ts",
-      "./dist-client"
+      "./dist-server"
     ],
     "paths": {
       "*": [

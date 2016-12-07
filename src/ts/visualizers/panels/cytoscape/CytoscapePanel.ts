@@ -21,7 +21,7 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
     private _client: any;
     private $el: JQuery;
 
-    constructor(layoutManager: Panel.LayoutManager, params: Panel.Params) {
+    constructor(layoutManager: GmePanel.LayoutManager, params: GmePanel.Params) {
         super({
             LOGGER_INSTANCE_NAME: "CytoscapePanel",
             HEADER_TITLE: "CytoscapePanel",

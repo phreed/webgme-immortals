@@ -46,7 +46,7 @@ class StreamPlugin extends PluginBase {
         }
         this.sendNotification(`The streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = config;
-        let core = this.core;
+        // let core = this.core;
         let project = this.project;
 
         /**

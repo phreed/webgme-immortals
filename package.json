@@ -13,7 +13,7 @@
   "scripts": {
     "docs": "./node_modules/bin/jsdoc -c jsdoc_conf.json",
     "build": "tsc && npm run build:metadata",
-    "build:metadata": "gulp dist-metadata",
+    "build:metadata": "gulp dist-client-metadata",
     "start": "node ./node_modules/webgme/src/bin/start_server.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
     "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",
@@ -30,7 +30,7 @@
     "users": "node ./node_modules/webgme/src/bin/usermanager.js",
     "clean_up": "node ./node_modules/webgme/src/bin/clean_up.js",
     "stats": "node ./node_modules/webgme/src/bin/storage_stats.js",
-    "gitclean": "rimraf ./dist",
+    "gitclean": "rimraf ./dist-client",
     "restart": "sudo systemctl --system stop webgme.service"
   },
   "dependencies": {

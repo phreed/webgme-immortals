@@ -5,6 +5,8 @@ blob-local-storage/
 .nrepl-*
 npm-debug.log*
 dist/
+dist-server/
+dist-client/
 typings/
 *.js.map
 

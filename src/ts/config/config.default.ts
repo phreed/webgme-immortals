@@ -11,19 +11,19 @@ let validateConfig = require("webgme/config/validator");
 
 config.client.log.level = "debug";
 
-config.plugin.basePaths.push("./dist/plugins", "./src/ts");
+config.plugin.basePaths.push("./dist-client/plugins");
 // console.log(config.plugin.basePaths);
 
-config.requirejsPaths["WebGMEGlobal"] = "./dist/WebGMEGlobal";
+config.requirejsPaths["WebGMEGlobal"] = "./dist-client/WebGMEGlobal";
 config.requirejsPaths["favicon"] = "img/favicon.ico";
 
 // Visualizer descriptors
-config.visualization.panelPaths.push("./dist/visualizers/panels");
+config.visualization.panelPaths.push("./dist-client/visualizers/panels");
 config.visualization.visualizerDescriptors.push("./src/ts/visualizers/Visualizers.json");
 
-config.requirejsPaths["visualizers/widgets/cytoscape/CytoscapeWidget"] = "./dist/visualizers/widgets/cytoscape/CytoscapeWidget";
-config.requirejsPaths["panels"] = "./dist/visualizers/panels";
-config.requirejsPaths["widgets"] = "./dist/visualizers/widgets";
+config.requirejsPaths["visualizers/widgets/cytoscape/CytoscapeWidget"] = "./dist-client/visualizers/widgets/cytoscape/CytoscapeWidget";
+config.requirejsPaths["panels"] = "./dist-client/visualizers/panels";
+config.requirejsPaths["widgets"] = "./dist-client/visualizers/widgets";
 
 config.mongo.uri = "mongodb://127.0.0.1:27017/webgme_immortals";
 
@@ -49,17 +49,17 @@ config.requirejsPaths["bluebird"] = "./node_modules/bluebird/js/browser/bluebird
 config.requirejsPaths["n3"] = "node_modules/n3/browser/n3-browserify";
 config.requirejsPaths["toposort"] = "node_modules/toposort/lib/toposort-browserify";
 
-config.requirejsPaths["serializer"] = "./dist/serializer/";
-config.requirejsPaths["extract"] = "./dist/extract/";
-config.requirejsPaths["delivery"] = "./dist/delivery/";
-config.requirejsPaths["utility"] = "./dist/utility/";
-// config.requirejsPaths["serializer"] = ["dist/serializer/","src/ts/serializer/"];
+config.requirejsPaths["serializer"] = "./dist-client/serializer/";
+config.requirejsPaths["extract"] = "./dist-client/extract/";
+config.requirejsPaths["delivery"] = "./dist-client/delivery/";
+config.requirejsPaths["utility"] = "./dist-client/utility/";
+// config.requirejsPaths["serializer"] = ["dist-client/serializer/","src/ts/serializer/"];
 
-config.requirejsPaths["plugins/SerializerServerPlugin/metadata"] = "./dist/plugins/SerializerServerPlugin/metadata";
-config.requirejsPaths["plugins/SerializerClientPlugin/metadata"] = "./dist/plugins/SerializerClientPlugin/metadata";
+config.requirejsPaths["plugins/SerializerServerPlugin/metadata"] = "./dist-client/plugins/SerializerServerPlugin/metadata";
+config.requirejsPaths["plugins/SerializerClientPlugin/metadata"] = "./dist-client/plugins/SerializerClientPlugin/metadata";
 
-config.requirejsPaths["plugins/PushPlugin/metadata"] = "./dist/plugins/PushPlugin/metadata";
-config.requirejsPaths["plugins/StreamPlugin/metadata"] = "./dist/plugins/StreamPlugin/metadata";
+config.requirejsPaths["plugins/PushPlugin/metadata"] = "./dist-client/plugins/PushPlugin/metadata";
+config.requirejsPaths["plugins/StreamPlugin/metadata"] = "./dist-client/plugins/StreamPlugin/metadata";
 
 config.storage.disableHashChecks = false;
 
