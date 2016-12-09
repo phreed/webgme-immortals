@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch webGME",
-            "program": "${workspaceRoot}/dist-client/app_bootstrap.js",
+            "program": "${workspaceRoot}/dist-client/main/app_bootstrap.js",
             "cwd": "${workspaceRoot}",
             "outFiles": [],
             "sourceMaps": true
@@ -26,16 +26,24 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Stream Plugin",
-            "program": "${workspaceRoot}/node_modules/webgme/src/bin/run_plugin.js",
-            "cwd": "${workspaceRoot}/client",
+            "stopOnEntry": false,
+            "program": "${workspaceRoot}/dist-client/main/run_plugin.js",
+            "cwd": "${workspaceRoot}",
             "args": [
                 "StreamPlugin",
-                "fred+immortals_v03_cp02_mission_2",
+                "immortals_v03_cp02_mission_2",
+                "--owner",
+                "fred",
+                "--user",
+                "fred",
                 "--branchName",
                 "master"
             ],
-            "outFiles": [],
-            "sourceMaps": true
+            "outDir": "${workspaceRoot}",
+            "sourceMaps": true,
+            "env": {
+                "NODE_ENV": "immortals"
+            }
         },
         {
             "type": "node",

@@ -14,12 +14,13 @@
  */
 
 import Promise = require("bluebird");
+import _ = require("underscore");
 import PluginBase = require("plugin/PluginBase");
 
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
 
 
-import { Producer, KeyedMessage, Client } from "kafka-node";
+import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
 
 class StreamPlugin extends PluginBase {
     pluginMetadata: any;
@@ -49,33 +50,6 @@ class StreamPlugin extends PluginBase {
         // let core = this.core;
         let project = this.project;
 
-        /**
-         * Get the most recent commit id.
-         */
-
-        /**
-         * Push the commits into a KeyedMessage.
-         * These are only those more recent commits.
-         */
-        let payload: any | null = null;
-        Promise
-            .try(() => {
-                let branch = configDictionary["branch"];
-                Promise
-                    .try(() => {
-                        return project.getHistory(branch, 1);
-                    })
-                    .then((commit) => {
-                        if (commit === null) {
-                            return;
-                        }
-                        let km = new KeyedMessage("key", commit.message);
-                        payload = [
-                            { topic: "topic1", messages: "hi", partition: 0 },
-                            { topic: "topic2", messages: ["oi", "world", km], partition: 0 }
-                        ];
-                    });
-            });
 
         /**
          * Deliver the payload to the stream.
@@ -93,19 +67,63 @@ class StreamPlugin extends PluginBase {
                     return Promise.reject(new Error("no payload produced"));
                 });
 
-                return Promise.promisify(producer.on)("ready");
+                return Promise.promisify(producer.on, producer)("ready");
             })
-            .then(() => {
+            .then((producer: Producer) => {
                 if (producer === null) {
                     return Promise.reject(new Error("no payload produced"));
                 }
-                return Promise.promisify(producer.send)(payload);
+                let sender = Promise.promisify(producer.send, producer);
+                return sender;
             })
-            .then((data) => {
-                console.log(`sucessfully sent the data ${data}`);
-            })
-            .catch((err: Error) => {
-                console.log(`failed sending the payload because ${err}`);
+            .then((sender: { (req: ProduceRequest[]): Promise<any> }) => {
+                /**
+                 * Get the most recent commit id.
+                 */
+                let lastKnownCommit = "";
+
+                /**
+                 * Push the commits into a KeyedMessage.
+                 * These are only those more recent commits.
+                 */
+                let payload: any | null = null;
+                let branch = configDictionary["branch"];
+                const BATCH_SIZE = 20;
+                let continueFlag = true;
+                let startingPoint = branch;
+                while (continueFlag) {
+                    Promise
+                        .try(() => {
+                            return project.getHistory(startingPoint, BATCH_SIZE);
+                        })
+                        .then((history: GmeStorage.CommitObject[]) => {
+                            if (history.length < BATCH_SIZE) {
+                                continueFlag = false;
+                            }
+                            for (let commit of history) {
+                                if (commit._id === lastKnownCommit) {
+                                    continueFlag = false;
+                                    break;
+                                }
+                                let km = new KeyedMessage("key", commit.message);
+                                payload = [
+                                    { topic: "topic2", messages: ["oi", "world", km], partition: 0 }
+                                ];
+                                sender(payload)
+                                    .then((data) => {
+                                        console.log(`sucessfully sent the data ${data}`);
+                                    })
+                                    .catch((err: Error) => {
+                                        console.log(`failed sending the payload because ${err}`);
+                                    });
+                            }
+                            let earliestCommit = history.pop();
+                            if (earliestCommit === undefined) {
+                                return;
+                            }
+                            startingPoint = earliestCommit._id;
+                        });
+                }
             });
     }
 }

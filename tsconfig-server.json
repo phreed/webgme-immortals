@@ -27,7 +27,7 @@
     "noUnusedParameters": true,
     "noResolve": false,
     "strictNullChecks": true,
-    "module": "commonjs",
+    "module": "umd",
     "moduleResolution": "node",
     "removeComments": false,
     "target": "es6",

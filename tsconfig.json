@@ -13,10 +13,7 @@
     "outDir": "./dist-client",
     "lib": [
       "dom",
-      "es2015.promise",
-      "es5",
-      "es2015.core",
-      "es2015.collection"
+      "es6"
     ],
     "sourceMap": true,
     "declaration": true,
@@ -36,8 +33,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "rootDirs": [
-      "./src/ts",
-      "./dist-client"
+      "./src/ts"
     ],
     "paths": {
       "*": [
@@ -45,9 +41,6 @@
       ]
     }
   },
-  "files": [
-    "./src/ts/app_bootstrap.ts"
-  ],
   "include": [
     "./src/ts/**/*.ts"
   ],

@@ -21,7 +21,7 @@ Environment="NODE_ENV=immortals"
 Environment="GME_DIR=projects/brass/webgme-immortals"
 WorkingDirectory=/isis/home/brass/projects/brass/webgme-immortals
 # ExecStartPre=/usr/bin/env
-ExecStart=/isis/home/brass/.nvm/versions/node/v6.5.0/bin/node ./dist-client/app_bootstrap.js
+ExecStart=/isis/home/brass/.nvm/versions/node/v6.5.0/bin/node ./dist-client/main/app_bootstrap.js
 
 
 # man systemd.special
