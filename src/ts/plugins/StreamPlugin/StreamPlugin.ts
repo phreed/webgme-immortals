@@ -39,7 +39,6 @@ class ResultTree {
 
 type CommitBunch = Array<GmeStorage.CommitObject>;
 
-
 const BATCH_SIZE = 20;
 
 async function getCommits(project: GmeClasses.Project,
@@ -49,7 +48,7 @@ async function getCommits(project: GmeClasses.Project,
     let moreCommits = true;
     let currentPoint = startingPoint;
     while (moreCommits) {
-        let history = await project.getHistory(currentPoint, BATCH_SIZE)
+        let history = await project.getHistory(currentPoint, BATCH_SIZE);
 
         for (let commit of history) {
             if (commit._id === terminationPoint) {
@@ -73,11 +72,11 @@ async function deliverCommits(
         _ix: number) {
 
         let original = await getRootCommit(core, project, current._id);
-        let revision = await getRootCommit(core, project, current.parents[0]);
-
         if (original.root === null) {
             return Promise.reject(`bad original root ${original.root}`);
         }
+        let revision = await getRootCommit(core, project, current.parents[0]);
+
         if (revision.root === null) {
             return Promise.reject(`bad original root ${revision.root}`);
         }
@@ -96,21 +95,65 @@ async function deliverCommits(
             });
     }
     for (let ix = 1; ix < collection.length; ++ix) {
-        helper(collection[ix - 1], collection[ix], ix);
+        try {
+            await helper(collection[ix - 1], collection[ix], ix);
+        } catch (err) {
+            console.log(`problem with commit ${ix}`);
+        }
     }
 }
 
-
+/**
+ * wrap the... 
+ * Project.loadObject(key: string, cb: GmeCommon.LoadObjectCallback): void;
+ * ...method in an async promise.
+ * type LoadObjectCallback = GmeCommon.ResultCallback<GmeStorage.CommitObject | Core.DataObject>;
+ * 
+ */
+function loadObjectAsync(project: GmeClasses.Project,
+    commit: GmeStorage.CommitHash): Promise<GmeCommon.LoadObject> {
+    return new Promise<GmeCommon.LoadObject>((resolve, reject) => {
+        project.loadObject(commit,
+            (err: Error, lo: GmeCommon.LoadObject) => {
+                if (err !== null) {
+                    reject(`null load object for ${commit}`);
+                } else {
+                    console.log(`load object key ${commit}`);
+                    resolve(lo);
+                }
+            });
+    });
+}
+function loadRootAsync(core: GmeClasses.Core,
+    commit: GmeStorage.CommitHash) {
+    return new Promise<Core.DataObject>((resolve, reject) => {
+        core.loadRoot(commit,
+            (err: Error, result: Core.DataObject): void => {
+                if (err !== null) {
+                    reject(`null load root for ${commit}`);
+                } else {
+                    console.log(`load root key ${commit}`);
+                    resolve(result);
+                }
+            });
+    });
+}
 /**
  * Return the result-tree associated with a particular commit.
  */
 async function loadCommit(core: GmeClasses.Core,
     project: GmeClasses.Project,
     commit: GmeCommon.MetadataHash,
-    branch: GmeCommon.Name) {
-    let commitObj = await project.loadObject(commit);
-    let root = await core.loadRoot(commitObj.root);
-    return new ResultTree(root, branch, commit);
+    branch: GmeCommon.Name): Promise<ResultTree> {
+    try {
+        let commitObj = await loadObjectAsync(project, commit);
+        console.log(`load commit ${commitObj}`);
+        let root = await loadRootAsync(core, commitObj.root);
+        return new ResultTree(root, branch, commit);
+    } catch (err) {
+        console.log(`load commit failed: ${err}`);
+    }
+    return new ResultTree(null, "", "");
 }
 
 /**
@@ -123,7 +166,7 @@ async function getRootCommit(
     commit: GmeStorage.CommitHash) {
 
     if (GmeRegExp.HASH.test(commit)) {
-        return loadCommit(core, project, commit, "");
+        return await loadCommit(core, project, commit, "");
     }
     // the seminal case is to load the latest commit of a branch
     let branches = await project.getBranches();
@@ -131,7 +174,7 @@ async function getRootCommit(
         return Promise.reject(
             new Error(`there is no branch ${commit}`));
     }
-    return loadCommit(core, project, branches[commit], commit);
+    return await loadCommit(core, project, branches[commit], commit);
 }
 
 /**
@@ -195,9 +238,26 @@ async function kafkaSender(configDictionary: any): Promise<Sender> {
         return Promise.reject(new Error("no payload produced"));
     });
 
-    producer.on("ready");
+    await producer.on("ready", () => {
+        return new Promise((resolve, _reject) => {
+            resolve();
+        });
+    });
 
-    return producer.send;
+    /**
+     * promisify producer.send
+     */
+    return (payloads) => {
+        return new Promise((resolve, reject) => {
+            producer.send(payloads, (err, data) => {
+                if (err === null) {
+                    resolve(data);
+                } else {
+                    reject(err);
+                }
+            });
+        });
+    };
 }
 
 
@@ -223,7 +283,7 @@ class StreamPlugin extends PluginBase {
     *
     * @param {Core.Callback} mainHandler [description]
     */
-    public main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): void {
+    public async  main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>) {
         let config = this.getCurrentConfig();
         if (config === null) {
             this.sendNotification("The streaming plugin has failed: no configuration");
@@ -234,32 +294,24 @@ class StreamPlugin extends PluginBase {
         // let core = this.core;
         this.project = this.project;
 
-        return new Promise()
-            .then(() => {
-                /**
-                * Select delivery mechanism.
-                */
-                switch (this.configDictionary["deliveryType"]) {
-                    case "kafka:001":
-                        return kafkaSender(this.configDictionary);
+        let sender: Sender;
+        /**
+        * Select delivery mechanism.
+        */
+        switch (this.configDictionary["deliveryType"]) {
+            case "kafka:001":
+                sender = await kafkaSender(this.configDictionary);
+                break;
+            default:
+                sender = await dummySender(this.configDictionary);
+        }
+        /**
+         * publish the latest commits.
+         */
+        await processCommits(this.configDictionary,
+            this.core, this.project, sender);
 
-                    default:
-                        return dummySender(this.configDictionary);
-                }
-            })
-            .then((sender) => {
-                /**
-                 * publish the latest commits.
-                 */
-                return processCommits(this.configDictionary,
-                    this.core, this.project, sender);
-            })
-            .then(() => {
-                this.result.addMessage({ msg: "all commits sent" });
-            })
-            .finally(() => {
-                mainHandler(null, this.result);
-            });
+        mainHandler(null, this.result);
     }
 }
 
