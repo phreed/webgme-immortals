@@ -1,7 +1,7 @@
 
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
-import { attrToString, pathToString } from "utility/gmeString";
+import { attrToString, pathToString } from "utility/GmeString";
 
 const POINTER_SET_DIV = "-";
 const CONTAINMENT_PREFIX = "";

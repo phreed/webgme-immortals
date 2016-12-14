@@ -1,6 +1,6 @@
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
-import { attrToString } from "utility/gmeString";
+import { attrToString } from "utility/GmeString";
 
 export function getEdgesSchema(sponsor: PluginBase, core: GmeClasses.Core,
     _rootNode: Core.Node, _metaNode: Node): Promise<string> {

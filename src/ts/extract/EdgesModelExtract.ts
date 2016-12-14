@@ -12,7 +12,7 @@
 
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
-import { attrToString, pathToString } from "utility/gmeString";
+import { attrToString, pathToString } from "utility/GmeString";
 
 import { PruningFlag } from "serializer/filters";
 import * as nt from "utility/NodeType";

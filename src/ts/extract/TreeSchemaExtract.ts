@@ -1,7 +1,7 @@
 
 import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
-import { attrToString } from "utility/gmeString";
+import { attrToString } from "utility/GmeString";
 
 export function getTreeSchema(sponsor: PluginBase, core: GmeClasses.Core,
     _1: Core.Node, _2: Node): Promise<string> {

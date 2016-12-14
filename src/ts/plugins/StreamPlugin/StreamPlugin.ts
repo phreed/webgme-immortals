@@ -13,22 +13,206 @@
  * and constructed components.
  */
 
-import Promise = require("bluebird");
-import _ = require("underscore");
+// import _ = require("underscore");
 import PluginBase = require("plugin/PluginBase");
-
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
-
-
 import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
+import { GmeRegExp } from "utility/GmeRegExp";
+
+interface Sender {
+    (req: Array<ProduceRequest>): Promise<any>;
+}
+
+class ResultTree {
+    root: Core.Node | null;
+    branchName: GmeCommon.Name;
+    commitHash: GmeStorage.CommitHash;
+    static factory() {
+        return new ResultTree(null, "", "");
+    }
+    constructor(root: Core.Node | null, branchName: GmeCommon.Name, commit: GmeStorage.CommitHash) {
+        this.root = root;
+        this.branchName = branchName;
+        this.commitHash = commit;
+    }
+}
+
+type CommitBunch = Array<GmeStorage.CommitObject>;
+
+
+const BATCH_SIZE = 20;
+
+async function getCommits(project: GmeClasses.Project,
+    startingPoint: GmeStorage.CommitHash,
+    terminationPoint: GmeStorage.CommitHash) {
+    let collection: CommitBunch = [];
+    let moreCommits = true;
+    let currentPoint = startingPoint;
+    while (moreCommits) {
+        let history = await project.getHistory(currentPoint, BATCH_SIZE)
+
+        for (let commit of history) {
+            if (commit._id === terminationPoint) {
+                return Promise.resolve(collection);
+            }
+            collection.push(commit);
+            currentPoint = commit._id;
+        }
+        if (history.length < BATCH_SIZE) {
+            return Promise.resolve(collection);
+        }
+    }
+    return Promise.reject(new Error(`could not get commits`));
+}
+
+async function deliverCommits(
+    core: GmeClasses.Core, project: GmeClasses.Project,
+    sender: any, collection: CommitBunch) {
+    async function helper(_previous: GmeStorage.CommitObject,
+        current: GmeStorage.CommitObject,
+        _ix: number) {
+
+        let original = await getRootCommit(core, project, current._id);
+        let revision = await getRootCommit(core, project, current.parents[0]);
+
+        if (original.root === null) {
+            return Promise.reject(`bad original root ${original.root}`);
+        }
+        if (revision.root === null) {
+            return Promise.reject(`bad original root ${revision.root}`);
+        }
+        let diff = await core.generateTreeDiff(original.root, revision.root);
+
+        let km = new KeyedMessage("payload", JSON.stringify(diff));
+        let payload = [
+            { topic: "topic2", messages: ["oi", "world", km], partition: 0 }
+        ];
+        return sender(payload)
+            .then((data: any) => {
+                console.log(`sucessfully sent the data ${data}`);
+            })
+            .catch((err: Error) => {
+                console.log(`failed sending the payload because ${err}`);
+            });
+    }
+    for (let ix = 1; ix < collection.length; ++ix) {
+        helper(collection[ix - 1], collection[ix], ix);
+    }
+}
+
+
+/**
+ * Return the result-tree associated with a particular commit.
+ */
+async function loadCommit(core: GmeClasses.Core,
+    project: GmeClasses.Project,
+    commit: GmeCommon.MetadataHash,
+    branch: GmeCommon.Name) {
+    let commitObj = await project.loadObject(commit);
+    let root = await core.loadRoot(commitObj.root);
+    return new ResultTree(root, branch, commit);
+}
+
+/**
+ * Typically the key is simply a commit but if a 
+ * branch name is supplied the head commit is looked up first.
+ */
+async function getRootCommit(
+    core: GmeClasses.Core,
+    project: GmeClasses.Project,
+    commit: GmeStorage.CommitHash) {
+
+    if (GmeRegExp.HASH.test(commit)) {
+        return loadCommit(core, project, commit, "");
+    }
+    // the seminal case is to load the latest commit of a branch
+    let branches = await project.getBranches();
+    if (!branches[commit]) {
+        return Promise.reject(
+            new Error(`there is no branch ${commit}`));
+    }
+    return loadCommit(core, project, branches[commit], commit);
+}
+
+/**
+   * Candidates for building patches:
+   * ./webgme/src/common/util/jsonPatcher.js
+   * ./webgme/src/common/storage/util.js 
+   *   * getPatchObject()
+   * ./webgme/src/common/storage/storageclasses/editorstorage.js
+   *   * makeCommit()
+   * 
+   * 
+   * @see http://tools.ietf.org/html/rfc6902
+   */
+function processCommits(config: any,
+    core: GmeClasses.Core, project: GmeClasses.Project, sender: Sender) {
+    /**
+     * Get the most recent commit id.
+     */
+    let lastKnownCommit = "";
+
+    /**
+     * Push the commits into a KeyedMessage.
+     * These are only those more recent commits.
+     */
+    let branch = config["branch"];
+
+    return getCommits(project, branch, lastKnownCommit)
+        .then((commitCollection) => {
+            commitCollection.sort(
+                (lhs: GmeStorage.CommitObject,
+                    rhs: GmeStorage.CommitObject): number => {
+                    if (lhs.time < rhs.time) { return -1; }
+                    if (lhs.time > rhs.time) { return +1; }
+                    return 0;
+                });
+            return deliverCommits(core, project,
+                sender, commitCollection);
+        });
+}
+
+function dummySender(_config: any): Promise<Sender> {
+    return new Promise<Sender>((resolve) => {
+        resolve((req: Array<ProduceRequest>): Promise<any> => {
+            console.log(`the request ${req}`);
+            return Promise.resolve("dummy");
+        });
+    });
+}
+
+/**
+ * Make a sender for a kafka stream.
+ */
+async function kafkaSender(configDictionary: any): Promise<Sender> {
+
+    let connStr = configDictionary["deliveryUrl"];
+    let client = await new Client(connStr, "kafka-node-client");
+
+    let producer = new Producer(client);
+
+    producer.on("error", () => {
+        return Promise.reject(new Error("no payload produced"));
+    });
+
+    producer.on("ready");
+
+    return producer.send;
+}
+
 
 class StreamPlugin extends PluginBase {
+
     pluginMetadata: any;
+
+    configDictionary: any;
+    project: GmeClasses.Project;
 
     constructor() {
         super();
         this.pluginMetadata = JSON.parse(MetaDataStr);
     }
+
 
     /**
     * Main function for the plugin to execute. This will perform the execution.
@@ -46,84 +230,35 @@ class StreamPlugin extends PluginBase {
             mainHandler(null, this.result);
         }
         this.sendNotification(`The streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
-        let configDictionary: any = config;
+        this.configDictionary = config;
         // let core = this.core;
-        let project = this.project;
+        this.project = this.project;
 
-
-        /**
-         * Deliver the payload to the stream.
-         */
-        let producer: Producer | null = null;
-        Promise
-            .try(() => {
-                let connStr = configDictionary["deliveryUrl"];
-                return new Client(connStr, "kafka-node-client");
-            })
-            .then((client) => {
-                producer = new Producer(client);
-
-                producer.on("error", () => {
-                    return Promise.reject(new Error("no payload produced"));
-                });
-
-                return Promise.promisify(producer.on, producer)("ready");
-            })
-            .then((producer: Producer) => {
-                if (producer === null) {
-                    return Promise.reject(new Error("no payload produced"));
-                }
-                let sender = Promise.promisify(producer.send, producer);
-                return sender;
-            })
-            .then((sender: { (req: ProduceRequest[]): Promise<any> }) => {
+        return new Promise()
+            .then(() => {
                 /**
-                 * Get the most recent commit id.
-                 */
-                let lastKnownCommit = "";
+                * Select delivery mechanism.
+                */
+                switch (this.configDictionary["deliveryType"]) {
+                    case "kafka:001":
+                        return kafkaSender(this.configDictionary);
 
-                /**
-                 * Push the commits into a KeyedMessage.
-                 * These are only those more recent commits.
-                 */
-                let payload: any | null = null;
-                let branch = configDictionary["branch"];
-                const BATCH_SIZE = 20;
-                let continueFlag = true;
-                let startingPoint = branch;
-                while (continueFlag) {
-                    Promise
-                        .try(() => {
-                            return project.getHistory(startingPoint, BATCH_SIZE);
-                        })
-                        .then((history: GmeStorage.CommitObject[]) => {
-                            if (history.length < BATCH_SIZE) {
-                                continueFlag = false;
-                            }
-                            for (let commit of history) {
-                                if (commit._id === lastKnownCommit) {
-                                    continueFlag = false;
-                                    break;
-                                }
-                                let km = new KeyedMessage("key", commit.message);
-                                payload = [
-                                    { topic: "topic2", messages: ["oi", "world", km], partition: 0 }
-                                ];
-                                sender(payload)
-                                    .then((data) => {
-                                        console.log(`sucessfully sent the data ${data}`);
-                                    })
-                                    .catch((err: Error) => {
-                                        console.log(`failed sending the payload because ${err}`);
-                                    });
-                            }
-                            let earliestCommit = history.pop();
-                            if (earliestCommit === undefined) {
-                                return;
-                            }
-                            startingPoint = earliestCommit._id;
-                        });
+                    default:
+                        return dummySender(this.configDictionary);
                 }
+            })
+            .then((sender) => {
+                /**
+                 * publish the latest commits.
+                 */
+                return processCommits(this.configDictionary,
+                    this.core, this.project, sender);
+            })
+            .then(() => {
+                this.result.addMessage({ msg: "all commits sent" });
+            })
+            .finally(() => {
+                mainHandler(null, this.result);
             });
     }
 }
