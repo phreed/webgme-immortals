@@ -82,9 +82,14 @@ async function deliverCommits(
         }
         let diff = await core.generateTreeDiff(original.root, revision.root);
 
-        let km = new KeyedMessage("payload", JSON.stringify(diff));
         let payload = [
-            { topic: "topic2", messages: ["oi", "world", km], partition: 0 }
+            {
+                topic: "urn:vu-isis:gme/brass/immortals",
+                project: project.projectId,
+                commit: current,
+                messages: new KeyedMessage("payload", diff),
+                partition: 0
+            }
         ];
         return sender(payload)
             .then((data: any) => {
@@ -147,11 +152,11 @@ async function loadCommit(core: GmeClasses.Core,
     branch: GmeCommon.Name): Promise<ResultTree> {
     try {
         let commitObj = await loadObjectAsync(project, commit);
-        console.log(`load commit ${commitObj}`);
+        console.log(`load commit ${commit}`);
         let root = await loadRootAsync(core, commitObj.root);
         return new ResultTree(root, branch, commit);
     } catch (err) {
-        console.log(`load commit failed: ${err}`);
+        console.log(`load commit ${commit} failed: ${err}`);
     }
     return new ResultTree(null, "", "");
 }
@@ -218,7 +223,7 @@ function processCommits(config: any,
 function dummySender(_config: any): Promise<Sender> {
     return new Promise<Sender>((resolve) => {
         resolve((req: Array<ProduceRequest>): Promise<any> => {
-            console.log(`the request ${req}`);
+            console.log(`the request ${JSON.stringify(req, null, 2)}`);
             return Promise.resolve("dummy");
         });
     });
