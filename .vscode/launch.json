@@ -3,7 +3,7 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [       
         {
             "type": "node",
             "request": "launch",
@@ -31,7 +31,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "StreamPlugin",
-                "immortals_v03_cp02_mission_2",
+                "immortals_v03_cp02_network",
                 "--owner",
                 "fred",
                 "--user",
@@ -39,7 +39,7 @@
                 "--branchName",
                 "master"
             ],
-            "outDir": "${workspaceRoot}",
+            "outFiles": ["${workspaceRoot}/output"],
             "sourceMaps": true,
             "env": {
                 "NODE_ENV": "immortals"

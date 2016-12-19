@@ -80,8 +80,8 @@
     "rimraf": "^2.5.4",
     "ts-node": "^1.7.0",
     "tsify": "^2.0.2",
-    "tslint": "^4.0.2",
-    "typescript": "^2.0.10",
+    "tslint": "^4.1.1",
+    "typescript": "^2.1.4",
     "vinyl-source-stream": "^1.1.0",
     "which": "^1.2.12"
   }

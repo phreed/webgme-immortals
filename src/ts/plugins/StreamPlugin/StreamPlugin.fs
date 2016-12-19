@@ -49,7 +49,7 @@ const BATCH_SIZE = 20;
  */
 async function getCommits(project: GmeClasses.Project,
     startingPoint: GmeStorage.CommitHash,
-    terminationPoint: GmeStorage.CommitHash) {
+    terminationPoint: GmeStorage.CommitHash | null) {
     let collection: CommitBunch = [];
     let moreCommits = true;
     let currentPoint = startingPoint;
@@ -73,28 +73,41 @@ async function getCommits(project: GmeClasses.Project,
 async function deliverCommits(
     core: GmeClasses.Core, project: GmeClasses.Project,
     sender: any, collection: CommitBunch) {
+    /**
+     * This function generates a tree diff for the first commit.
+     */
+    async function naturalHelper(initial: GmeStorage.CommitObject) {
 
-    async function naturalHelper(prime: GmeStorage.CommitObject) {
-        // let preCommit = await getRootCommit(core, project, prime._id);
-        let payload = [
+        let primingCommit = await getRootCommit(core, project, initial._id);
+        if (primingCommit.root === null) {
+            return Promise.reject(`bad original root ${primingCommit.root}`);
+        }
+        // let nullRoot = core.createNode({});
+        
+        // if (!(nullRoot instanceof Core.Node)) {
+            return [
+                {
+                    topic: "urn:vu-isis:gme/brass/immortals",
+                    project: project.projectId,
+                    commit: primingCommit,
+                    messages: new KeyedMessage("payload", ""),
+                    partition: 0
+                }];
+        // }
+
+        /*
+         let diff = await core.generateTreeDiff(nullRoot, primingCommit.root);
+
+        return [
             {
                 topic: "urn:vu-isis:gme/brass/immortals",
                 project: project.projectId,
-                commit: prime,
-                messages: new KeyedMessage("payload", "none"),
+                commit: primingCommit,
+                messages: new KeyedMessage("payload", diff),
                 partition: 0
-            }
-        ];
-        return sender(payload)
-            .then((data: any) => {
-                console.log(`sucessfully sent the data ${data}`);
-            })
-            .catch((err: Error) => {
-                console.log(`failed sending the payload because ${err}`);
-            });
+            }];
+            */
     }
-
-
     /**
         * This function generates a tree diff between pairs of commits.
         */
@@ -112,8 +125,7 @@ async function deliverCommits(
             return Promise.reject(`bad original root ${postCommit.root}`);
         }
         let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
-
-        let payload = [
+        return [
             {
                 topic: "urn:vu-isis:gme/brass/immortals",
                 project: project.projectId,
@@ -122,21 +134,28 @@ async function deliverCommits(
                 partition: 0
             }
         ];
-        return sender(payload)
+
+    }
+    if (collection.length > 0) {
+        let payload = await naturalHelper(collection[0]);
+        sender(payload)
             .then((data: any) => {
                 console.log(`sucessfully sent the data ${data}`);
             })
             .catch((err: Error) => {
                 console.log(`failed sending the payload because ${err}`);
             });
-    }
-    // processing
-    if (collection.length > 0) {
 
-        await naturalHelper(collection[0]);
         for (let ix = 1; ix < collection.length; ++ix) {
             try {
-                await normalHelper(collection[ix - 1], collection[ix], ix);
+                let payload = await normalHelper(collection[ix - 1], collection[ix], ix);
+                sender(payload)
+                    .then((data: any) => {
+                        console.log(`sucessfully sent the data ${data}`);
+                    })
+                    .catch((err: Error) => {
+                        console.log(`failed sending the payload because ${err}`);
+                    });
             } catch (err) {
                 console.log(`problem with commit ${ix}`);
             }
@@ -229,12 +248,12 @@ async function getRootCommit(
    * 
    * @see http://tools.ietf.org/html/rfc6902
    */
-async function processCommits(config: any,
+function processCommits(config: any,
     core: GmeClasses.Core, project: GmeClasses.Project, sender: Sender): Promise<void> {
     /**
      * Get the most recent commit id.
      */
-    let lastKnownCommit = "";
+    let lastKnownCommit: GmeStorage.CommitHash | null = null;
 
     /**
      * Push the commits into a KeyedMessage.
@@ -242,17 +261,18 @@ async function processCommits(config: any,
      */
     let branch = config["branch"];
 
-    let commitCollection = await getCommits(project, branch, lastKnownCommit);
-    //   .then((commitCollection) => {
-    commitCollection.sort(
-        (lhs: GmeStorage.CommitObject,
-            rhs: GmeStorage.CommitObject): number => {
-            if (lhs.time < rhs.time) { return -1; }
-            if (lhs.time > rhs.time) { return +1; }
-            return 0;
+    return getCommits(project, branch, lastKnownCommit)
+        .then((commitCollection) => {
+            commitCollection.sort(
+                (lhs: GmeStorage.CommitObject,
+                    rhs: GmeStorage.CommitObject): number => {
+                    if (lhs.time < rhs.time) { return -1; }
+                    if (lhs.time > rhs.time) { return +1; }
+                    return 0;
+                });
+            return deliverCommits(core, project,
+                sender, commitCollection);
         });
-    return deliverCommits(core, project,
-        sender, commitCollection);
 }
 
 function dummySender(_config: any): Promise<Sender> {
