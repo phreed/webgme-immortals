@@ -30,7 +30,7 @@ function executePluginAsync(manager: any,
     });
 }
 
-async function primary() {
+async function main() {
     let argv = process.argv;
 
     let path = require("path");
@@ -165,10 +165,10 @@ async function primary() {
     await Promise.all([storage.closeDatabase(), gmeAuth.unload()]);
 
     if (pluginResult["success"] && pluginResult.success === true) {
-        console.info(`execution was successful: ${result}`);
+        console.info(`execution was successful: ${pluginResult}`);
         process.exit(0);
     } else {
-        console.error("execution failed:", JSON.stringify(result, null, 2));
+        console.error("execution failed:", JSON.stringify(pluginResult, null, 2));
         process.exit(1);
     }
 }
@@ -177,6 +177,6 @@ if (require.main !== module) {
     console.error("not a module");
     process.exit(1);
 }
-let result = primary();
+main();
 
 

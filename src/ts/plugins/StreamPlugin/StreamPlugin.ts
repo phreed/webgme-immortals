@@ -21,31 +21,75 @@ import { GmeRegExp } from "utility/GmeRegExp";
 
 /**
  * The JSON.stringify takes an argument that can be 
- * used to halt Circular dependency descent.
+ * Used to halt unlimited circular dependency descent.
+ * There seems to be a harded maximum of 30 serialized objects.
+ * At that hard limit an exception is thrown.
+ * Using 15 because that seems like it should be enough.
  */
-function censor(censoredValue: any) {
-    let ix = 0;
-    return (_key: string, value: any) => {
+/*
+function areplacer(censoredValue: any) {
+    let ix = -1;
+    return (key: string, value: any) => {
+        ++ix;
         if (ix === 0) {
-            ++ix;
+            console.log(`priming ${censoredValue}`);
             return value;
         }
+        if (ix > 15) {
+            return `[Exausted] ${ix}`;
+        }
         if (typeof (censoredValue) !== "object") {
-            ++ix;
+            console.log(`censored value is not object`);
             return value;
         }
         if (typeof (value) !== "object") {
-            ++ix;
+            console.log(`value is not object: [[${key}:${value}]]`);
             return value;
         }
         if (censoredValue != value) {
-            ++ix;
+            console.log(`not censored: [[${key}]]`);
             return value;
         }
-        // seems to be a harded maximum of 30 serialized objects?
-        if (ix > 29)
-            return "[Unknown]";
-        return "[Circular]";
+        return `[Circular:${ix}]`;
+    }
+}
+*/
+
+function replacer(root: any, options: { maxLevel?: number, maxNodes?: number }) {
+    let visited: Array<any> = [];
+    let visitedKeys: Array<any> = [];
+    let maxVisits = options.maxLevel ? options.maxLevel : 0;
+    return (key: string, value: any) => {
+        if (maxVisits > 0 && visited.length > maxVisits) {
+            return `too many visits`;
+        }
+        let visitedRef: number = 0;
+        let visitedFlag = false;
+        visited.forEach((obj: any, ix: number) => {
+            if (obj !== value) return;
+            visitedFlag = true;
+            visitedRef = ix;
+        });
+        // handle root element
+        if (key == "") {
+            visited.push(root);
+            visitedKeys.push("root");
+            return value;
+        }
+        if (visitedFlag && typeof (value) == "object") {
+            let seen = visitedKeys[visitedRef];
+            if (seen == "root") {
+                return `pointer to root`;
+            }
+            if (!!value && !!value.constructor) {
+                return `see ${value.constructor.name.toLowerCase()} with key ${seen}`;
+            }
+            return `see ${typeof (value)} with key ${seen}`;
+        }
+        let qualKey = key || `(empty key)`;
+        visited.push(value);
+        visitedKeys.push(qualKey);
+        return value;
     }
 }
 
@@ -115,7 +159,7 @@ async function deliverCommits(
 
         let postCommit = await getRootCommit(core, project, prime._id);
         if (postCommit.root === null) {
-            return Promise.reject(`original root: failure ${postCommit.root}`);
+            return Promise.reject(`primary root: ${prime._id}`);
         }
 
         let diff = await core.generateTreeDiff(nullCommit, postCommit.root);
@@ -128,13 +172,7 @@ async function deliverCommits(
                 partition: 0
             }
         ];
-        return sender(payload)
-            .then((data: any) => {
-                console.log(`sucessfully sent the data ${data}`);
-            })
-            .catch((err: Error) => {
-                console.log(`failed sending the payload because ${err}`);
-            });
+        return await sender(payload);
     }
 
 
@@ -146,23 +184,23 @@ async function deliverCommits(
         _ix: number): Promise<void> {
         console.log(`normal helper:`);
         console.log(` ix: ${_ix}, \n`
-            + `prev: ${JSON.stringify(_previous, censor(_previous), 2)}, \n`
-            + `curr: ${JSON.stringify(current, censor(current), 2)}`);
+            + `prev: ${JSON.stringify(_previous, replacer(_previous, {}), 2)}, \n`
+            + `curr: ${JSON.stringify(current, replacer(current, {}), 2)}`);
 
         let preCommit = await getRootCommit(core, project, current._id);
         if (preCommit.root === null) {
             return Promise.reject(`problem with pre-commit root ${preCommit.root}`);
         }
-        console.log(`pre: ${JSON.stringify(preCommit, censor(preCommit), 2)}`);
+        // console.log(`pre: ${JSON.stringify(preCommit, replacer(preCommit), 2)}`);
 
         let postCommit = await getRootCommit(core, project, current.parents[0]);
         if (postCommit.root === null) {
             return Promise.reject(`problem with post-commit root ${postCommit.root}`);
         }
-        console.log(`post: ${JSON.stringify(postCommit, censor(postCommit), 2)}`);
+        // console.log(`post: ${JSON.stringify(postCommit, replacer(postCommit), 2)}`);
 
         let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
-        console.log(`diff: ${JSON.stringify(diff, censor(diff), 2)}`);
+        // console.log(`diff: ${JSON.stringify(diff, replacer(diff, {}), 2)}`);
         let payload = [
             {
                 topic: "urn:vu-isis:gme/brass/immortals",
@@ -172,13 +210,7 @@ async function deliverCommits(
                 partition: 0
             }
         ];
-        return sender(payload)
-            .then((data: any) => {
-                console.log(`sucessfully sent the data ${data}`);
-            })
-            .catch((err: Error) => {
-                console.log(`failed sending the payload because ${err}`);
-            });
+        return await sender(payload);
     }
 
     // processing
@@ -186,8 +218,8 @@ async function deliverCommits(
         try {
             await naturalHelper(collection[0]);
         } catch (err) {
-            console.log(`natural helper failed ${err}`);
-            // return Promise.reject(`natural helper failed: ${collection[0]}`);
+            console.log(`natural helper failed [[${err}]]`);
+            console.log(`failed commit: ${JSON.stringify(collection[0], replacer(collection[0], {}), 2)}`);
         }
 
         for (let ix = 1; ix < collection.length; ++ix) {
@@ -195,8 +227,8 @@ async function deliverCommits(
                 console.log(`preparing to run normal helper`);
                 await normalHelper(collection[ix - 1], collection[ix], ix);
             } catch (err) {
-                console.log(`problem with commit ${ix}: ${err}`);
-                // return Promise.reject(`normal helper failed ${ix}: ${JSON.stringify(collection[ix], censor(collection[ix]), 2)}`);
+                console.log(`normal helper failed [[${ix}: ${err}]]`);
+                console.log(`failed commit: ${JSON.stringify(collection[ix], replacer(collection[ix], {}), 2)}`);
             }
         }
     }
@@ -248,10 +280,10 @@ async function loadCommit(core: GmeClasses.Core,
         let commitObj = await loadObjectAsync(project, commit);
         let root = await loadRootAsync(core, commitObj.root);
         let tree = new ResultTree(root, branch, commit);
-        console.log(`commit loaded ${JSON.stringify(tree, censor(tree), 2)}`);
+        // console.log(`commit loaded ${JSON.stringify(tree, replacer(tree, {}), 2)}`);
         return tree;
     } catch (err) {
-        console.log(`load commit ${commit} failed: ${err}`);
+        console.log(`load failure [[${err}: ${commit}]]`);
     }
     return new ResultTree(null, "broken", commit);
 }
@@ -318,7 +350,7 @@ async function processCommits(config: any,
 function dummySender(_config: any): Promise<Sender> {
     return new Promise<Sender>((resolve) => {
         resolve((req: Array<ProduceRequest>): Promise<any> => {
-            console.log(`the request ${JSON.stringify(req, censor(req), 2)}`);
+            console.log(`the request ${JSON.stringify(req, replacer(req, {}), 2)}`);
             return Promise.resolve("dummy");
         });
     });
