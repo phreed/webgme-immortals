@@ -26,42 +26,13 @@ import { GmeRegExp } from "utility/GmeRegExp";
  * At that hard limit an exception is thrown.
  * Using 15 because that seems like it should be enough.
  */
-/*
-function areplacer(censoredValue: any) {
-    let ix = -1;
-    return (key: string, value: any) => {
-        ++ix;
-        if (ix === 0) {
-            console.log(`priming ${censoredValue}`);
-            return value;
-        }
-        if (ix > 15) {
-            return `[Exausted] ${ix}`;
-        }
-        if (typeof (censoredValue) !== "object") {
-            console.log(`censored value is not object`);
-            return value;
-        }
-        if (typeof (value) !== "object") {
-            console.log(`value is not object: [[${key}:${value}]]`);
-            return value;
-        }
-        if (censoredValue != value) {
-            console.log(`not censored: [[${key}]]`);
-            return value;
-        }
-        return `[Circular:${ix}]`;
-    }
-}
-*/
-
 function replacer(root: any, options: { maxLevel?: number, maxNodes?: number }) {
     let visited: Array<any> = [];
     let visitedKeys: Array<any> = [];
     let maxVisits = options.maxLevel ? options.maxLevel : 0;
     return (key: string, value: any) => {
         if (maxVisits > 0 && visited.length > maxVisits) {
-            return `too many visits`;
+            return `xfdf: too many visits`;
         }
         let visitedRef: number = 0;
         let visitedFlag = false;
@@ -79,14 +50,14 @@ function replacer(root: any, options: { maxLevel?: number, maxNodes?: number }) 
         if (visitedFlag && typeof (value) == "object") {
             let seen = visitedKeys[visitedRef];
             if (seen == "root") {
-                return `pointer to root`;
+                return `xvdf: pointer to root`;
             }
             if (!!value && !!value.constructor) {
-                return `see ${value.constructor.name.toLowerCase()} with key ${seen}`;
+                return `xvdf: see ${value.constructor.name.toLowerCase()} with key ${seen}`;
             }
-            return `see ${typeof (value)} with key ${seen}`;
+            return `xvdf: see ${typeof (value)} with key ${seen}`;
         }
-        let qualKey = key || `(empty key)`;
+        let qualKey = key || `(xvdf: empty key)`;
         visited.push(value);
         visitedKeys.push(qualKey);
         return value;
@@ -191,16 +162,16 @@ async function deliverCommits(
         if (preCommit.root === null) {
             return Promise.reject(`problem with pre-commit root ${preCommit.root}`);
         }
-        // console.log(`pre: ${JSON.stringify(preCommit, replacer(preCommit), 2)}`);
+        console.log(`pre:`);
 
         let postCommit = await getRootCommit(core, project, current.parents[0]);
         if (postCommit.root === null) {
             return Promise.reject(`problem with post-commit root ${postCommit.root}`);
         }
-        // console.log(`post: ${JSON.stringify(postCommit, replacer(postCommit), 2)}`);
+        console.log(`post:`);
 
         let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
-        // console.log(`diff: ${JSON.stringify(diff, replacer(diff, {}), 2)}`);
+        console.log(`diff:`);
         let payload = [
             {
                 topic: "urn:vu-isis:gme/brass/immortals",
