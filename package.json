@@ -55,7 +55,7 @@
     "webgme": "^2.7.1"
   },
   "devDependencies": {
-    "@types/bluebird": "^3.0.35",
+    "@types/bluebird": "^3.0.36",
     "@types/cytoscape": "github:phreed/ts-typings#cytoscape",
     "@types/form-data": "0.0.33",
     "@types/fs-extra": "0.0.35",
@@ -63,7 +63,7 @@
     "@types/jszip": "0.0.31",
     "@types/kafka-node": "^0.2.34",
     "@types/n3": "github:phreed/ts-typings#n3",
-    "@types/node": "^6.0.48",
+    "@types/node": "^6.0.52",
     "@types/requirejs": "^2.1.28",
     "@types/underscore": "^1.7.33",
     "@types/webgme": "github:phreed/ts-typings#webgme",

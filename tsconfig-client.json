@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig",
+  
+    "outDir": "./dist-client",
+   
+    "module": "amd",
+   

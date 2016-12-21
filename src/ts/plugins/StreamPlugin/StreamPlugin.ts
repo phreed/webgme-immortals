@@ -19,6 +19,36 @@ import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
 import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
 import { GmeRegExp } from "utility/GmeRegExp";
 
+/**
+ * The JSON.stringify takes an argument that can be 
+ * used to halt Circular dependency descent.
+ */
+function censor(censoredValue: any) {
+    let ix = 0;
+    return (_key: string, value: any) => {
+        if (ix === 0) {
+            ++ix;
+            return value;
+        }
+        if (typeof (censoredValue) !== "object") {
+            ++ix;
+            return value;
+        }
+        if (typeof (value) !== "object") {
+            ++ix;
+            return value;
+        }
+        if (censoredValue != value) {
+            ++ix;
+            return value;
+        }
+        // seems to be a harded maximum of 30 serialized objects?
+        if (ix > 29)
+            return "[Unknown]";
+        return "[Circular]";
+    }
+}
+
 interface Sender {
     (req: Array<ProduceRequest>): Promise<any>;
 }
@@ -70,18 +100,31 @@ async function getCommits(project: GmeClasses.Project,
     return Promise.reject(new Error(`could not get commits`));
 }
 
+/**
+ * generate the commit and send it as indicated by the sender.
+ */
 async function deliverCommits(
     core: GmeClasses.Core, project: GmeClasses.Project,
-    sender: any, collection: CommitBunch) {
+    sender: Sender, collection: CommitBunch): Promise<void> {
 
     async function naturalHelper(prime: GmeStorage.CommitObject) {
-        // let preCommit = await getRootCommit(core, project, prime._id);
+        let nullCommit = core.createNode({});
+        if (nullCommit instanceof Error) {
+            return Promise.reject(`null root: failure`);
+        }
+
+        let postCommit = await getRootCommit(core, project, prime._id);
+        if (postCommit.root === null) {
+            return Promise.reject(`original root: failure ${postCommit.root}`);
+        }
+
+        let diff = await core.generateTreeDiff(nullCommit, postCommit.root);
         let payload = [
             {
                 topic: "urn:vu-isis:gme/brass/immortals",
                 project: project.projectId,
                 commit: prime,
-                messages: new KeyedMessage("payload", "none"),
+                messages: new KeyedMessage("payload", diff),
                 partition: 0
             }
         ];
@@ -96,23 +139,30 @@ async function deliverCommits(
 
 
     /**
-        * This function generates a tree diff between pairs of commits.
-        */
+    * This function generates a tree diff between pairs of commits.
+    */
     async function normalHelper(_previous: GmeStorage.CommitObject,
         current: GmeStorage.CommitObject,
-        _ix: number) {
+        _ix: number): Promise<void> {
+        console.log(`normal helper:`);
+        console.log(` ix: ${_ix}, \n`
+            + `prev: ${JSON.stringify(_previous, censor(_previous), 2)}, \n`
+            + `curr: ${JSON.stringify(current, censor(current), 2)}`);
 
         let preCommit = await getRootCommit(core, project, current._id);
         if (preCommit.root === null) {
-            return Promise.reject(`bad original root ${preCommit.root}`);
+            return Promise.reject(`problem with pre-commit root ${preCommit.root}`);
         }
+        console.log(`pre: ${JSON.stringify(preCommit, censor(preCommit), 2)}`);
+
         let postCommit = await getRootCommit(core, project, current.parents[0]);
-
         if (postCommit.root === null) {
-            return Promise.reject(`bad original root ${postCommit.root}`);
+            return Promise.reject(`problem with post-commit root ${postCommit.root}`);
         }
-        let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
+        console.log(`post: ${JSON.stringify(postCommit, censor(postCommit), 2)}`);
 
+        let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
+        console.log(`diff: ${JSON.stringify(diff, censor(diff), 2)}`);
         let payload = [
             {
                 topic: "urn:vu-isis:gme/brass/immortals",
@@ -130,15 +180,23 @@ async function deliverCommits(
                 console.log(`failed sending the payload because ${err}`);
             });
     }
+
     // processing
     if (collection.length > 0) {
+        try {
+            await naturalHelper(collection[0]);
+        } catch (err) {
+            console.log(`natural helper failed ${err}`);
+            // return Promise.reject(`natural helper failed: ${collection[0]}`);
+        }
 
-        await naturalHelper(collection[0]);
         for (let ix = 1; ix < collection.length; ++ix) {
             try {
+                console.log(`preparing to run normal helper`);
                 await normalHelper(collection[ix - 1], collection[ix], ix);
             } catch (err) {
-                console.log(`problem with commit ${ix}`);
+                console.log(`problem with commit ${ix}: ${err}`);
+                // return Promise.reject(`normal helper failed ${ix}: ${JSON.stringify(collection[ix], censor(collection[ix]), 2)}`);
             }
         }
     }
@@ -166,7 +224,7 @@ function loadObjectAsync(project: GmeClasses.Project,
     });
 }
 function loadRootAsync(core: GmeClasses.Core,
-    commit: GmeStorage.CommitHash) {
+    commit: GmeStorage.CommitHash): Promise<Core.DataObject> {
     return new Promise<Core.DataObject>((resolve, reject) => {
         core.loadRoot(commit,
             (err: Error, result: Core.DataObject): void => {
@@ -188,13 +246,14 @@ async function loadCommit(core: GmeClasses.Core,
     branch: GmeCommon.Name): Promise<ResultTree> {
     try {
         let commitObj = await loadObjectAsync(project, commit);
-        console.log(`load commit ${commit}`);
         let root = await loadRootAsync(core, commitObj.root);
-        return new ResultTree(root, branch, commit);
+        let tree = new ResultTree(root, branch, commit);
+        console.log(`commit loaded ${JSON.stringify(tree, censor(tree), 2)}`);
+        return tree;
     } catch (err) {
         console.log(`load commit ${commit} failed: ${err}`);
     }
-    return new ResultTree(null, "", "");
+    return new ResultTree(null, "broken", commit);
 }
 
 /**
@@ -204,9 +263,10 @@ async function loadCommit(core: GmeClasses.Core,
 async function getRootCommit(
     core: GmeClasses.Core,
     project: GmeClasses.Project,
-    commit: GmeStorage.CommitHash) {
+    commit: GmeStorage.CommitHash): Promise<ResultTree> {
 
     if (GmeRegExp.HASH.test(commit)) {
+        console.log(`get root commit ${commit}`);
         return await loadCommit(core, project, commit, "");
     }
     // the seminal case is to load the latest commit of a branch
@@ -243,7 +303,6 @@ async function processCommits(config: any,
     let branch = config["branch"];
 
     let commitCollection = await getCommits(project, branch, lastKnownCommit);
-    //   .then((commitCollection) => {
     commitCollection.sort(
         (lhs: GmeStorage.CommitObject,
             rhs: GmeStorage.CommitObject): number => {
@@ -253,12 +312,13 @@ async function processCommits(config: any,
         });
     return deliverCommits(core, project,
         sender, commitCollection);
+
 }
 
 function dummySender(_config: any): Promise<Sender> {
     return new Promise<Sender>((resolve) => {
         resolve((req: Array<ProduceRequest>): Promise<any> => {
-            console.log(`the request ${JSON.stringify(req, null, 2)}`);
+            console.log(`the request ${JSON.stringify(req, censor(req), 2)}`);
             return Promise.resolve("dummy");
         });
     });
@@ -348,10 +408,16 @@ class StreamPlugin extends PluginBase {
         /**
          * publish the latest commits.
          */
-        await processCommits(this.configDictionary,
-            this.core, this.project, sender);
+        try {
+            await processCommits(this.configDictionary,
+                this.core, this.project, sender);
 
-        mainHandler(null, this.result);
+            console.log(`processing complete`);
+            mainHandler(null, this.result);
+        } catch (err) {
+            console.log(`processing failed`);
+            mainHandler(err, this.result);
+        }
     }
 }
 

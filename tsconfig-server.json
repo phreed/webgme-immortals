@@ -1,61 +1,7 @@
 {
-  "atom": {
-    "formatOnSave": true
-  },
-  "compileOnSave": true,
-  "buildOnSave": true,
-  "compilerOptions": {
-    "types": [
-      "node",
-      "jquery",
-      "webgme"
-    ],
+  "extends": "./tsconfig",
+  
     "outDir": "./dist-server",
-    "lib": [
-      "dom",
-      "es2015.promise",
-      "es5",
-      "es2015.core",
-      "es2015.collection"
-    ],
-    "sourceMap": true,
-    "declaration": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noResolve": false,
-    "strictNullChecks": true,
+   
     "module": "umd",
-    "moduleResolution": "node",
-    "removeComments": false,
-    "target": "es6",
-    "watch": false,
-    "pretty": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "rootDirs": [
-      "./src/ts",
-      "./dist-server"
-    ],
-    "paths": {
-      "*": [
-        "./src/ts/*"
-      ]
-    }
-  },
-  "files": [
-    "./src/ts/app_bootstrap.ts"
-  ],
-  "include": [
-    "./src/ts/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "bower_components",
-    "jspm_packages",
-    "**/*.spec.ts",
-    ".vscode"
-  ]
 }

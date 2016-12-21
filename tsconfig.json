@@ -24,6 +24,7 @@
     "noUnusedParameters": true,
     "noResolve": false,
     "strictNullChecks": true,
+    "alwaysStrict": true,
     "module": "amd",
     "moduleResolution": "node",
     "removeComments": false,
