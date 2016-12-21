@@ -305,7 +305,14 @@ async function processCommits(config: any,
      */
     let branch = config["branch"];
 
-    let commitCollection = await getCommits(project, branch, lastKnownCommit);
+    let commitCollection: Array<GmeStorage.CommitObject> = [];
+    switch (config.grainSize) {
+        case "fine":
+            break;
+        case "coarse":
+        default:
+            commitCollection = await getCommits(project, branch, lastKnownCommit);
+    }
     commitCollection.sort(
         (lhs: GmeStorage.CommitObject,
             rhs: GmeStorage.CommitObject): number => {

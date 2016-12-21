@@ -37,7 +37,8 @@
     },
     {
       "name": "deliveryUrl",
-      "displayName": "Host IP address or name: for stream processing server.",
+      "displayName": "Delivery URL",
+      "discription": "Host IP address or name: for stream processing server.",
       "regex": "^[0-9a-zA-Z:\/\\.-_]+$",
       "regexMessage": "Name can only contain digits, latin characters, slash, dot, hyphen and underscore!",
       "description": "What is the ip address or name of the zookeeper host.",
@@ -47,11 +48,23 @@
     },
     {
       "name": "branch",
-      "displayName": "extract model indicated by branch",
-      "description": "Model extraction.",
+      "displayName": "Branch",
+      "description": "extract model indicated by branch",
       "value": "master",
       "valueType": "string",
       "readOnly": false
+    },
+    {
+      "name": "grainSize",
+      "displayName": "Grain Size",
+      "description": "how fine should the commits be?",
+      "readOnly": false,
+      "value": "coarse",
+      "valueType": "string",
+      "valueItems": [
+        "coarse",
+        "fine"
+      ]
     }
   ]
 }
