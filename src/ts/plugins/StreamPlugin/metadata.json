@@ -47,6 +47,18 @@
       "readOnly": false
     },
     {
+      "name": "deliveryType",
+      "displayName": "Delivery Type",
+      "description": "Which delivery mechanism? kafka or dummy?",
+      "readOnly": false,
+      "value": "kafka:001",
+      "valueType": "string",
+      "valueItems": [
+        "kafka:001",
+        "dummy"
+      ]
+    },
+    {
       "name": "branch",
       "displayName": "Branch",
       "description": "extract model indicated by branch",

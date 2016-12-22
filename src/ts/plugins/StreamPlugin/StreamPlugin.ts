@@ -136,7 +136,7 @@ async function deliverCommits(
         let diff = await core.generateTreeDiff(nullCommit, postCommit.root);
         let payload = [
             {
-                topic: "urn:vu-isis:gme/brass/immortals",
+                topic: "vu-isis_gme_brass_immortals",
                 project: project.projectId,
                 commit: prime,
                 messages: new KeyedMessage("payload", diff),
