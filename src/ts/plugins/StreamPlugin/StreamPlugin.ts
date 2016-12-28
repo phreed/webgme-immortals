@@ -13,7 +13,7 @@
  * and constructed components.
  */
 
-// import _ = require("underscore");
+import _ = require("underscore");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
 import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
@@ -153,25 +153,25 @@ async function deliverCommits(
     async function normalHelper(_previous: GmeStorage.CommitObject,
         current: GmeStorage.CommitObject,
         _ix: number): Promise<void> {
-        console.log(`normal helper:`);
-        console.log(` ix: ${_ix}, \n`
-            + `prev: ${JSON.stringify(_previous, replacer(_previous, {}), 2)}, \n`
-            + `curr: ${JSON.stringify(current, replacer(current, {}), 2)}`);
+        // console.log(`normal helper:`);
+        // console.log(` ix: ${_ix}, \n`
+        //    + `prev: ${JSON.stringify(_previous, replacer(_previous, {}), 2)}, \n`
+        //    + `curr: ${JSON.stringify(current, replacer(current, {}), 2)}`);
 
         let preCommit = await getRootCommit(core, project, current._id);
         if (preCommit.root === null) {
             return Promise.reject(`problem with pre-commit root ${preCommit.root}`);
         }
-        console.log(`pre:`);
+        // console.log(`pre:`);
 
         let postCommit = await getRootCommit(core, project, current.parents[0]);
         if (postCommit.root === null) {
             return Promise.reject(`problem with post-commit root ${postCommit.root}`);
         }
-        console.log(`post:`);
+        // console.log(`post:`);
 
         let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
-        console.log(`diff:`);
+        // console.log(`diff:`);
         let payload = [
             {
                 topic: "urn:vu-isis:gme/brass/immortals",
@@ -220,7 +220,7 @@ function loadObjectAsync(project: GmeClasses.Project,
                 if (err !== null) {
                     reject(`null load object for ${commit}`);
                 } else {
-                    console.log(`load object key ${commit}`);
+                    // console.log(`load object key ${commit}`);
                     resolve(lo);
                 }
             });
@@ -234,7 +234,7 @@ function loadRootAsync(core: GmeClasses.Core,
                 if (err !== null) {
                     reject(`null load root for ${commit}`);
                 } else {
-                    console.log(`load root key ${commit}`);
+                    // console.log(`load root key ${commit}`);
                     resolve(result);
                 }
             });
@@ -269,7 +269,7 @@ async function getRootCommit(
     commit: GmeStorage.CommitHash): Promise<ResultTree> {
 
     if (GmeRegExp.HASH.test(commit)) {
-        console.log(`get root commit ${commit}`);
+        // console.log(`get root commit ${commit}`);
         return await loadCommit(core, project, commit, "");
     }
     // the seminal case is to load the latest commit of a branch
@@ -325,52 +325,49 @@ async function processCommits(config: any,
 
 }
 
-function dummySender(_config: any): Promise<Sender> {
-    return new Promise<Sender>((resolve) => {
-        resolve((req: Array<ProduceRequest>): Promise<any> => {
-            console.log(`the request ${JSON.stringify(req, replacer(req, {}), 2)}`);
-            return Promise.resolve("dummy");
+function dummySender(_config: any): Sender {
+    return (payloads: Array<ProduceRequest>): Promise<Sender> => {
+        return new Promise<Sender>((resolve, _reject) => {
+            console.log(`dummy: ${JSON.stringify(payloads, replacer(payloads, {}), 2)}`);
+            resolve();
         });
-    });
-}
+    };
+};
+
 
 /**
  * Make a sender for a kafka stream.
+ * This returns a sender function that sends payload.
  */
-async function kafkaSender(configDictionary: any): Promise<Sender> {
+function kafkaSender(configDictionary: any): Sender {
+   
 
-    let connStr = configDictionary["deliveryUrl"];
-    let client = await new Client(connStr, "kafka-node-client");
-
+    return (payloads: Array<ProduceRequest>): Promise<Sender> => {
+         let connStr = configDictionary["deliveryUrl"];
+    console.log(`connecting to: ${connStr}`);
+    let client = new Client(connStr, "kafka-node-client");
     let producer = new Producer(client);
-
-    producer.on("error", () => {
-        return Promise.reject(new Error("no payload produced"));
-    });
-
-    await producer.on("ready", () => {
-        return new Promise((resolve, _reject) => {
-            resolve();
-        });
-    });
-
-    /**
-     * promisify producer.send
-     */
-    return (payloads) => {
-        return new Promise((resolve, reject) => {
-            producer.send(payloads, (err, data) => {
-                if (err === null) {
-                    resolve(data);
-                } else {
-                    reject(err);
-                }
+        return new Promise<Sender>((resolve, reject) => {
+            producer.on("error", (err: any) => {
+                reject(`could not ${err}`);
             });
-        });
+            producer.on("ready", () => {
+                producer.send(payloads, (err, data) => {
+                    if (_.isEmpty(err) || _.isUndefined(err)) {
+                        console.log(`data sent: ${JSON.stringify(data, null, 2)}`);
+                        resolve(data);
+                    } else {
+                        reject(`error sending [[${typeof err} : ${err}]]`);
+                    }
+                });
+            });
+        })
     };
 }
 
-
+/**
+ * The class
+ */
 class StreamPlugin extends PluginBase {
 
     pluginMetadata: any;
@@ -410,9 +407,11 @@ class StreamPlugin extends PluginBase {
         */
         switch (this.configDictionary["deliveryType"]) {
             case "kafka:001":
+                console.log(`making a kafka sender`);
                 sender = await kafkaSender(this.configDictionary);
                 break;
             default:
+                console.log(`making a dummy sender`);
                 sender = await dummySender(this.configDictionary);
         }
         /**
