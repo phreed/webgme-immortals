@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [       
         {
-            "type": "node",
+            "type": "node2",
             "request": "launch",
             "name": "Launch webGME",
             "program": "${workspaceRoot}/dist-client/main/app_bootstrap.js",
@@ -14,7 +14,7 @@
             "sourceMaps": true
         },
         {
-            "type": "node",
+            "type": "node2",
             "request": "launch",
             "name": "Launch server",
             "program": "${workspaceRoot}/node_modules/webgme/src/bin/start_server.js",
@@ -23,7 +23,7 @@
             "sourceMaps": true
         },
         {
-            "type": "node",
+            "type": "node2",
             "request": "launch",
             "name": "Launch Stream Plugin",
             "stopOnEntry": false,
@@ -46,12 +46,27 @@
             }
         },
         {
-            "type": "node",
+            "type": "node2",
             "request": "attach",
             "name": "Attach to Process",
             "port": 5858,
             "outFiles": [],
             "sourceMaps": true
+        },
+         {
+            "name": "Attach",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9222,
+            "url": "<url of the open browser tab to connect to>"
+        },
+        {
+            "name": "Attach to url with files served from ./out",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9222,
+            "url": "<url of the open browser tab to connect to>",
+            "webRoot": "${workspaceRoot}/out"
         }
     ]
 }

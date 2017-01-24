@@ -1,3 +1,4 @@
+
 /**
  * A plugin that inherits from the PluginBase.
  * To see source code documentation about available
@@ -12,7 +13,7 @@
  * dynamic information about the system environment
  * and constructed components.
  */
-
+// import { exec } from "child_process";
 import _ = require("underscore");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
@@ -37,19 +38,19 @@ function replacer(root: any, options: { maxLevel?: number, maxNodes?: number }) 
         let visitedRef: number = 0;
         let visitedFlag = false;
         visited.forEach((obj: any, ix: number) => {
-            if (obj !== value) return;
+            if (obj !== value) { return; }
             visitedFlag = true;
             visitedRef = ix;
         });
         // handle root element
-        if (key == "") {
+        if (key === "") {
             visited.push(root);
             visitedKeys.push("root");
             return value;
         }
-        if (visitedFlag && typeof (value) == "object") {
+        if (visitedFlag && typeof (value) === "object") {
             let seen = visitedKeys[visitedRef];
-            if (seen == "root") {
+            if (seen === "root") {
                 return `xvdf: pointer to root`;
             }
             if (!!value && !!value.constructor) {
@@ -61,7 +62,7 @@ function replacer(root: any, options: { maxLevel?: number, maxNodes?: number }) 
         visited.push(value);
         visitedKeys.push(qualKey);
         return value;
-    }
+    };
 }
 
 interface Sender {
@@ -114,6 +115,7 @@ async function getCommits(project: GmeClasses.Project,
     }
     return Promise.reject(new Error(`could not get commits`));
 }
+
 
 /**
  * generate the commit and send it as indicated by the sender.
@@ -340,13 +342,11 @@ function dummySender(_config: any): Sender {
  * This returns a sender function that sends payload.
  */
 function kafkaSender(configDictionary: any): Sender {
-   
-
     return (payloads: Array<ProduceRequest>): Promise<Sender> => {
-         let connStr = configDictionary["deliveryUrl"];
-    console.log(`connecting to: ${connStr}`);
-    let client = new Client(connStr, "kafka-node-client");
-    let producer = new Producer(client);
+        let connStr = configDictionary["deliveryUrl"];
+        console.log(`connecting to: ${connStr}`);
+        let client = new Client(connStr, "kafka-node-client");
+        let producer = new Producer(client);
         return new Promise<Sender>((resolve, reject) => {
             producer.on("error", (err: any) => {
                 reject(`could not ${err}`);
@@ -361,7 +361,7 @@ function kafkaSender(configDictionary: any): Sender {
                     }
                 });
             });
-        })
+        });
     };
 }
 
