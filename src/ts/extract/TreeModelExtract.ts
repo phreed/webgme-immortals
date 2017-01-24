@@ -16,7 +16,7 @@ const CONTAINMENT_PREFIX = "";
      * @param {Core.Callback} mainHandler [description]
      */
 export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
-    _rootNode: Core.Node, _metaNode: Node): GmeCommon.Dictionary<any> {
+    _rootNode: Core.Node, _metaNode: Node): Promise<Map<string, string>> {
     // let config: GmeConfig.GmeConfig = sponsor.getCurrentConfig();
     // let configDictionary: Core.Dictionary = config;
 
@@ -26,9 +26,8 @@ export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
     let fcoName: string = attrToString(core.getAttribute(core.getFCO(sponsor.rootNode), "name"));
     let languageName: string = attrToString(core.getAttribute(sponsor.rootNode, "name"));
     sponsor.logger.info(`get model tree : ${languageName}:${fcoName}`);
-    let rootEntry: GmeCommon.Dictionary<string> = {
-        "version": "0.0.1"
-    };
+    let rootEntry = new Map<string, string>();
+    rootEntry.set("version", "0.0.1");
     /**
      * A dictionary: look up nodes based on their path name.
      */

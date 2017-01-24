@@ -17,12 +17,8 @@ import { attrToString, pathToString } from "utility/GmeString";
 import { PruningFlag } from "serializer/filters";
 import * as nt from "utility/NodeType";
 
-const BLANK = "";
-const NULL_OBJECT = "_OBJECT";
-const NULL_GUID = "00000000-0000-0000-0000-000000000000";
-
 export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
-    _rootNode: Core.Node, _metaNode: Node): GmeCommon.Dictionary<any> {
+    _rootNode: Core.Node, _metaNode: Node): Promise<Map<string, nt.Subject>> {
 
     // let config = sponsor.getCurrentConfig();
     // let configDictionary: any = config;
@@ -31,34 +27,14 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
     let languageName: string = attrToString(core.getAttribute(sponsor.rootNode, "name"));
     sponsor.logger.info(`get model edges : ${languageName} : ${fcoName}`);
 
-    let rootEntry
-        = <nt.Subject>{
-            "version": "0.0.1",
-            "pointers": {}, "inv_pointers": {},
-            "sets": {}, "inv_sets": {},
-            "base": {
-                "name": NULL_OBJECT,
-                "guid": NULL_GUID,
-            },
-            "name": {
-                "name": NULL_OBJECT, "uriExt": BLANK, "uriPrefix": BLANK,
-                "uriName": BLANK, "uriGen": BLANK
-            },
-            "type": {
-                "domain": languageName,
-                "meta": NULL_GUID, "root": NULL_GUID, "base": NULL_GUID, "parent": NULL_GUID
-            },
-            "attributes": {},
-            "children": {},
-            "prune": PruningFlag.None,
-            "guid": NULL_GUID
-        };
-    let nodeGuidMap: GmeCommon.Dictionary<nt.Subject> = {
-        [NULL_GUID]: rootEntry
-    };
+    let rootEntry = nt.Subject.makeRoot(languageName);
+
+    let nodeGuidMap = new Map<string, nt.Subject>();
+    nodeGuidMap.set(nt.NULL_GUID, rootEntry);
 
     sponsor.logger.info("A dictionary: look up nodes based on their path name.");
-    let path2entry: GmeCommon.Dictionary<nt.Subject> = { [BLANK]: rootEntry };
+    let path2entry = new Map<string, nt.Subject>();
+    path2entry.set(nt.BLANK, rootEntry);
 
     /**
      * A filter mechanism to effectively eliminate containment branches.
@@ -89,16 +65,25 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
             if (typeof nodeNameAttr !== "string") { return; }
 
             // sponsor.logger.info(`visitor function with ${nodeNameAttr}`);
-
-            let baseNodeGuid: string = core.getGuid(core.getBase(node));
-            let baseNodeTypeGuid: string = core.getGuid(core.getBaseType(node));
-            let baseNodeRootGuid: string = core.getGuid(core.getBaseRoot(node));
+            let baseNode = core.getBase(node);
+            let baseNodeGuid: string;
+            let baseNodeTypeGuid: string;
+            let baseNodeRootGuid: string;
+            if (baseNode === null) {
+                baseNodeGuid = "NULL";
+                baseNodeTypeGuid = "NULL";
+                baseNodeRootGuid = "NULL";
+            } else {
+                baseNodeGuid = core.getGuid(baseNode);
+                baseNodeTypeGuid = core.getGuid(core.getBaseType(node));
+                baseNodeRootGuid = core.getGuid(core.getBaseRoot(node));
+            }
 
             // set the nodes sourceGuid
             let sourceGuid: string = core.getGuid(node);
             let sourceEntry: nt.Subject
                 = Object.assign({},
-                    nodeGuidMap[sourceGuid],
+                    nodeGuidMap.get(sourceGuid),
                     <nt.Subject>{
                         "guid": sourceGuid,
                         "name": {},
@@ -111,28 +96,28 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                         "pointers": {}, "inv_pointers": {},
                         "sets": {}, "inv_sets": {},
                         "base": {
-                            "name": NULL_OBJECT,
-                            "guid": NULL_GUID
+                            "name": nt.NULL_OBJECT,
+                            "guid": nt.NULL_GUID
                         },
                         "attributes": {},
                         "children": {},
                         "prune": PruningFlag.None
                     });
-            nodeGuidMap[sourceGuid] = sourceEntry;
+            nodeGuidMap.set(sourceGuid, sourceEntry);
 
             let metaName: string;
             let metaNodeGuid: string;
             if (node === sponsor.rootNode) {
                 metaName = ":Root:";
                 sourceEntry.type = {
-                    "domain": BLANK,
+                    "domain": nt.BLANK,
                     "name": "Root",
-                    "meta": NULL_GUID,
-                    "root": NULL_GUID,
-                    "base": NULL_GUID,
-                    "parent": NULL_GUID
+                    "meta": nt.NULL_GUID,
+                    "root": nt.NULL_GUID,
+                    "base": nt.NULL_GUID,
+                    "parent": nt.NULL_GUID
                 };
-                metaNodeGuid = NULL_GUID;
+                metaNodeGuid = nt.NULL_GUID;
             } else if (core.isLibraryRoot(node)) {
                 metaName = ":LibraryRoot:";
                 metaNodeGuid = core.getGuid(node);
@@ -150,7 +135,7 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
             let containRel = metaName;
             sourceEntry.prune = (prunedRootPath === null) ? PruningFlag.None : PruningFlag.Library;
 
-            path2entry[nodePath] = sourceEntry;
+            path2entry.set(nodePath, sourceEntry);
 
             // set the parent to know its child the root node has no parent
             // if a non-pruned item has a pruned parent then bring it in.
@@ -161,7 +146,11 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 }
                 let parentPath: string = core.getPath(parent);
 
-                let parentData: nt.Subject = path2entry[parentPath];
+                let parentData = path2entry.get(parentPath);
+                if (typeof parentData === "undefined") {
+                    console.log(`problem with parentPath ${parentPath}`);
+                    return;
+                }
                 let children = parentData.children;
                 children[containRel] = children[containRel] || [];
                 // children[containRel].push(sourceEntry);
@@ -221,10 +210,10 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                                 let targetMetaNode = core.getBaseType(targetNode);
                                 let targetMetaName = core.getAttribute(targetMetaNode, "name");
 
-                                let targetEntry = nodeGuidMap[targetGuid];
+                                let targetEntry = nodeGuidMap.get(targetGuid);
                                 if (targetEntry === undefined) {
-                                    targetEntry = new nt.Subject(targetGuid);
-                                    nodeGuidMap[targetGuid] = targetEntry;
+                                    targetEntry = nt.Subject.makeIdentity(targetGuid);
+                                    nodeGuidMap.set(targetGuid, targetEntry);
                                 }
                                 if (typeof targetMetaName === "string") {
                                     sourceEntry.pointers[ptrName] = {
@@ -258,10 +247,10 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                                 let sets = sourceEntry.sets;
                                 let targetMetaNode = core.getBaseType(targetNode);
 
-                                let targetEntry = nodeGuidMap[targetGuid];
+                                let targetEntry = nodeGuidMap.get(targetGuid);
                                 if (targetEntry === undefined) {
-                                    targetEntry = new nt.Subject(targetGuid);
-                                    nodeGuidMap[targetGuid] = targetEntry;
+                                    targetEntry = nt.Subject.makeIdentity(targetGuid);
+                                    nodeGuidMap.set(targetGuid, targetEntry);
                                 }
                                 let invSets = targetEntry.inv_sets;
                                 let targetSet = invSets[setName];

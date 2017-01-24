@@ -18,10 +18,10 @@ require("amdefine/intercept");
 function executePluginAsync(manager: any,
     name: string, config: any, context: any): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-        manager.executePlugin(name, config, context, 
+        manager.executePlugin(name, config, context,
             (err: Error, res: any) => {
                 if (err !== null) {
-                    reject(`error executing plugin ${name}`);
+                    reject(`error executing plugin ${name} ${err.stack}`);
                 } else {
                     console.log(`successfully executed plugin ${name}`);
                     resolve(res);
@@ -165,10 +165,10 @@ async function main() {
     await Promise.all([storage.closeDatabase(), gmeAuth.unload()]);
 
     if (pluginResult["success"] && pluginResult.success === true) {
-        console.info(`execution was successful: ${pluginResult}`);
+        console.info(`execution was successful: ${JSON.stringify(pluginResult, null, 2)}`);
         process.exit(0);
     } else {
-        console.error("execution failed:", JSON.stringify(pluginResult, null, 2));
+        console.error(`execution failed: ${JSON.stringify(pluginResult, null, 2)}`);
         process.exit(1);
     }
 }

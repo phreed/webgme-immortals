@@ -1,3 +1,4 @@
+import { NULL_GUID } from "../utility/NodeType";
 
 import _ = require("underscore");
 import { Writer, N3Writer, Util } from "n3";
@@ -49,7 +50,7 @@ function objectifyName(nodeName: nt.NameType): string {
     return setDefault(nodeName.name, NA);
 }
 
-function objectifyType(nodeType: nt.TypeType, dict: any): string {
+function objectifyType(nodeType: nt.TypeType, dict: Map<string, nt.Subject>): string {
     // console.log("objectify type: ");
     if (nodeType === undefined) {
         return `${NS2}/cp#undefined`;
@@ -65,21 +66,24 @@ function objectifyType(nodeType: nt.TypeType, dict: any): string {
     return objectifyByGuid(metaNode, dict);
 }
 
-function objectifyBase(nodeBase: nt.NGuidType, dict: any): string {
+function objectifyBase(nodeBase: nt.NGuidType, dict: Map<string, nt.Subject>): string {
     let guid = nodeBase.guid;
     // console.log(`objectify base: ${guid}`);
     return objectifyByGuid(guid, dict);
 }
 
-function objectifyPointer(nodePointer: nt.NGuidType, dict: any): string {
+function objectifyPointer(nodePointer: nt.NGuidType, dict: Map<string, nt.Subject>): string {
     let guid = nodePointer.guid;
     // console.log(`objectify pointer: ${guid}`);
     return objectifyByGuid(guid, dict);
 }
 
-function objectifyByGuid(nodeGuid: string, dict: any): string {
+function objectifyByGuid(nodeGuid: string, dict: Map<string, nt.Subject>): string {
     // console.log(`object by guid: ${nodeGuid}`);
-    let node = dict[nodeGuid];
+    let node = dict.get(nodeGuid);
+    if (typeof node === "undefined") {
+        return NULL_GUID;
+    }
     let fnGuid: FnGuid = isClass(node) ? noGuid : appendGuid;
     return getRdfNameForNode(node, fnGuid, acase.bactrian);
 }
@@ -244,23 +248,23 @@ export class RdfNodeSerializer {
     private pruningCondition: PruningCondition;
     private writer: N3Writer;
     public ttlStr: string = "none produced";
-    private nodeDict: { [guid: string]: nt.Subject };
+    private nodeDict: Map<string, nt.Subject>;
 
-    constructor(dict: GmeCommon.Dictionary<any>, pruningCondition: PruningCondition) {
+    constructor(dict: Map<string, nt.Subject>, pruningCondition: PruningCondition) {
         this.nodeDict = dict;
-        dict[NA] = {
-            "name": {
-                "uriGen": "semantic",
-                "uriPrefix": NS2,
-                "uriExt": "",
-                "uriName": "not-available",
-                "name": "na"
-            },
-            "guid": NA,
-            "base": {
-                "guid": NA
-            }
+        let subject = nt.Subject.makeIdentity(NA);
+        subject.name = {
+            "uriGen": "semantic",
+            "uriPrefix": NS2,
+            "uriExt": "",
+            "uriName": "not-available",
+            "name": "na"
         };
+        subject.base = {
+            "guid": NA,
+            "name": nt.NULL_NAME
+        };
+        this.nodeDict.set(NA, subject);
 
         this.pruningCondition = pruningCondition;
 
@@ -414,7 +418,11 @@ export class RdfNodeSerializer {
                 } else if (nt.isNGuidType(member)) {
                     let memberGuid = member.guid;
                     // let memberName = member.name;
-                    let objective = this.nodeDict[memberGuid];
+                    let objective = this.nodeDict.get(memberGuid);
+                    if (typeof objective === "undefined") {
+                        return;
+                    }
+
                     let fnGuid = isClass(objective) ? noGuid : appendGuid;
                     let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
                     if (isAtom(objective)) {
@@ -441,7 +449,10 @@ export class RdfNodeSerializer {
             // console.log(`guids: ${child.length}`);
             child.forEach((guid) => {
                 // console.log(`guid: ${guid}`);
-                let objective = this.nodeDict[guid];
+                let objective = this.nodeDict.get(guid);
+                if (typeof objective === "undefined") {
+                    return;
+                }
                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
                 let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
                 let objIsAtom = isAtom(objective);
@@ -478,7 +489,10 @@ export class RdfNodeSerializer {
                         let valueRawArray = sets[key];
                         valueRawArray.forEach((value) => {
                             if (nt.isNGuidType(value)) {
-                                let objective = this.nodeDict[value.guid];
+                                let objective = this.nodeDict.get(value.guid);
+                                if (typeof objective === "undefined") {
+                                    return;
+                                }
                                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
                                 let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
                                 // console.log(`collection member: s:${subjectName} p:${predicateName} o:${objectName}`);
@@ -513,7 +527,7 @@ export class RdfNodeSerializer {
 
     visitNode = (node: nlv.ListNode): void => {
         let subject = <nt.Subject>node;
-        // console.log(`visiting a node: ${Object.keys(node)}`);
+        console.log(`visiting a node: ${Object.keys(node)}`);
         this.write(subject);
     }
 }

@@ -73,12 +73,12 @@ class SerializerClientPlugin extends PluginBase {
                 }
 
             })
-            .then((jsonObject) => {
+            .then((nodeDict) => {
                 switch (configDictionary["syntacticVersion"]) {
                     case "json:1.0.0":
                         this.sendNotification("serializing json");
 
-                        let jsonStr = JSON.stringify(jsonObject, null, 4);
+                        let jsonStr = JSON.stringify(nodeDict, null, 4);
                         if (jsonStr == null) {
                             return Promise.reject(new Error("no payload produced"));
                         }
@@ -102,8 +102,9 @@ class SerializerClientPlugin extends PluginBase {
                                 pruningCondition.flag = PruningFlag.None;
                                 pruningCondition.cond = false;
                         }
-                        let accumulator = new RdfNodeSerializer(jsonObject, pruningCondition);
-                        nlv.visit(jsonObject, accumulator.visitNode);
+
+                        let accumulator = new RdfNodeSerializer(nodeDict, pruningCondition);
+                        nlv.visit(nodeDict, accumulator.visitNode);
                         accumulator.complete();
                         return accumulator.ttlStr;
 
