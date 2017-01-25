@@ -4,7 +4,6 @@
  * properties and methods visit %host%/docs/source/PluginBase.html.
  */
 
-import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 
 import MetaDataStr = require("text!plugins/SerializerClientPlugin/metadata.json");
@@ -14,11 +13,82 @@ import { RdfNodeSerializer } from "serializer/RdfTtlSerializer";
 import { PruningCondition, PruningFlag } from "serializer/filters";
 
 import { getEdgesModel } from "extract/EdgesModelExtract";
-import { getEdgesSchema } from "extract/EdgesSchemaExtract";
-import { getTreeModel } from "extract/TreeModelExtract";
-import { getTreeSchema } from "extract/TreeSchemaExtract";
+// import { getEdgesSchema } from "extract/EdgesSchemaExtract";
+// import { getTreeModel } from "extract/TreeModelExtract";
+// import { getTreeSchema } from "extract/TreeSchemaExtract";
 
 import { deliverArtifact } from "delivery/ArtifactDelivery";
+
+async function serialize(that: SerializerClientPlugin, configDictionary: any): Promise<GmeClasses.Result> {
+    /**
+    Push the current data-model into a JSON structure.
+    */
+    let nodeDict: Map<string, any>;
+
+    switch (configDictionary["schematicVersion"]) {
+        /*
+        case "schema-tree:1.0.0":
+            that.sendNotification("get schema tree");
+            nodeDict = await getTreeSchema(this, this.core, this.rootNode, this.META);
+        */
+        /*
+        case "schema-flat:1.0.0":
+            this.sendNotification("get schema edges");
+            return getEdgesSchema(this, this.core, this.rootNode, this.META);
+        */
+        /*
+        case "model-tree:1.0.0":
+            this.sendNotification("get model tree");
+            return getTreeModel(this, this.core, this.rootNode, this.META);
+        */
+        case "model-flat:1.0.0":
+            that.sendNotification("get model edges");
+            nodeDict = await getEdgesModel(that, that.core, that.rootNode, that.META);
+            break;
+        default:
+            return Promise.reject(new Error("no serializer matches typed version"));
+    }
+    let payload: string = "";
+    switch (configDictionary["syntacticVersion"]) {
+        case "json:1.0.0":
+            that.sendNotification("serializing json");
+
+            let jsonStr = await JSON.stringify(nodeDict, null, 4);
+            if (jsonStr == null) {
+                return Promise.reject(new Error("no payload produced"));
+            }
+            break;
+
+        case "ttl:1.0.0":
+            that.sendNotification("serializing ttl");
+
+            let pruningCondition: PruningCondition = new PruningCondition();
+            switch (configDictionary["filter"]) {
+                case "library":
+                    pruningCondition.flag = PruningFlag.Library;
+                    pruningCondition.cond = true;
+                    break;
+                case "book":
+                    pruningCondition.flag = PruningFlag.Library;
+                    pruningCondition.cond = false;
+                    break;
+                case "all":
+                default:
+                    pruningCondition.flag = PruningFlag.None;
+                    pruningCondition.cond = false;
+            }
+
+            let accumulator = new RdfNodeSerializer(nodeDict, pruningCondition);
+            nlv.visitMap(nodeDict, accumulator.visitNode);
+            await accumulator.complete();
+            payload = accumulator.ttlStr;
+            break;
+        default:
+            return Promise.reject(new Error("no output writer matches typed version"));
+    }
+    that.sendNotification("deliver as file on server");
+    return await deliverArtifact(that, configDictionary, payload);
+}
 
 class SerializerClientPlugin extends PluginBase {
     pluginMetadata: any;
@@ -37,96 +107,27 @@ class SerializerClientPlugin extends PluginBase {
     *
     * @param {Core.Callback} mainHandler [description]
     */
-    public main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): void {
-        let config = this.getCurrentConfig();
-        if (config === null) {
+    public async main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): Promise<void> {
+        let configDict = this.getCurrentConfig();
+        if (configDict === null) {
             this.sendNotification("The streaming plugin has failed: no configuration");
             mainHandler(null, this.result);
         }
         this.sendNotification(`This streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
-        let configDictionary: any = config;
+        let configDictionary: any = configDict;
+        try {
+            await serialize(this, configDictionary);
 
-        /**
-        Push the current data-model into a JSON structure.
-        */
-        Promise
-            .try(() => {
-                switch (configDictionary["schematicVersion"]) {
-                    case "schema-tree:1.0.0":
-                        this.sendNotification("get schema tree");
-                        return getTreeSchema(this, this.core, this.rootNode, this.META);
+            this.logger.info("successful completion");
+            this.sendNotification("The streaming plugin has completed successfully.");
+            mainHandler(null, this.result);
+        } catch (err) {
 
-                    case "schema-flat:1.0.0":
-                        this.sendNotification("get schema edges");
-                        return getEdgesSchema(this, this.core, this.rootNode, this.META);
-
-                    case "model-tree:1.0.0":
-                        this.sendNotification("get model tree");
-                        return getTreeModel(this, this.core, this.rootNode, this.META);
-
-                    case "model-flat:1.0.0":
-                        this.sendNotification("get model edges");
-                        return getEdgesModel(this, this.core, this.rootNode, this.META);
-
-                    default:
-                        return Promise.reject(new Error("no serializer matches typed version"));
-                }
-
-            })
-            .then((nodeDict) => {
-                switch (configDictionary["syntacticVersion"]) {
-                    case "json:1.0.0":
-                        this.sendNotification("serializing json");
-
-                        let jsonStr = JSON.stringify(nodeDict, null, 4);
-                        if (jsonStr == null) {
-                            return Promise.reject(new Error("no payload produced"));
-                        }
-                        return jsonStr;
-
-                    case "ttl:1.0.0":
-                        this.sendNotification("serializing ttl");
-
-                        let pruningCondition: PruningCondition = new PruningCondition();
-                        switch (configDictionary["filter"]) {
-                            case "library":
-                                pruningCondition.flag = PruningFlag.Library;
-                                pruningCondition.cond = true;
-                                break;
-                            case "book":
-                                pruningCondition.flag = PruningFlag.Library;
-                                pruningCondition.cond = false;
-                                break;
-                            case "all":
-                            default:
-                                pruningCondition.flag = PruningFlag.None;
-                                pruningCondition.cond = false;
-                        }
-
-                        let accumulator = new RdfNodeSerializer(nodeDict, pruningCondition);
-                        nlv.visit(nodeDict, accumulator.visitNode);
-                        accumulator.complete();
-                        return accumulator.ttlStr;
-
-                    default:
-                        return Promise.reject(new Error("no output writer matches typed version"));
-                }
-            })
-            .then((payload) => {
-                this.sendNotification("deliver as file on server");
-                return deliverArtifact(this, config, payload);
-            })
-            .then(() => {
-                this.logger.info("successful completion");
-                this.sendNotification("The streaming plugin has completed successfully.");
-                mainHandler(null, this.result);
-            })
-            .catch((err: Error) => {
-                this.logger.info(`failed: ${err.stack}`);
-                console.log(`streaming plugin failed: ${err.stack}`);
-                this.sendNotification(`The streaming plugin has failed: ${err.message}`);
-                mainHandler(err, this.result);
-            });
+            this.logger.info(`failed: ${err.stack}`);
+            console.log(`streaming plugin failed: ${err.stack}`);
+            this.sendNotification(`The streaming plugin has failed: ${err.message}`);
+            mainHandler(err, this.result);
+        };
     }
 }
 

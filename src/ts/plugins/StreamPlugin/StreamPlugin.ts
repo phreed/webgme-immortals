@@ -390,7 +390,7 @@ class StreamPlugin extends PluginBase {
     *
     * @param {Core.Callback} mainHandler [description]
     */
-    public async  main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>) {
+    public async main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>) {
         let config = this.getCurrentConfig();
         if (config === null) {
             this.sendNotification("The streaming plugin has failed: no configuration");
