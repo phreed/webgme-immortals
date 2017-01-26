@@ -45,7 +45,7 @@ interface JsonObject {
 */
 
 
-interface JsonModel {
+export interface JsonModel {
   format_version: string;
   generated_by: string;
   target_cytoscapejs_version: string;
@@ -67,8 +67,14 @@ interface JsonModel {
 export class CyjsSerializer {
   constructor() {
   }
+
+static exportMegaModelAsync(core: GmeClasses.Core, libraryRoot: any): Promise<JsonModel> {
+   return new Promise<JsonModel>((resolve, _reject) => {
+            CyjsSerializer.exportMegaModel(core, libraryRoot, resolve);
+        });
+}
   // export-global variables and their initialization
-  static exportMegaModel(core: GmeClasses.Core, libraryRoot: any, callback: any) {
+  static exportMegaModel(core: GmeClasses.Core, libraryRoot: any, callback: any): void {
 
     let jsonModel: JsonModel = {
       format_version: "1.0",

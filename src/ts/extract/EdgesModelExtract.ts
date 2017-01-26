@@ -10,14 +10,13 @@
 * @param {Core.Callback} mainHandler [description]
 */
 
-import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 import { attrToString, pathToString } from "utility/GmeString";
 
 import { PruningFlag } from "serializer/filters";
 import * as nt from "utility/NodeType";
 
-export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
+export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
     _rootNode: Core.Node, _metaNode: Node): Promise<Map<string, nt.Subject>> {
 
     // let config = sponsor.getCurrentConfig();
@@ -49,7 +48,7 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
      * The traverse function follows the containment tree.
      * @type {[type]}
      */
-    let visitFn = (node: Core.Node, done: GmeCommon.VoidFn): void => {
+    let visitFn = async (node: Core.Node, done: GmeCommon.VoidFn): Promise<void> => {
         try {
             let core = sponsor.core;
             let nodePath: string = core.getPath(node);
@@ -185,112 +184,101 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
             });
 
             // get pointers & inv_pointers
-            Promise
-                .try(() => {
-                    return core.getPointerNames(node);
-                })
-                .map((ptrName: string) => {
-                    let targetPathRaw = pathToString(core.getPointerPath(node, ptrName));
-                    if (typeof targetPathRaw !== "string") { return; }
+            let ptrNameList: string[] = /* await */ core.getPointerNames(node);
+            ptrNameList.forEach(async (ptrName, _index, _array) => {
 
-                    let targetPath: string = targetPathRaw;
-                    Promise
-                        .try(() => {
-                            return core.loadByPath(sponsor.rootNode, targetPath);
-                        })
-                        .then((targetNode: Core.Node) => {
-                            let targetGuid = core.getGuid(targetNode);
-                            if (ptrName === "base") {
-                                sourceEntry.base = {
-                                    name: fcoName,
-                                    guid: targetGuid
-                                };
-                            } else {
+                let targetPathRaw = pathToString(core.getPointerPath(node, ptrName));
+                if (typeof targetPathRaw !== "string") { return; }
 
-                                let targetMetaNode = core.getBaseType(targetNode);
-                                let targetMetaName = core.getAttribute(targetMetaNode, "name");
+                let targetPath: string = targetPathRaw;
+                let targetNode = await core.loadByPath(sponsor.rootNode, targetPath);
 
-                                let targetEntry = nodeGuidMap.get(targetGuid);
-                                if (targetEntry === undefined) {
-                                    targetEntry = nt.Subject.makeIdentity(targetGuid);
-                                    nodeGuidMap.set(targetGuid, targetEntry);
-                                }
-                                if (typeof targetMetaName === "string") {
-                                    sourceEntry.pointers[ptrName] = {
-                                        name: targetMetaName,
-                                        guid: targetGuid
-                                    };
-                                    targetEntry.inv_pointers[ptrName] =
-                                        new nt.NGuidType(targetMetaName, sourceGuid);
-                                }
-                            }
-                        });
-                });
+                let targetGuid = core.getGuid(targetNode);
+                if (ptrName === "base") {
+                    sourceEntry.base = {
+                        name: fcoName,
+                        guid: targetGuid
+                    };
+                } else {
+
+                    let targetMetaNode = core.getBaseType(targetNode);
+                    let targetMetaName = core.getAttribute(targetMetaNode, "name");
+
+                    let targetEntry = nodeGuidMap.get(targetGuid);
+                    if (targetEntry === undefined) {
+                        targetEntry = nt.Subject.makeIdentity(targetGuid);
+                        nodeGuidMap.set(targetGuid, targetEntry);
+                    }
+                    if (typeof targetMetaName === "string") {
+                        sourceEntry.pointers[ptrName] = {
+                            name: targetMetaName,
+                            guid: targetGuid
+                        };
+                        targetEntry.inv_pointers[ptrName] =
+                            new nt.NGuidType(targetMetaName, sourceGuid);
+                    }
+                }
+            });
 
             // get sets & inv_set
-            Promise
-                .try(() => {
-                    return core.getValidSetNames(node);
-                })
-                .map((setName: string) => {
-                    let targetMemberPathsRaw = core.getMemberPaths(node, setName);
-                    targetMemberPathsRaw.forEach((targetMemberPath) => {
-                        if (typeof targetMemberPath !== "string") { return; }
-                        let targetPath: string = targetMemberPath;
+            let setNameList: string[] = core.getValidSetNames(node);
+            setNameList.forEach((setName, _index, _array) => {
+                let targetMemberPathsRaw = core.getMemberPaths(node, setName);
+                targetMemberPathsRaw.forEach(async (targetMemberPath) => {
+                    if (typeof targetMemberPath !== "string") { return; }
+                    let targetPath: string = targetMemberPath;
 
-                        Promise
-                            .try(() => {
-                                return core.loadByPath(sponsor.rootNode, targetPath);
-                            })
-                            .then((targetNode: Core.Node) => {
-                                let targetGuid = core.getGuid(targetNode);
-                                let sets = sourceEntry.sets;
-                                let targetMetaNode = core.getBaseType(targetNode);
+                    try {
+                        let targetNode = await core.loadByPath(sponsor.rootNode, targetPath);
 
-                                let targetEntry = nodeGuidMap.get(targetGuid);
-                                if (targetEntry === undefined) {
-                                    targetEntry = nt.Subject.makeIdentity(targetGuid);
-                                    nodeGuidMap.set(targetGuid, targetEntry);
-                                }
-                                let invSets = targetEntry.inv_sets;
-                                let targetSet = invSets[setName];
-                                let targetMetaName = core.getAttribute(targetMetaNode, "name");
-                                if (typeof targetMetaName === "string") {
-                                    let load = {
-                                        name: targetMetaName,
-                                        guid: targetGuid
-                                    };
-                                    let sourceSet = sets[setName];
-                                    if (sourceSet === undefined) {
-                                        sets[setName] = [load];
-                                    } else {
-                                        sourceSet.push(load);
-                                    }
-                                    let invLoad =
-                                        new nt.NGuidType(targetMetaName, sourceGuid);
+                        let targetGuid = core.getGuid(targetNode);
+                        let sets = sourceEntry.sets;
+                        let targetMetaNode = core.getBaseType(targetNode);
 
-                                    if (targetSet === undefined) {
-                                        invSets[setName] = [invLoad];
-                                    } else {
-                                        targetSet.push(invLoad);
-                                    };
-                                }
-                            })
-                            .catch((err: Error) => {
-                                console.log(`difficulty loading target path: ${targetPath} with err: ${err.message}`);
-                                let load = {
-                                    "fault": `could not load member path: ${targetPath}`
-                                };
-                                let sets = sourceEntry.sets;
-                                let sourceSet = sets[setName];
-                                if (sourceSet === undefined) {
-                                    sets[setName] = [load];
-                                } else {
-                                    sourceSet.push(load);
-                                }
-                            });
-                    });
+                        let targetEntry = nodeGuidMap.get(targetGuid);
+                        if (targetEntry === undefined) {
+                            targetEntry = nt.Subject.makeIdentity(targetGuid);
+                            nodeGuidMap.set(targetGuid, targetEntry);
+                        }
+                        let invSets = targetEntry.inv_sets;
+                        let targetSet = invSets[setName];
+                        let targetMetaName = core.getAttribute(targetMetaNode, "name");
+                        if (typeof targetMetaName === "string") {
+                            let load = {
+                                name: targetMetaName,
+                                guid: targetGuid
+                            };
+                            let sourceSet = sets[setName];
+                            if (sourceSet === undefined) {
+                                sets[setName] = [load];
+                            } else {
+                                sourceSet.push(load);
+                            }
+                            let invLoad =
+                                new nt.NGuidType(targetMetaName, sourceGuid);
+
+                            if (targetSet === undefined) {
+                                invSets[setName] = [invLoad];
+                            } else {
+                                targetSet.push(invLoad);
+                            };
+                        }
+                    }
+                    catch (err) {
+                        console.log(`difficulty loading target path: ${targetPath} with err: ${err.message}`);
+                        let load = {
+                            "fault": `could not load member path: ${targetPath}`
+                        };
+                        let sets = sourceEntry.sets;
+                        let sourceSet = sets[setName];
+                        if (sourceSet === undefined) {
+                            sets[setName] = [load];
+                        } else {
+                            sourceSet.push(load);
+                        }
+                    }
                 });
+            });
         } finally {
             done();
         }
@@ -303,13 +291,10 @@ export function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
     * Related example using traverse.
     * https://github.com/webgme/xmi-tools/blob/master/src/plugins/XMIExporter/XMIExporter.js#L430
     */
-    return Promise
-        .try<void>(() => {
-            return core.traverse(sponsor.rootNode,
-                { excludeRoot: false },
-                visitFn);
-        })
-        .then(() => {
-            return nodeGuidMap;
-        });
+    try {
+        await core.traverse(sponsor.rootNode,
+            { excludeRoot: false },
+            visitFn);
+    } finally { }
+    return nodeGuidMap;
 }

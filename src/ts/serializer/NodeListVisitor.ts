@@ -7,7 +7,7 @@ export interface Action {
     (node: ListNode): void;
 }
 
-export function visit(nodes: { [guid: string]: ListNode }, action: Action): void {
+export function visitList(nodes: { [guid: string]: ListNode }, action: Action): void {
     for (let nodeKey in nodes) {
         action(nodes[nodeKey]);
     };

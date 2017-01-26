@@ -6,7 +6,6 @@
  * @author phreed / https://github.com/phreed
  */
 import CANON = require("common/util/canon");
-import Promise = require("bluebird");
 
 interface Dictionary {
     [key: string]: string;
@@ -29,7 +28,7 @@ interface Sheets {
     [key: string]: Sheet;
 }
 
-interface Containment {
+export interface Containment {
     [key: string]: Containment;
 }
 
@@ -45,7 +44,7 @@ class ResultType {
     [propName: string]: any;
 }
 
-class JsonLibrary {
+export class JsonLibrary {
     bases: any;
     containment: Containment;
     nodes: any;
@@ -66,6 +65,11 @@ class JsonNode {
 
 export class FlatSerializer {
     constructor() {
+    }
+    static exportLibraryAsync(core: GmeClasses.Core, libraryRoot: any): Promise<JsonLibrary> {
+        return new Promise<JsonLibrary>((resolve, _reject) => {
+            FlatSerializer.exportLibrary(core, libraryRoot, resolve);
+        });
     }
 
     static exportLibrary(core: GmeClasses.Core, libraryRoot: any, callback: any): void {
@@ -304,7 +308,7 @@ export class FlatSerializer {
                     value = core.getMemberRegistry(node, setName, memberPath, names[i]);
                     if (CANON.stringify(core.getMemberRegistry(base, setName, memberPath, names[i])) !==
                         CANON.stringify(value)) {
- 
+         
                         data.attributes[names[i]] = value;
                     }
                 }
@@ -334,57 +338,55 @@ export class FlatSerializer {
             return sets;
         }
 
-        function getNodeData(path: string, next: any) {
+        async function getNodeData(path: string, next: any) {
             let jsonNode = new JsonNode();
             let guid: string;
             inComputation = true;
-            Promise
-                .try(() => {
-                    return core.loadByPath(root, path);
-                })
-                .then((node) => {
-                    // fill out the basic data and make place in the jsonLibrary for the node
-                    guid = core.getGuid(node);
-                    // ASSERT(!jsonLibrary.nodes[guid]);
+            try {
+                let node = await core.loadByPath(root, path);
 
-                    guidCache[guid] = path;
-                    pathCache[path] = guid;
-                    jsonLibrary.relids[guid] = core.getRelid(node);
-                    jsonLibrary.nodes[guid] = jsonNode;
+                // fill out the basic data and make place in the jsonLibrary for the node
+                guid = core.getGuid(node);
+                // ASSERT(!jsonLibrary.nodes[guid]);
 
-                    checkForExternalBases(node);
-                    fillContainment(node);
+                guidCache[guid] = path;
+                pathCache[path] = guid;
+                jsonLibrary.relids[guid] = core.getRelid(node);
+                jsonLibrary.nodes[guid] = jsonNode;
 
-                    /*
-                     meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
-                     */
+                checkForExternalBases(node);
+                fillContainment(node);
 
-                    let nname = core.getAttribute(node, "name");
-                    jsonNode.attributes = getAttributesOfNode(node);
-                    jsonNode.derivative = getDerivativeAttrOfNode(node);
+                /*
+                 meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
+                 */
 
-                    // jsonNode.registry = getRegistryOfNode(node);
-                    jsonNode.base = core.getBase(node) ? core.getGuid(core.getBase(node)) : null;
-                    jsonNode.parent = core.getParent(node) ? core.getGuid(core.getParent(node)) : null;
-                    jsonNode.pointers = getPointersOfNode(node);
-                    switch (nname) {
-                        case "ROOT":
-                        // jsonNode.sets = { };
-                        // jsonNode.derivative.suppressed = "sets";
-                        // break;
-                        default:
-                            jsonNode.sets = getSetsOfNode(node);
-                    }
-                    jsonNode.meta = core.getOwnJsonMeta(node);
+                let nname = core.getAttribute(node, "name");
+                jsonNode.attributes = getAttributesOfNode(node);
+                jsonNode.derivative = getDerivativeAttrOfNode(node);
 
-                    // putting children into task list
-                    taskList = taskList.concat(core.getChildrenPaths(node));
+                // jsonNode.registry = getRegistryOfNode(node);
+                jsonNode.base = core.getBase(node) ? core.getGuid(core.getBase(node)) : null;
+                jsonNode.parent = core.getParent(node) ? core.getGuid(core.getParent(node)) : null;
+                jsonNode.pointers = getPointersOfNode(node);
+                switch (nname) {
+                    case "ROOT":
+                    // jsonNode.sets = { };
+                    // jsonNode.derivative.suppressed = "sets";
+                    // break;
+                    default:
+                        jsonNode.sets = getSetsOfNode(node);
+                }
+                jsonNode.meta = core.getOwnJsonMeta(node);
 
-                    next(null);
-                })
-                .catch((err) => {
-                    return next(err || new Error(`no node found at given path: ${path}`));
-                });
+                // putting children into task list
+                taskList = taskList.concat(core.getChildrenPaths(node));
+
+                next(null);
+            }
+            catch (err) {
+                return next(err || new Error(`no node found at given path: ${path}`));
+            };
         }
 
         function postProcessing() {
@@ -403,7 +405,7 @@ export class FlatSerializer {
             /*
             let getMemberRegistry =   (setname: string, memberpath: string) => {
                 let names = core.getMemberRegistryNames(node, setname, memberpath);
-
+        
                 let registry: Dictionary = {};
                 for (let i = 0; i < names.length; i++) {
                     registry[names[i]] = core.getMemberRegistry(node, setname, memberpath, names[i]);
@@ -425,7 +427,7 @@ export class FlatSerializer {
             /*
             getRegistryEntry =   (setname) => {
                 var index = registry.length;
- 
+         
                 while (--index >= 0) {
                     if (registry[index].SetID === setname) {
                         return registry[index];
@@ -692,7 +694,7 @@ export class FlatSerializer {
             }
 
         };
-        let moveNode = (guid: string, next: NextCallback) => {
+        let moveNode = async (guid: string, next: NextCallback) => {
             // we need the node itself and the new parent
             log(`node ${logId(guid, updatedJsonLibrary)} will be moved within the library from ${getRelativePathByGuid(guid, originalJsonLibrary)} to ${getRelativePathByGuid(guid, updatedJsonLibrary)}`);
 
@@ -709,40 +711,34 @@ export class FlatSerializer {
                 next(null);
             };
 
-            Promise
-                .try(() => {
-                    return core.loadByPath(root, guidCache[guid]);
-                })
-                .then((n) => {
-                    parent = n;
-                    if (--needed === 0) {
-                        move();
-                    }
-                })
-                .catch((err) => {
-                    error = error || err;
-                    // parent = null;
-                    if (--needed === 0) {
-                        move();
-                    }
-                });
-            Promise
-                .try(() => {
-                    return core.loadByPath(root, guidCache[updatedJsonLibrary.nodes[guid].parent]);
-                })
-                .then((n) => {
-                    parent = n;
-                    if (--needed === 0) {
-                        move();
-                    }
-                })
-                .catch((err) => {
-                    error = error || err;
-                    // parent = null;
-                    if (--needed === 0) {
-                        move();
-                    }
-                });
+            try {
+                let n = await core.loadByPath(root, guidCache[guid]);
+                parent = n;
+                if (--needed === 0) {
+                    move();
+                }
+            } catch (err) {
+                error = error || err;
+                // parent = null;
+                if (--needed === 0) {
+                    move();
+                }
+            }
+            try {
+                let n = await core.loadByPath(root, guidCache[updatedJsonLibrary.nodes[guid].parent]);
+
+                parent = n;
+                if (--needed === 0) {
+                    move();
+                }
+            }
+            catch (err) {
+                error = error || err;
+                // parent = null;
+                if (--needed === 0) {
+                    move();
+                }
+            }
         };
         let updateNode = (guid: string, next: NextCallback) => {
             // TODO implement

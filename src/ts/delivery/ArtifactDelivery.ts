@@ -1,5 +1,5 @@
 
-import Promise = require("bluebird");
+
 import PluginBase = require("plugin/PluginBase");
 import { addSytacticSuffix } from "utility/ConfigUtil";
 
@@ -8,7 +8,7 @@ import { addSytacticSuffix } from "utility/ConfigUtil";
 
 * @param {}
 */
-export function deliverArtifact(sponsor: PluginBase, config: GmeConfig.GmeConfig, payload: string): Promise<GmeClasses.Result> {
+export async function deliverArtifact(sponsor: PluginBase, config: GmeConfig.GmeConfig, payload: string): Promise<GmeClasses.Result> {
 
     let configDictionary: any = config;
     sponsor.logger.info("deliver artifact");
@@ -18,48 +18,41 @@ export function deliverArtifact(sponsor: PluginBase, config: GmeConfig.GmeConfig
     }
     sponsor.sendNotification("config has property");
 
-    return Promise
-        .try(() => {
-            let artifactName = "stream-";
-            switch (configDictionary["schematicVersion"]) {
-                case "schema-tree:1.0.0":
-                    artifactName += "schema-tree";
-                    break;
-                case "schema-flat:1.0.0":
-                    artifactName += "schema-flat";
-                    break;
-                case "model-tree:1.0.0":
-                    artifactName += "model-tree";
-                    break;
-                case "model-flat:1.0.0":
-                    artifactName += "model-flat";
-                    break;
-            }
-            return sponsor.blobClient.createArtifact(artifactName);
-        })
-        .then((artifact) => {
-            sponsor.sendNotification("artifact created");
-            let pushedFileName = addSytacticSuffix(config, configDictionary["fileName"]);
+    try {
+        let artifactName = "stream-";
+        switch (configDictionary["schematicVersion"]) {
+            case "schema-tree:1.0.0":
+                artifactName += "schema-tree";
+                break;
+            case "schema-flat:1.0.0":
+                artifactName += "schema-flat";
+                break;
+            case "model-tree:1.0.0":
+                artifactName += "model-tree";
+                break;
+            case "model-flat:1.0.0":
+                artifactName += "model-flat";
+                break;
+        }
+        let artifact = await sponsor.blobClient.createArtifact(artifactName);
 
-            return Promise
-                .try(() => {
-                    sponsor.sendNotification(`adding: ${pushedFileName}`);
-                    return artifact.addFile(pushedFileName, payload);
-                })
-                .then((hash: GmeCommon.MetadataHash) => {
-                    sponsor.sendNotification(`saving: ${hash}`);
-                    return artifact.save();
-                });
-        })
-        .then((hash: GmeCommon.MetadataHash) => {
-            sponsor.sendNotification(`adding artifact: ${hash}`);
-            sponsor.result.addArtifact(hash);
-            sponsor.result.setSuccess(true);
-            sponsor.sendNotification("resolution");
-            return Promise.resolve(sponsor.result);
-        })
-        .catch((err: Error) => {
-            sponsor.sendNotification(`problem in file delivery: ${err.message}`);
-            return Promise.reject(err.message);
-        });
+        sponsor.sendNotification("artifact created");
+        let pushedFileName = addSytacticSuffix(config, configDictionary["fileName"]);
+
+
+        sponsor.sendNotification(`adding: ${pushedFileName}`);
+        let hash = await artifact.addFile(pushedFileName, payload);
+
+        sponsor.sendNotification(`saving: ${hash}`);
+        let reHash = await artifact.save();
+
+        sponsor.sendNotification(`adding artifact: ${reHash}`);
+        sponsor.result.addArtifact(reHash);
+        sponsor.result.setSuccess(true);
+        sponsor.sendNotification("resolution");
+        return Promise.resolve(sponsor.result);
+    } catch (err) {
+        sponsor.sendNotification(`problem in file delivery: ${err.message}`);
+        return Promise.reject(err.message);
+    }
 }

@@ -4,7 +4,6 @@
  */
 
 // import _ = require("underscore");
-import Promise = require("bluebird");
 import nodePropertyNames = require("js/NodePropertyNames");
 import GMEConcepts = require("js/Utils/GMEConcepts");
 import registryKeys = require("js/RegistryKeys");
@@ -428,19 +427,13 @@ export class CytoscapeControl {
             }
 
             // update the territory
-            Promise
-                .try(() => {
-                    if (territoryChanged) { return true; }
-                    if (this._pendingEvents.length > 0) { return true; }
-                    return false;
-                })
-                .then((territoryChanged: boolean) => {
-                    if (!territoryChanged) { return; }
+            let territoryChanged2: boolean = (territoryChanged) ? true : false;
+            if (this._pendingEvents.length > 0) { territoryChanged2 = true; }
+            if (!territoryChanged) { return; }
 
-                    this._logger.warn("Updating territory with ruleset from decorators: " +
-                        JSON.stringify(this._patterns));
-                    this._client.updateTerritory(this._territoryId, this._patterns.toObj());
-                });
+            this._logger.warn("Updating territory with ruleset from decorators: " +
+                JSON.stringify(this._patterns));
+            this._client.updateTerritory(this._territoryId, this._patterns.toObj());
 
         } catch (err) {
             this._logger.error(`problem processing queue`);

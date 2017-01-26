@@ -6,7 +6,6 @@
 
  The metadata.json needs to be copied as well.
  */
-import Promise = require("bluebird");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/PullPlugin/metadata.json");
 
@@ -47,7 +46,8 @@ class PullPlugin extends PluginBase {
    * @param {function(string, plugin.PluginResult)} callback - the result callback
    */
 
-  public main(callback: GmeCommon.ResultCallback<GmeClasses.Result>): void {
+  public async main(callback: GmeCommon.ResultCallback<GmeClasses.Result>): Promise<void> {
+    let self = this;
     // let baseNode = self.core.getBase();
     let currentConfig = this.getCurrentConfig();
     this.sendNotification(`The push plugin function is running: ${new Date(Date.now()).toTimeString()}`);
@@ -57,7 +57,7 @@ class PullPlugin extends PluginBase {
       case "file":
         if (!configDictionary.file) {
           callback(new Error("No file provided."), this.result);
-          return;
+          return Promise.reject("no file provided");
         }
         let saveFile = "";
         this.blobClient.getObject(configDictionary.file, saveFile);
@@ -65,7 +65,7 @@ class PullPlugin extends PluginBase {
       case "websocket":
         if (!configDictionary.deliveryUrl) {
           callback(new Error("No host address provided."), this.result);
-          return;
+          return Promise.reject("no host address provided");
         }
         let deliveryUrl = configDictionary.deliveryUrl;
         if (typeof deliveryUrl === "string") {
@@ -75,47 +75,40 @@ class PullPlugin extends PluginBase {
         break;
       default:
         callback(new Error("unknown mode provided."), this.result);
-        return;
+        return Promise.reject("unknown mode provided");
     }
 
-    Promise
-      .try(() => {
-        if (typeof configDictionary.file === "string") {
-          this.sendNotification("creating artifact");
-          return this.blobClient.getObject(configDictionary.file, "");
-        } else {
-          return Promise.reject(`file name not a string ${typeof configDictionary.file}`);
-        }
-      })
-      .then((jsonOrBuf) => {
-        if (typeof Buffer !== "undefined" && jsonOrBuf instanceof Buffer) {
-          // This clause is entered when the plugin in executed in a node process (on the server) rather than
-          // in a browser. Then the getObject returns a Buffer and we need to convert it to string and then
-          // parse it into an object.
+    try {
+      let jsonOrBuf: any;
+      if (typeof configDictionary.file === "string") {
+        this.sendNotification("creating artifact");
 
-          jsonOrBuf = String.fromCharCode.apply(null, new Uint8Array(jsonOrBuf));
-          return JSON.parse(jsonOrBuf);
-
-        } else {
-          // In the browser the getObject automatically returns a json object.
-          return jsonOrBuf;
-        }
+        jsonOrBuf = await self.blobClient.getObject(configDictionary.file, "");
+      } else {
+        return Promise.reject(`file name not a string ${typeof configDictionary.file}`);
       }
-      )
-      .then((dataModel) => {
-        this.logger.info("Obtained dataModel", dataModel);
-        // this.buildUpFMDiagram(dataModel);
-        return this.save("FSM Importer created new model.");
-      })
-      .then(() => {
-        this.result.setSuccess(true);
-        callback(null, this.result);
-      })
-      .catch((err: Error) => {
-        callback(err, this.result);
-        return;
-      });
+      let dataModel: any;
+      if (typeof Buffer !== "undefined" && jsonOrBuf instanceof Buffer) {
+        // This clause is entered when the plugin in executed in a node process (on the server) rather than
+        // in a browser. Then the getObject returns a Buffer and we need to convert it to string and then
+        // parse it into an object.
 
+        jsonOrBuf = String.fromCharCode.apply(null, new Uint8Array(jsonOrBuf));
+        dataModel = JSON.parse(jsonOrBuf);
+
+      } else {
+        // In the browser the getObject automatically returns a json object.
+        dataModel = jsonOrBuf;
+      }
+      this.logger.info("Obtained dataModel", dataModel);
+      // this.buildUpFMDiagram(dataModel);
+      await self.save("FSM Importer created new model.");
+
+      this.result.setSuccess(true);
+      callback(null, this.result);
+    } catch (err) {
+      callback(err, this.result);
+    }
   }
 }
 

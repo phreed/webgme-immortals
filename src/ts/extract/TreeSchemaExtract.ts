@@ -1,5 +1,5 @@
 
-import Promise = require("bluebird");
+
 import PluginBase = require("plugin/PluginBase");
 import { attrToString } from "utility/GmeString";
 

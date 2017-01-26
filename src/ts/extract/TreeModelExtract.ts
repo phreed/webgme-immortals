@@ -1,5 +1,5 @@
 
-import Promise = require("bluebird");
+
 import PluginBase = require("plugin/PluginBase");
 import { attrToString, pathToString } from "utility/GmeString";
 
@@ -16,7 +16,7 @@ const CONTAINMENT_PREFIX = "";
      * @param {Core.Callback} mainHandler [description]
      */
 export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
-    _rootNode: Core.Node, _metaNode: Node): Promise<Map<string, string>> {
+    _rootNode: Core.Node, _metaNode: Node): void { // Promise<Map<string, string>> {
     // let config: GmeConfig.GmeConfig = sponsor.getCurrentConfig();
     // let configDictionary: Core.Dictionary = config;
 
@@ -64,74 +64,66 @@ export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
             sourceEntry[attrName] = core.getAttribute(node, attrName);
         });
 
-        Promise
-            .try(() => {
-                // get pointers
-                return core.getPointerNames(node);
-            })
-            .map((ptrName: string) => {
+        try {
+            let ptrNameList = core.getPointerNames(node);
+            ptrNameList.forEach(async (ptrName, _index, _array) => {
+
                 let targetPathRaw = pathToString(core.getPointerPath(node, ptrName));
                 if (typeof targetPathRaw !== "string") { return; }
                 let targetPath: string = targetPathRaw;
-                return Promise
-                    .try(() => {
-                        return core.loadByPath(sponsor.rootNode, targetPath);
-                    })
-                    .then((targetNode: Core.Node) => {
-                        if (ptrName === "base") {
-                            sourceEntry[`${ptrName}${POINTER_SET_DIV}${fcoName}`]
-                                = core.getGuid(targetNode);
-                        } else {
-                            let targetMetaNode = core.getBaseType(targetNode);
-                            let targetMetaName = core.getAttribute(targetMetaNode, "name");
-                            sourceEntry[`${ptrName}${POINTER_SET_DIV}${targetMetaName}`]
-                                = core.getGuid(targetNode);
-                        }
-                    });
-            });
+                let targetNode = await core.loadByPath(sponsor.rootNode, targetPath);
 
-        Promise
-            .try(() => {
-                // get sets
-                return core.getSetNames(node);
-            })
-            .map((setName: string) => {
-                return Promise
-                    .try(() => {
-                        return core.getMemberPaths(node, setName);
-                    })
-                    .map((memberPath: string) => {
-                        return Promise
-                            .try(() => {
-                                return core.loadByPath(sponsor.rootNode, memberPath);
-                            })
-                            .then((memberNode: Core.Node) => {
-                                let memberMetaNode = core.getBaseType(memberNode);
-                                let memberMetaName = core.getAttribute(memberMetaNode, "name");
-                                let setAttr = `${setName}${POINTER_SET_DIV}${memberMetaName}`;
-
-                                sourceEntry[setAttr] = typeof sourceEntry[setAttr] === "string"
-                                    ? `${sourceEntry[setAttr]} ${core.getGuid(memberNode)}`
-                                    : core.getGuid(memberNode);
-                            });
-                    });
+                if (ptrName === "base") {
+                    sourceEntry[`${ptrName}${POINTER_SET_DIV}${fcoName}`]
+                        = core.getGuid(targetNode);
+                } else {
+                    let targetMetaNode = core.getBaseType(targetNode);
+                    let targetMetaName = core.getAttribute(targetMetaNode, "name");
+                    sourceEntry[`${ptrName}${POINTER_SET_DIV}${targetMetaName}`]
+                        = core.getGuid(targetNode);
+                }
             });
-        done();
+        } finally { }
+
+        try {
+            // get sets
+            let setNameList = core.getSetNames(node);
+            setNameList.forEach((setName, _index, _array) => {
+
+                try {
+                    let memberPathList = core.getMemberPaths(node, setName);
+                    memberPathList.forEach(async (memberPath, _index, _array) => {
+
+                        try {
+                            let memberNode = await core.loadByPath(sponsor.rootNode, memberPath);
+
+                            let memberMetaNode = core.getBaseType(memberNode);
+                            let memberMetaName = core.getAttribute(memberMetaNode, "name");
+                            let setAttr = `${setName}${POINTER_SET_DIV}${memberMetaName}`;
+
+                            sourceEntry[setAttr] = typeof sourceEntry[setAttr] === "string"
+                                ? `${sourceEntry[setAttr]} ${core.getGuid(memberNode)}`
+                                : core.getGuid(memberNode);
+                        } finally { }
+                    });
+                } finally { }
+
+            });
+        } finally {
+            done();
+        }
+
+        /**
+        * Visit the node and perform the function.
+        * Documentation for traverse.
+        * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
+        * Related example using traverse.
+        * https://github.com/webgme/xmi-tools/blob/master/src/plugins/XMIExporter/XMIExporter.js#L430
+        */
+
     };
 
-    /**
-    * Visit the node and perform the function.
-    * Documentation for traverse.
-    * https://github.com/webgme/webgme/wiki/GME-Core-API#the-traverse-method
-    * Related example using traverse.
-    * https://github.com/webgme/xmi-tools/blob/master/src/plugins/XMIExporter/XMIExporter.js#L430
-    */
-    return Promise
-        .try(() => {
-            return core.traverse(sponsor.rootNode, { excludeRoot: true }, visitFn);
-        })
-        .then(() => {
-            console.log(`DATA: ${rootEntry}`);
-            return rootEntry;
-        });
+    core.traverse(sponsor.rootNode, { excludeRoot: true }, visitFn);
+    console.log(`DATA: ${rootEntry}`);
+    // return  rootEntry;
 }

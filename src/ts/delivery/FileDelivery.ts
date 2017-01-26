@@ -1,5 +1,5 @@
 
-import Promise = require("bluebird");
+
 import PluginBase = require("plugin/PluginBase");
 import fs = require("fs-extra");
 import { addSytacticSuffix } from "utility/ConfigUtil";
@@ -10,7 +10,7 @@ import { addSytacticSuffix } from "utility/ConfigUtil";
 * @param {}
 */
 
-export function deliverFile(sponsor: PluginBase, config: GmeConfig.GmeConfig, payload: string): Promise<GmeClasses.Result> {
+export async function deliverFile(sponsor: PluginBase, config: GmeConfig.GmeConfig, payload: string): Promise<GmeClasses.Result> {
     sponsor.logger.info(`deliver file of size: ${payload.length}`);
 
     let configDictionary: any = config;
@@ -19,21 +19,19 @@ export function deliverFile(sponsor: PluginBase, config: GmeConfig.GmeConfig, pa
     }
     sponsor.sendNotification("config has property");
 
-    return Promise
-        .try(() => {
-            let targetFileName = addSytacticSuffix(config, configDictionary["fileName"]);
-            fs.ensureFileSync(targetFileName);
-            return targetFileName;
-        })
-        .then((fileName: string) => {
-            sponsor.logger.info(`file being written: ${fileName} in ${process.cwd()}`);
-            fs.writeFileSync(fileName, payload);
-            sponsor.sendNotification(`file ${fileName} written`);
-            sponsor.result.setSuccess(true);
-            return Promise.resolve(sponsor.result);
-        })
-        .catch((err: Error) => {
-            sponsor.sendNotification(`problem writing file: ${err.message}`);
-            return Promise.reject(err.message);
-        });
+    try {
+        let targetFileName = await addSytacticSuffix(config, configDictionary["fileName"]);
+        fs.ensureFileSync(targetFileName);
+        let fileName = targetFileName;
+
+        sponsor.logger.info(`file being written: ${fileName} in ${process.cwd()}`);
+        fs.writeFileSync(fileName, payload);
+        sponsor.sendNotification(`file ${fileName} written`);
+        sponsor.result.setSuccess(true);
+        return Promise.resolve(sponsor.result);
+    }
+    catch (err) {
+        sponsor.sendNotification(`problem writing file: ${err.message}`);
+        return Promise.reject(err.message);
+    }
 }

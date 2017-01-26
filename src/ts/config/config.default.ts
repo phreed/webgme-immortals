@@ -43,7 +43,6 @@ config.requirejsPaths["style"] = "./style";
 // config.visualization.extraCss = ["./visualizers/widgets/cytoscape/styles/CytoscapeWidget.css"];
 
 config.requirejsPaths["cytoscape"] = "./bower_components/cytoscape/dist/cytoscape.min";
-config.requirejsPaths["bluebird"] = "./node_modules/bluebird/js/browser/bluebird";
 // simply installing n3 as an npm module is insufficient
 //  see the 'package.json' script 'postinstall:n3'.
 config.requirejsPaths["n3"] = "node_modules/n3/browser/n3-browserify";
