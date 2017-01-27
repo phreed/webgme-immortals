@@ -9,4 +9,5 @@ dist-server/
 dist-client/
 typings/
 *.js.map
+log/
 

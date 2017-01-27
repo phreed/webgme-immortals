@@ -39,8 +39,19 @@ config.server.log = {
   }, {
     transportType: "File",
     options: {
+      name: "debug-file",
+      filename: "./log/immortals-debug.log",
+      level: "debug",
+      json: false,
+      prettyPrint: true,
+      colorize: false,
+      depth: 3
+    }
+  }, {
+    transportType: "File",
+    options: {
       name: "info-file",
-      filename: "./server.log",
+      filename: "./log/immortals-info.log",
       level: "info",
       json: false,
       prettyPrint: true
@@ -49,7 +60,7 @@ config.server.log = {
     transportType: "File",
     options: {
       name: "error-file",
-      filename: "./server-error.log",
+      filename: "./log/immortals-error.log",
       level: "error",
       handleExceptions: true,
       json: false,
