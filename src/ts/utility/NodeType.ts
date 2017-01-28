@@ -32,8 +32,8 @@ export class NGuidType {
     guid: GuidType;
 }
 
-/** 
- * Sets are kind of like pointers but 
+/**
+ * Sets are kind of like pointers but
  * with many rather than just one.
  */
 export interface Pointers {
@@ -52,6 +52,13 @@ export class TypeType {
     parent: string;
     name?: string;
 
+    static brief(that: TypeType): string {
+        if (typeof that === "undefined") {
+            return "undef";
+        }
+        return `[D]${that.domain} [M]${that.meta} [R]${that.root} [B]${that.base} [P]${that.parent}`;
+    }
+
     constructor(domain: string, meta: string, root: string,
         base: string, parent: string, name: string | undefined) {
         this.domain = domain;
@@ -60,6 +67,10 @@ export class TypeType {
         this.base = base;
         this.parent = parent;
         this.name = name;
+    }
+    static makeByHash(hash: { [key: string]: any }) {
+        return new TypeType(hash["domain"],
+            hash["meta"], hash["root"], hash["base"], hash["parent"], hash["name"]);
     }
     static makeEmpty(): TypeType {
         return new TypeType(BLANK, NULL_NAME, NULL_NAME, NULL_NAME, NULL_NAME, undefined);
@@ -73,14 +84,21 @@ export class NameType {
     name: string;
     uriGen: string;
     uriPrefix: string;
-    uriName: string;
     uriExt: string;
+    uriName: string;
+
+    static brief(that: NameType): string {
+        if (typeof that === "undefined") {
+            return "undef";
+        }
+        return `[A]${that.name} [G]${that.uriGen} [P]${that.uriPrefix} [X]${that.uriExt} [N]${that.uriName}`;
+    }
 
     constructor(name: string,
         uriGen: string,
         uriPrefix: string,
-        uriName: string,
-        uriExt: string) {
+        uriExt: string,
+        uriName: string) {
         this.name = name;
         this.uriGen = uriGen;
         this.uriPrefix = uriPrefix;
@@ -90,6 +108,10 @@ export class NameType {
     static makeEmpty() {
         return new NameType(NULL_OBJECT, BLANK, BLANK,
             BLANK, BLANK);
+    }
+    static makeByHash(hash: { [key: string]: any }) {
+        return new NameType(hash["name"],
+            hash["uriGen"], hash["uriPrefix"], hash["uriExt"], hash["uriName"]);
     }
 }
 
@@ -107,6 +129,17 @@ export class Subject {
     attributes: { [attr: string]: string | number };
     children: { [type: string]: GuidType[] };
     prune: PruningFlag;
+
+    static brief(that: Subject): string {
+        if (typeof that === "undefined") {
+            return "undef";
+        }
+         return `
+         version: ${that.version} 
+         guid: ${that.guid}
+         name: ${NameType.brief(that.name)}, 
+         type: ${TypeType.brief(that.type)}`;
+    }
 
     constructor(
         version: string,
@@ -134,6 +167,15 @@ export class Subject {
         this.attributes = attributes;
         this.children = children;
         this.prune = prune;
+    }
+
+    static makeByHash(hash: { [key: string]: any }) {
+        return new Subject(hash["version"],
+            hash["guid"], hash["name"], hash["type"],
+            hash["pointers"], hash["inv_pointers"],
+            hash["sets"], hash["inv_sets"],
+            hash["base"], hash["attributes"],
+            hash["children"], hash["prune"]);
     }
 
     static makeIdentity(guid: string) {

@@ -91,15 +91,15 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
     switch (configDictionary["deliveryMode"]) {
         case "file:1.0.0":
             that.sendNotification("deliver as file on server");
-            return await deliverFile(that, config, payload);
+            return await deliverFile(that, configDictionary, payload);
 
         case "multipart:1.0.0":
             that.sendNotification("deliver as multipart/form-data");
-            return await deliverMultipart(that, config, payload);
+            return await deliverMultipart(that, configDictionary, payload);
 
         case "singlepart:1.0.0":
             that.sendNotification("deliver as text/plain");
-            return await deliverSinglepart(that, config, payload);
+            return await deliverSinglepart(that, configDictionary, payload);
 
         default:
             return Promise.reject(new Error(`unknown delivery mode: ${configDictionary["deliveryMode"]}`));

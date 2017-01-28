@@ -11,13 +11,14 @@ import * as nt from "utility/NodeType";
 const BLANK = "";
 const NA = "NA";
 
-// const NS1 = "http://darpa.mil/immortals/ontology/r1.0.0/";
 const NS_owl = "http://www.w3.org/2002/07/owl";
 const NS_xsd = "http://www.w3.org/2001/XMLSchema";
 const NS_rdfs = "http://www.w3.org/2000/01/rdf-schema";
 const NS_rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns";
 
-const NS2 = "http://darpa.mil/immortals/ontology/r2.0.0";
+const NS0 = "http://darpa.mil/immortals/ontology";
+// const NS1 = `${NS0}/r1.0.0`;
+const NS2 = `${NS0}/r2.0.0`;
 // const NS2_ex = `${NS2}com/securboration/immortals/example`;
 
 /**
@@ -50,6 +51,9 @@ function objectifyName(nodeName: nt.NameType): string {
     return setDefault(nodeName.name, NA);
 }
 
+/**
+ * This function determines the type of an object.
+ */
 function objectifyType(nodeType: nt.TypeType, dict: Map<string, nt.Subject>): string {
     // console.log("objectify type: ");
     if (nodeType === undefined) {
@@ -139,7 +143,7 @@ function buildNoneUriForNode(name: nt.NameType, conditioner: (raw: string) => st
     return `${NS2}/model#${acase.cookName(nickName)}`;
 }
 
-/** 
+/**
  * Construct an RDF name for the node.
  * This is of the form...
  * "http://somthing/else#and-guid"
@@ -171,9 +175,9 @@ function getRdfNameForNode(node: nt.Subject,
 }
 
 
-/** 
+/**
  * A function to determine if a node is an atom.
- * 
+ *
  * atom => a node with no pointers, and attributes
  * The predicate for a contained atom is constructed from
  * the name of the atom plus the names of its attributes.
@@ -192,7 +196,7 @@ function isAtom(node: nt.Subject): boolean {
     return true;
 }
 
-/** 
+/**
 * model => a node with children
 * If a child is an "atom" then its attributes are rendered
 * as triples where the model is the subject.
@@ -205,7 +209,6 @@ function isModel(node: any): boolean {
 
 /**
  * connection => a node with pointers
- * 
  */
 function isConnection(node: any): boolean {
     if (!_.isEmpty(node.pointers)) { return false; }
@@ -253,13 +256,13 @@ export class RdfNodeSerializer {
     constructor(dict: Map<string, nt.Subject>, pruningCondition: PruningCondition) {
         this.nodeDict = dict;
         let subject = nt.Subject.makeIdentity(NA);
-        subject.name = {
+        subject.name = nt.NameType.makeByHash({
             "uriGen": "semantic",
             "uriPrefix": NS2,
             "uriExt": "",
             "uriName": "not-available",
             "name": "na"
-        };
+        });
         subject.base = {
             "guid": NA,
             "name": nt.NULL_NAME
@@ -282,7 +285,7 @@ export class RdfNodeSerializer {
                     rdf: `${NS_rdf}#`,
                     IMMoRTALS: `${NS2}#`,
                     IMMoRTALS_gmei: `${NS2}/gmei#`,
-                    IMMoRTALS_cp: `${NS2}/cp#`,
+                    IMMoRTALS_cp1: `${NS2}/cp#`,
                     IMMoRTALS_cp_java: `${NS2}/cp/java#`,
 
                     IMMoRTALS_ordering: `${NS2}/ordering#`,
@@ -321,13 +324,20 @@ export class RdfNodeSerializer {
 
     /**
      * name,type,pointers,sets,base,attributes,children,guid
-     * 
-     * duck-typing: {atom model connection}
-     * 
+     * duck-typing:
+     *   atom : contains nothing and has no pointers/sets/etc.
+     *   model : contains things
+     *   connection : has pointers/sets/etc.
+     * Atoms are never subjects.
+     *
      */
     write = (subject: nt.Subject): void => {
 
         // console.log(`write: ${subject.prune} ... ${(subject.prune & PruningFlag.Library)}`);
+        /*
+         Determine if the node should be written based
+         on the pruning criteria.
+         */
         if (subject.prune & this.pruningCondition.flag) {
             if (!this.pruningCondition.cond) { return; }
         } else {
@@ -341,14 +351,14 @@ export class RdfNodeSerializer {
             return;
         }
 
-        // console.log("write subject name");
+        // console.log(`write subject name: ${nt.NameType.brief(subject.name)}`);
         this.writer.addTriple({
             subject: subjectName,
             predicate: `${NS2}#name`,
             object: Util.createLiteral(objectifyName(subject.name))
         });
 
-        // console.log("write subject type");
+        // console.log(`write subject type: ${nt.TypeType.brief(subject.type)}`);
         this.writer.addTriple({
             subject: subjectName,
             predicate: `${NS_rdf}#type`,
@@ -397,6 +407,7 @@ export class RdfNodeSerializer {
                 object: valueLiteral
             });
         }
+
         // console.log("write subject pointers");
         let ptrs = subject.pointers;
         for (let key in ptrs) {
@@ -462,7 +473,6 @@ export class RdfNodeSerializer {
                     // console.log(`atom child: ${objectName}`);
                     let attrs = objective.attributes;
                     for (let key in attrs) {
-                        // let predicateName: string = `${objectName}${acase.bactrian(key)}`;
                         let predicateName = predicateByNode(key);
                         let valueRaw = attrs[key];
                         let valueLiteral: any;
@@ -484,7 +494,6 @@ export class RdfNodeSerializer {
                 if (objIsCollection) {
                     let sets = objective.sets;
                     for (let key in sets) {
-                        // let predicateName: string = `${objectName}${acase.bactrian(key)}`;
                         let predicateName = predicateByNode(key);
                         let valueRawArray = sets[key];
                         valueRawArray.forEach((value) => {
@@ -526,8 +535,8 @@ export class RdfNodeSerializer {
     }
 
     visitNode = (node: nlv.ListNode): void => {
-        let subject = <nt.Subject>node;
-        console.log(`visiting a node: ${Object.keys(node)}`);
+        let subject = nt.Subject.makeByHash(node);
+        console.log(`visiting a node: ${nt.Subject.brief(subject)}`);
         this.write(subject);
     }
 }

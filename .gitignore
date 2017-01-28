@@ -11,4 +11,5 @@ typings/
 *.js.map
 log/
 config/
+*.ttl
 

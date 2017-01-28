@@ -37,7 +37,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
 
     /**
      * A filter mechanism to effectively eliminate containment branches.
-     * Any path included in the prune-list will be the root of a 
+     * Any path included in the prune-list will be the root of a
      * pruned subtree.
      */
     let pruneList: string[] = [];
@@ -108,14 +108,14 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
             let metaNodeGuid: string;
             if (node === sponsor.rootNode) {
                 metaName = ":Root:";
-                sourceEntry.type = {
+                sourceEntry.type = nt.TypeType.makeByHash({
                     "domain": nt.BLANK,
                     "name": "Root",
                     "meta": nt.NULL_GUID,
                     "root": nt.NULL_GUID,
                     "base": nt.NULL_GUID,
                     "parent": nt.NULL_GUID
-                };
+                });
                 metaNodeGuid = nt.NULL_GUID;
             } else if (core.isLibraryRoot(node)) {
                 metaName = ":LibraryRoot:";
