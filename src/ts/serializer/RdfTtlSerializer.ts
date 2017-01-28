@@ -294,8 +294,8 @@ export class RdfNodeSerializer {
                     IMMoRTALS_core: `${NS2}/core#`,
 
                     IMMoRTALS_resources: `${NS2}/resources#`,
-                    IMMoRTALS_resources_gps: `${NS2}/resources/gps#`,
-                    IMMoRTALS_resources_gps_properties: `${NS2}/resources/gps/properties#`,
+                    IMMoRTALS_resources_gps: `${NS2}/resources_gps#`,
+                    IMMoRTALS_resources_gps_properties: `${NS2}/resources_gps/properties#`,
                     IMMoRTALS_resources_memory: `${NS2}/resources/memory#`,
 
                     IMMoRTALS_functionality: `${NS2}/functionality#`,
