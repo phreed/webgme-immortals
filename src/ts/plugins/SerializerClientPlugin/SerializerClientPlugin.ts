@@ -48,15 +48,12 @@ async function serialize(that: SerializerClientPlugin, configDictionary: any): P
         default:
             return Promise.reject(new Error("no serializer matches typed version"));
     }
-    let payload: string = "";
+    let payload: string = "empty";
     switch (configDictionary["syntacticVersion"]) {
         case "json:1.0.0":
             that.sendNotification("serializing json");
 
-            let jsonStr = await JSON.stringify(nodeDict, null, 4);
-            if (jsonStr == null) {
-                return Promise.reject(new Error("no payload produced"));
-            }
+            payload = await JSON.stringify([...nodeDict], null, 4);
             break;
 
         case "ttl:1.0.0":
@@ -85,6 +82,9 @@ async function serialize(that: SerializerClientPlugin, configDictionary: any): P
             break;
         default:
             return Promise.reject(new Error("no output writer matches typed version"));
+    }
+    if (!payload) {
+        return Promise.reject(new Error("no payload produced"));
     }
     that.sendNotification("deliver as file on server");
     return await deliverArtifact(that, configDictionary, payload);

@@ -49,15 +49,11 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
         default:
             return Promise.reject(new Error("no serializer matches typed version"));
     }
-    let payload: string = "";
+    let payload: string = "empty";
     switch (configDictionary["syntacticVersion"]) {
         case "json:1.0.0":
             that.sendNotification("serializing json");
-
-            let jsonStr = await JSON.stringify(nodeDict, null, 4);
-            if (jsonStr == null) {
-                return Promise.reject(new Error("no payload produced"));
-            }
+            payload = await JSON.stringify([...nodeDict], null, 4);
             break;
 
         case "ttl:1.0.0":
@@ -84,10 +80,13 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
             await accumulator.complete();
             payload = accumulator.ttlStr;
             break;
+
         default:
             return Promise.reject(new Error("no output writer matches typed version"));
     }
-
+    if (!payload) {
+        return Promise.reject(new Error("no payload produced"));
+    }
     switch (configDictionary["deliveryMode"]) {
         case "file:1.0.0":
             that.sendNotification("deliver as file on server");
@@ -126,22 +125,22 @@ class SerializerServerPlugin extends PluginBase {
     public async main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): Promise<void> {
         let configDict = this.getCurrentConfig();
         if (configDict === null) {
-            this.sendNotification("The streaming plugin has failed: no configuration");
+            this.sendNotification("The serializer plugin has failed: no configuration");
             mainHandler(null, this.result);
         }
-        this.sendNotification(`This streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
+        this.sendNotification(`This serializer plugin is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = configDict;
         try {
             await serialize(this, configDictionary);
 
             this.logger.info("successful completion");
-            this.sendNotification("The streaming plugin has completed successfully.");
+            this.sendNotification("The serializer plugin has completed successfully.");
             mainHandler(null, this.result);
         }
         catch (err) {
-            this.logger.info(`failed: ${err.stack}`);
-            console.log(`streaming plugin failed: ${err.stack}`);
-            this.sendNotification(`The streaming plugin has failed: ${err.message}`);
+            this.logger.info(`Serializer server plugin failed: ${err.stack}`);
+            console.log(`serializer plugin failed: ${err.stack}`);
+            this.sendNotification(`The serializer plugin has failed: ${err.message}`);
             mainHandler(err, this.result);
         };
     }
