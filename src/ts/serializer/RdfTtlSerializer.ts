@@ -307,22 +307,22 @@ export class RdfNodeSerializer {
 
                     IMMoRTALS_resources: `${NS2}/resources#`,
                     IMMoRTALS_resources_gps: `${NS2}/resources_gps#`,
-                    IMMoRTALS_resources_gps_properties: `${NS2}/resources_gps/properties#`,
+                    IMMoRTALS_resources_gps_properties: `${NS2}/resources_gps_properties#`,
                     IMMoRTALS_resources_memory: `${NS2}/resources/memory#`,
 
                     IMMoRTALS_functionality: `${NS2}/functionality#`,
-                    IMMoRTALS_functionality_locationprovider: `${NS2}/functionality/locationprovider#`,
-                    IMMoRTALS_functionality_imageprocessor: `${NS2}/functionality/imageprocessor#`,
-                    IMMoRTALS_functionality_dataproperties: `${NS2}/functionality/dataproperties#`,
+                    IMMoRTALS_functionality_locationprovider: `${NS2}/functionality_locationprovider#`,
+                    IMMoRTALS_functionality_imageprocessor: `${NS2}/functionality_imageprocessor#`,
+                    IMMoRTALS_functionality_dataproperties: `${NS2}/functionality_dataproperties#`,
 
                     IMMoRTALS_property: `${NS2}/property#`,
-                    IMMoRTALS_property_impact: `${NS2}/property/impact#`,
+                    IMMoRTALS_property_impact: `${NS2}/property_impact#`,
 
                     IMMoRTALS_com_securboration_immortals_example_instantiation: `${NS2}/com/securboration/immortals/example/instantiation#`,
                     IMMoRTALS_metrics: `${NS2}/metrics#`,
                     IMMoRTALS_connectivity: `${NS2}/connectivity#`,
                     IMMoRTALS_server: `${NS2}/server#`,
-                    IMMoRTALS_image_fidelity: `${NS2}/image/fidelity#`,
+                    IMMoRTALS_image_fidelity: `${NS2}/image_fidelity#`,
 
                     IMMoRTALS_model: `${NS2}/model#`,
                     IMMoRTALS_ptr: `${NS2}/pointer#`,
