@@ -97,6 +97,18 @@ function predicateByNode(key: string): string {
     return `${NS2}#has${acase.bactrian(acase.cookName(key))}`;
 }
 
+/**
+ * Generate a predicate based on the reason for the containment.
+ */
+function predicateByContainment(_subject: nt.Subject | undefined, objective: nt.Subject | undefined): string {
+    if (typeof objective === "undefined") {
+        return `${NS2}#hasUndefined}`;
+    }
+    let candidate = objective.name.uriName;
+    candidate = (candidate) ? candidate : objective.name.name;
+    return `${NS2}#has${acase.bactrian(acase.cookName(candidate))}`;
+}
+
 function isFilled(name: string | null | undefined) {
     if (name === null) { return false; }
     if (name === undefined) { return false; }
@@ -455,10 +467,13 @@ export class RdfNodeSerializer {
         // console.log("write subject children");
         let children = subject.children;
         for (let key in children) {
+            if (!children.hasOwnProperty(key)) { continue; }
             // console.log(`child keys: ${key}`);
             let child = children[key];
             // console.log(`guids: ${child.length}`);
-            child.forEach((guid) => {
+            for (let guid in child) {
+                if (!child.hasOwnProperty(guid)) { continue; }
+
                 // console.log(`guid: ${guid}`);
                 let objective = this.nodeDict.get(guid);
                 if (typeof objective === "undefined") {
@@ -515,15 +530,18 @@ export class RdfNodeSerializer {
                     }
                 }
                 if (!objIsAtom || !objIsCollection) {
-                    let predicateName = predicateByNode(key);
-                    // console.log(`model child: s:${subjectName} p:${predicateName} o:${objectName}`);
+                    let reason = child[guid];
+                    let parentReason = this.nodeDict.get(reason.parent);
+                    let childReason = this.nodeDict.get(reason.child);
+                    let predicateName = predicateByContainment(parentReason, childReason);
+                    console.log(`model child: s:${subjectName} p:${predicateName} o:${objectName}`);
                     this.writer.addTriple({
                         subject: subjectName,
                         predicate: predicateName,
                         object: objectName
                     });
                 }
-            });
+            };
         }
     }
 

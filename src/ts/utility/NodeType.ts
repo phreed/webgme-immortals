@@ -115,6 +115,7 @@ export class NameType {
     }
 }
 
+export type ChildReasonType = { [type: string]: { [guid: string]: { parent: GuidType, child: GuidType } } };
 export class Subject {
 
     version: string;
@@ -127,14 +128,14 @@ export class Subject {
     inv_sets: Sets;
     base: NGuidType;
     attributes: { [attr: string]: string | number };
-    children: { [type: string]: GuidType[] };
+    children: ChildReasonType;
     prune: PruningFlag;
 
     static brief(that: Subject): string {
         if (typeof that === "undefined") {
             return "undef";
         }
-         return `
+        return `
          version: ${that.version} 
          guid: ${that.guid}
          name: ${NameType.brief(that.name)}, 
@@ -152,7 +153,7 @@ export class Subject {
         inv_sets: Sets,
         base: NGuidType,
         attributes: { [attr: string]: string | number },
-        children: { [type: string]: GuidType[] },
+        children: ChildReasonType,
         prune: PruningFlag) {
 
         this.version = version;
