@@ -33,7 +33,7 @@ interface FnGuid {
 }
 
 const appendGuid: FnGuid = (raw: string, guid: string): string => {
-    return `${raw}--${guid}`;
+    return `${raw}-${guid}`;
 };
 
 const noGuid: FnGuid = (raw: string, _guid: string): string => {
@@ -92,8 +92,13 @@ function objectifyByGuid(nodeGuid: string, dict: Map<string, nt.Subject>): strin
     return getRdfNameForNode(node, fnGuid, acase.bactrian);
 }
 
-function predicateByNode(key: string): string {
-    // console.log(`predicate by key: ${key}`);
+function predicateContainsKey(key: string): string {
+    // console.log(`predicate contains key: ${key}`);
+    return `${NS2}#has${acase.bactrian(acase.cookName(key))}`;
+}
+
+function predicateIndicatesKey(key: string): string {
+    // console.log(`predicate contains key: ${key}`);
     return `${NS2}#has${acase.bactrian(acase.cookName(key))}`;
 }
 
@@ -390,7 +395,7 @@ export class RdfNodeSerializer {
         let attrs = subject.attributes;
         for (let key in attrs) {
             // let predicateName: string = `${NS2}attribute#${key}`;
-            let predicateName = predicateByNode(key);
+            let predicateName = predicateContainsKey(key);
 
             switch (key) {
                 case "comment":
@@ -405,13 +410,14 @@ export class RdfNodeSerializer {
             }
             let valueRaw = attrs[key];
             let valueLiteral: any;
-            switch (typeof valueRaw) {
-                case "string":
-                    // valueLiteral = Util.createLiteral(valueRaw, "en");
-                    valueLiteral = Util.createLiteral(valueRaw);
-                    break;
-                default:
-                    valueLiteral = Util.createLiteral(valueRaw);
+            if (typeof valueRaw === "string") {
+                // valueLiteral = Util.createLiteral(valueRaw, "en");
+                if (valueRaw.length < 1) {
+                    continue;
+                }
+                valueLiteral = Util.createLiteral(`${valueRaw}`, "en");
+            } else {
+                valueLiteral = Util.createLiteral(`${valueRaw}`, "en");
             }
             this.writer.addTriple({
                 subject: subjectName,
@@ -426,7 +432,7 @@ export class RdfNodeSerializer {
             let valueNode = ptrs[key];
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: `${NS2}/pointer#${key}`,
+                predicate: predicateIndicatesKey(key),
                 object: objectifyPointer(valueNode, this.nodeDict)
             });
         }
@@ -452,7 +458,7 @@ export class RdfNodeSerializer {
                         console.log(`atom member ${objectName}`);
                         // console.log(`atom member> s:${subjectName} <atom> o:${objectName}`);
                     } else {
-                        let predicateName = predicateByNode(kind);
+                        let predicateName = predicateContainsKey(kind);
                         // console.log(`model member> s:${subjectName} p:{predicateName} o:${objectName}`);
                         this.writer.addTriple({
                             subject: subjectName,
@@ -488,16 +494,18 @@ export class RdfNodeSerializer {
                     // console.log(`atom child: ${objectName}`);
                     let attrs = objective.attributes;
                     for (let key in attrs) {
-                        let predicateName = predicateByNode(key);
+                        let predicateName = predicateContainsKey(key);
                         let valueRaw = attrs[key];
                         let valueLiteral: any;
-                        switch (typeof valueRaw) {
-                            case "string":
-                                // valueLiteral = Util.createLiteral(valueRaw, "en");
-                                valueLiteral = Util.createLiteral(valueRaw);
-                                break;
-                            default:
-                                valueLiteral = Util.createLiteral(valueRaw);
+                        if (typeof valueRaw === "string") {
+                            // valueLiteral = Util.createLiteral(valueRaw, "en");
+                            if (valueRaw.length < 1) {
+                                continue;
+                            }
+                            valueLiteral = Util.createLiteral(`${valueRaw}`);
+                        }
+                        else {
+                            valueLiteral = Util.createLiteral(`${valueRaw}`);
                         }
                         this.writer.addTriple({
                             subject: subjectName,
@@ -509,7 +517,7 @@ export class RdfNodeSerializer {
                 if (objIsCollection) {
                     let sets = objective.sets;
                     for (let key in sets) {
-                        let predicateName = predicateByNode(key);
+                        let predicateName = predicateContainsKey(key);
                         let valueRawArray = sets[key];
                         valueRawArray.forEach((value) => {
                             if (nt.isNGuidType(value)) {

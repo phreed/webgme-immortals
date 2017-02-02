@@ -6,6 +6,7 @@
  * @author phreed / https://github.com/phreed
  */
 import CANON = require("common/util/canon");
+import { getCoreGuid } from "utility/CoreExtras";
 
 interface Dictionary {
     [key: string]: string;
@@ -112,7 +113,7 @@ export class FlatSerializer {
             let guid: any;
             let path: any;
             while (node) {
-                guid = core.getGuid(node);
+                guid = getCoreGuid(core, node);
                 path = core.getPath(node);
                 if (!isInLibrary(node) && !jsonLibrary.bases[guid]) {
                     jsonLibrary.bases[guid] = path;
@@ -128,12 +129,12 @@ export class FlatSerializer {
         function fillContainment(node: any) {
             // first we compute the guid chain up to the library root
             let guidChain: string[] = [];
-            let actualGuid = core.getGuid(node);
+            let actualGuid = getCoreGuid(core, node);
             let containment = jsonLibrary.containment;
             while (actualGuid !== jsonLibrary.root.guid) {
                 guidChain.unshift(actualGuid);
                 node = core.getParent(node);
-                actualGuid = core.getGuid(node);
+                actualGuid = getCoreGuid(core, node);
             }
 
             // now we insert our guid into the containment tree structure
@@ -289,7 +290,7 @@ export class FlatSerializer {
                     return getMemberData(setName, memberPath);
                 }
 
-                // so we have the same member, let's check which 
+                // so we have the same member, let's check which
                 // values differ from the inherited ones attributes
                 names = core.getMemberAttributeNames(node, setName, memberPath);
                 for (let i = 0; i < names.length; i++) {
@@ -308,7 +309,6 @@ export class FlatSerializer {
                     value = core.getMemberRegistry(node, setName, memberPath, names[i]);
                     if (CANON.stringify(core.getMemberRegistry(base, setName, memberPath, names[i])) !==
                         CANON.stringify(value)) {
-         
                         data.attributes[names[i]] = value;
                     }
                 }
@@ -346,7 +346,7 @@ export class FlatSerializer {
                 let node = await core.loadByPath(root, path);
 
                 // fill out the basic data and make place in the jsonLibrary for the node
-                guid = core.getGuid(node);
+                guid = getCoreGuid(core, node);
                 // ASSERT(!jsonLibrary.nodes[guid]);
 
                 guidCache[guid] = path;
@@ -405,7 +405,6 @@ export class FlatSerializer {
             /*
             let getMemberRegistry =   (setname: string, memberpath: string) => {
                 let names = core.getMemberRegistryNames(node, setname, memberpath);
-        
                 let registry: Dictionary = {};
                 for (let i = 0; i < names.length; i++) {
                     registry[names[i]] = core.getMemberRegistry(node, setname, memberpath, names[i]);
@@ -427,7 +426,6 @@ export class FlatSerializer {
             /*
             getRegistryEntry =   (setname) => {
                 var index = registry.length;
-         
                 while (--index >= 0) {
                     if (registry[index].SetID === setname) {
                         return registry[index];

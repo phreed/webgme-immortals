@@ -7,6 +7,7 @@
  */
 // import CANON = require("common/util/canon");
 import ASSERT = require("common/util/assert");
+import { getCoreGuid } from "utility/CoreExtras";
 
 interface NextCallback {
   (err: Error | null): void;
@@ -125,7 +126,7 @@ static exportMegaModelAsync(core: GmeClasses.Core, libraryRoot: any): Promise<Js
       let guid: string;
       let path: string;
       while (node) {
-        guid = core.getGuid(node);
+        guid = getCoreGuid(core, node);
         path = core.getPath(node);
         if (!isInLibrary(node) && !jsonModel.bases[guid]) {
           jsonModel.bases[guid] = path;
@@ -143,12 +144,12 @@ static exportMegaModelAsync(core: GmeClasses.Core, libraryRoot: any): Promise<Js
     function fillContainment(node: Core.Node): void {
       // first we compute the guid chain up to the library root
       let guidChain: string[] = [];
-      let actualGuid: string = core.getGuid(node);
+      let actualGuid: string = getCoreGuid(core, node);
       let containment: Containment = jsonModel.containment;
       while (actualGuid !== jsonModel.root.guid) {
         guidChain.unshift(actualGuid);
         node = core.getParent(node);
-        actualGuid = core.getGuid(node);
+        actualGuid = getCoreGuid(core, node);
       }
 
       // now we insert our guid into the containment tree structure
@@ -266,7 +267,7 @@ static exportMegaModelAsync(core: GmeClasses.Core, libraryRoot: any): Promise<Js
           return getMemberData(setName, memberPath);
         }
 
-        // so we have the same member, let's check which 
+        // so we have the same member, let's check which
         // values differ from the inherited one attributes
         let anames = core.getMemberAttributeNames(node, setName, memberPath);
         for (let i = 0; i < anames.length; i++) {
@@ -330,7 +331,7 @@ static exportMegaModelAsync(core: GmeClasses.Core, libraryRoot: any): Promise<Js
         }
 
         // fill out the basic data and make place in the jsonModel for the node
-        let guid = core.getGuid(node);
+        let guid = getCoreGuid(core, node);
         ASSERT(!nodeCache[guid]);
 
         guidCache[guid] = path;

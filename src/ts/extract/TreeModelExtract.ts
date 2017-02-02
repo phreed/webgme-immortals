@@ -2,6 +2,7 @@
 
 import PluginBase = require("plugin/PluginBase");
 import { attrToString, pathToString } from "utility/GmeString";
+import { getCoreGuid } from "utility/CoreExtras";
 
 const POINTER_SET_DIV = "-";
 const CONTAINMENT_PREFIX = "";
@@ -59,7 +60,7 @@ export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
         parentData[containRel] = parentData[containRel] || [];
         parentData[containRel].push(sourceEntry);
 
-        sourceEntry["id"] = core.getGuid(node);
+        sourceEntry["id"] = getCoreGuid(core, node);
         core.getAttributeNames(node).forEach((attrName: string) => {
             sourceEntry[attrName] = core.getAttribute(node, attrName);
         });
@@ -75,12 +76,12 @@ export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
 
                 if (ptrName === "base") {
                     sourceEntry[`${ptrName}${POINTER_SET_DIV}${fcoName}`]
-                        = core.getGuid(targetNode);
+                        = getCoreGuid(core, targetNode);
                 } else {
                     let targetMetaNode = core.getBaseType(targetNode);
                     let targetMetaName = core.getAttribute(targetMetaNode, "name");
                     sourceEntry[`${ptrName}${POINTER_SET_DIV}${targetMetaName}`]
-                        = core.getGuid(targetNode);
+                        = getCoreGuid(core, targetNode);
                 }
             });
         } finally { }
@@ -103,7 +104,7 @@ export function getTreeModel(sponsor: PluginBase, core: GmeClasses.Core,
 
                             sourceEntry[setAttr] = typeof sourceEntry[setAttr] === "string"
                                 ? `${sourceEntry[setAttr]} ${core.getGuid(memberNode)}`
-                                : core.getGuid(memberNode);
+                                : getCoreGuid(core, memberNode);
                         } finally { }
                     });
                 } finally { }

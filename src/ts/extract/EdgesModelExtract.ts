@@ -16,6 +16,8 @@ import { attrToString, pathToString } from "utility/GmeString";
 import { PruningFlag } from "serializer/filters";
 import * as nt from "utility/NodeType";
 import { whyIsValidChildOf } from "utility/Reasons";
+import { getCoreGuid } from "utility/CoreExtras";
+
 
 export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
     _rootNode: Core.Node, _metaNode: Node): Promise<Map<string, nt.Subject>> {
@@ -74,13 +76,13 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 baseNodeTypeGuid = "NULL";
                 baseNodeRootGuid = "NULL";
             } else {
-                baseNodeGuid = core.getGuid(baseNode);
-                baseNodeTypeGuid = core.getGuid(core.getBaseType(node));
-                baseNodeRootGuid = core.getGuid(core.getBaseRoot(node));
+                baseNodeGuid = getCoreGuid(core, baseNode);
+                baseNodeTypeGuid = getCoreGuid(core, core.getBaseType(node));
+                baseNodeRootGuid = getCoreGuid(core, core.getBaseRoot(node));
             }
 
             // set the nodes sourceGuid
-            let sourceGuid: string = core.getGuid(node);
+            let sourceGuid: string = getCoreGuid(core, node);
             let sourceEntry: nt.Subject
                 = Object.assign({},
                     nodeGuidMap.get(sourceGuid),
@@ -120,7 +122,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 metaNodeGuid = nt.NULL_GUID;
             } else if (core.isLibraryRoot(node)) {
                 metaName = ":LibraryRoot:";
-                metaNodeGuid = core.getGuid(node);
+                metaNodeGuid = getCoreGuid(core, node);
 
                 // console.log(`prune: ${nodePath}`);
                 pruneList.push(nodePath);
@@ -129,7 +131,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 let metaNameAttr = core.getAttribute(core.getBaseType(node), "name");
                 if (typeof metaNameAttr !== "string") { return; }
                 metaName = metaNameAttr;
-                metaNodeGuid = core.getGuid(core.getParent(node));
+                metaNodeGuid = getCoreGuid(core, core.getParent(node));
             }
             sourceEntry.type.parent = metaNodeGuid;
             let containRel = metaName;
@@ -160,8 +162,8 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 }
                 else {
                     children[containRel][sourceGuid] = {
-                        parent: core.getGuid(reason.parent),
-                        child: core.getGuid(reason.child)
+                        parent: getCoreGuid(core, reason.parent),
+                        child: getCoreGuid(core, reason.child)
                     };
                 }
             }
@@ -203,7 +205,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 let targetPath: string = targetPathRaw;
                 let targetNode = await core.loadByPath(sponsor.rootNode, targetPath);
 
-                let targetGuid = core.getGuid(targetNode);
+                let targetGuid = getCoreGuid(core, targetNode);
                 if (ptrName === "base") {
                     sourceEntry.base = {
                         name: fcoName,
@@ -241,7 +243,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                     try {
                         let targetNode = await core.loadByPath(sponsor.rootNode, targetPath);
 
-                        let targetGuid = core.getGuid(targetNode);
+                        let targetGuid = getCoreGuid(core, targetNode);
                         let sets = sourceEntry.sets;
                         let targetMetaNode = core.getBaseType(targetNode);
 
