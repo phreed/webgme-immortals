@@ -367,13 +367,6 @@ export class RdfNodeSerializer {
         let fnGuid = isClass(subject) ? noGuid : appendGuid;
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
 
-        /*
-        if (isAtom(subject)) {
-            // console.log(`an atom ${subjectName}`);
-            return;
-        }
-        */
-
         // console.log(`write subject name: ${nt.NameType.brief(subject.name)}`);
         this.writer.addTriple({
             subject: subjectName,
@@ -412,7 +405,7 @@ export class RdfNodeSerializer {
             } else if (typeof valueRaw === "boolean") {
                 valueLiteral = Util.createLiteral(valueRaw);
             } else {
-                valueLiteral = Util.createLiteral(`${valueRaw}`);
+                valueLiteral = Util.createLiteral(valueRaw);
             }
             // let predicateName: string = `${NS2}attribute#${key}`;
             let predicateName = predicateContainsKey(key);
@@ -495,59 +488,7 @@ export class RdfNodeSerializer {
                 }
                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
                 let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
-                /*
-                let objIsAtom = isAtom(objective);
-                let objIsCollection = isCollection(objective);
 
-                if (objIsAtom) {
-                    // console.log(`atom child: ${objectName}`);
-                    let attrs = objective.attributes;
-                    for (let key in attrs) {
-                        let predicateName = predicateContainsKey(key);
-                        let valueRaw = attrs[key];
-                        let valueLiteral: any;
-                        if (typeof valueRaw === "string") {
-                            // valueLiteral = Util.createLiteral(valueRaw, "en");
-                            if (valueRaw.length < 1) {
-                                continue;
-                            }
-                            valueLiteral = Util.createLiteral(`${valueRaw}`);
-                        }
-                        else {
-                            valueLiteral = Util.createLiteral(`${valueRaw}`);
-                        }
-                        this.writer.addTriple({
-                            subject: subjectName,
-                            predicate: predicateName,
-                            object: valueLiteral
-                        });
-                    }
-                }
-                if (objIsCollection) {
-                    let sets = objective.sets;
-                    for (let key in sets) {
-                        let predicateName = predicateContainsKey(key);
-                        let valueRawArray = sets[key];
-                        valueRawArray.forEach((value) => {
-                            if (nt.isNGuidType(value)) {
-                                let objective = this.nodeDict.get(value.guid);
-                                if (typeof objective === "undefined") {
-                                    return;
-                                }
-                                let fnGuid = isClass(objective) ? noGuid : appendGuid;
-                                let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
-                                // console.log(`collection member: s:${subjectName} p:${predicateName} o:${objectName}`);
-                                this.writer.addTriple({
-                                    subject: subjectName,
-                                    predicate: predicateName,
-                                    object: objectName
-                                });
-                            }
-                        });
-                    }
-                }
-                if (!objIsAtom || !objIsCollection) {
-                    */
                 let reason = child[guid];
                 let parentReason = this.nodeDict.get(reason.parent);
                 let childReason = this.nodeDict.get(reason.child);
@@ -558,7 +499,6 @@ export class RdfNodeSerializer {
                     predicate: predicateName,
                     object: objectName
                 });
-                // }
             };
         }
     }
