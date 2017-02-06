@@ -170,28 +170,24 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
 
             // set the nodes attributes
             core.getAttributeNames(node).forEach((attrName: string) => {
-                let attrValueRaw = core.getAttribute(node, attrName);
-                let attrValue: string;
-                if (typeof attrValueRaw === "string") {
-                    attrValue = attrValueRaw;
+                let attrValue = core.getAttribute(node, attrName);
+                if (typeof attrValue === "string") {
+                    let sen = sourceEntry.name;
+                    switch (attrName) {
+                        case "uriName": sen.uriName = attrValue; break;
+                        case "uriExt": sen.uriExt = attrValue; break;
+                        case "uriGen": sen.uriGen = attrValue; break;
+                        case "uriPrefix": sen.uriPrefix = attrValue; break;
+                        case "name": sen.name = attrValue; break;
+                        default:
+                            sourceEntry.attributes[attrName] = attrValue;
+                    }
+                } else if (typeof attrValue === "boolean") {
+                    sourceEntry.attributes[attrName] = attrValue;
+                } else if (typeof attrValue === "number") {
+                    sourceEntry.attributes[attrName] = attrValue;
                 } else {
-                    attrValue = "<undefined>";
-                }
-                let sen = sourceEntry.name;
-                switch (attrName) {
-                    case "uriName": sen.uriName = attrValue; break;
-                    case "uriExt": sen.uriExt = attrValue; break;
-                    case "uriGen": sen.uriGen = attrValue; break;
-                    case "uriPrefix": sen.uriPrefix = attrValue; break;
-                    case "name": sen.name = attrValue; break;
-                    default:
-                        if (typeof attrValue === "string") {
-                            sourceEntry.attributes[attrName] = attrValue;
-                        } else if (typeof attrValue === "number") {
-                            sourceEntry.attributes[attrName] = attrValue;
-                        } else if (typeof attrValue === "object") {
-                            console.log(`problem with attribute value ${attrName}`);
-                        }
+                    console.log(`problem with attribute ${attrName} [${typeof attrValue}] : ${attrValue}`);
                 }
             });
 

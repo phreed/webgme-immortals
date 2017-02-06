@@ -42,13 +42,13 @@
         {
             "type": "node2",
             "request": "launch",
-            "name": "Client Serialize Plugin",
+            "name": "Server Serialize Plugin",
             "stopOnEntry": false,
             "program": "${workspaceRoot}/dist-client/main/run_plugin.js",
             "cwd": "${workspaceRoot}",
             "args": [
-                "SerializerClientPlugin",
-                "immortals_v03_cp02_mission",
+                "SerializerServerPlugin",
+                "immortals_v04_mission_2017",
                 "--owner",
                 "fred",
                 "--user",

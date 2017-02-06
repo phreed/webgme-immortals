@@ -121,6 +121,9 @@ function isFilled(name: string | null | undefined) {
     return true;
 }
 
+/**
+ * Construct the RDF subject name from parts.
+ */
 function buildSemanticUriForNode(name: nt.NameType, conditioner: (raw: string) => string): string {
     let uriPrefix: string = setDefault(name.uriPrefix, BLANK);
     let uriExt: string = setDefault(name.uriExt, BLANK);
@@ -228,7 +231,7 @@ function isModel(node: any): boolean {
  * connection => a node with pointers
  */
 function isConnection(node: any): boolean {
-    if (!_.isEmpty(node.pointers)) { return false; }
+    if (_.isEmpty(node.pointers)) { return false; }
     return true;
 }
 
@@ -314,6 +317,7 @@ export class RdfNodeSerializer {
                     IMMoRTALS_resources_gps: `${NS2}/resources_gps#`,
                     IMMoRTALS_resources_gps_properties: `${NS2}/resources_gps_properties#`,
                     IMMoRTALS_resources_memory: `${NS2}/resources/memory#`,
+                    IMMoRTALS_resources_network: `${NS2}/resources/network#`,
 
                     IMMoRTALS_functionality: `${NS2}/functionality#`,
                     IMMoRTALS_functionality_locationprovider: `${NS2}/functionality_locationprovider#`,
@@ -363,10 +367,12 @@ export class RdfNodeSerializer {
         let fnGuid = isClass(subject) ? noGuid : appendGuid;
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
 
+        /*
         if (isAtom(subject)) {
             // console.log(`an atom ${subjectName}`);
             return;
         }
+        */
 
         // console.log(`write subject name: ${nt.NameType.brief(subject.name)}`);
         this.writer.addTriple({
@@ -394,9 +400,22 @@ export class RdfNodeSerializer {
         // console.log("write subject attributes");
         let attrs = subject.attributes;
         for (let key in attrs) {
+
+            let valueRaw = attrs[key];
+            let valueLiteral: any;
+            if (typeof valueRaw === "string") {
+                // valueLiteral = Util.createLiteral(valueRaw, "en");
+                if (valueRaw.length < 1) {
+                    continue;
+                }
+                valueLiteral = Util.createLiteral(`${valueRaw}`, "en");
+            } else if (typeof valueRaw === "boolean") {
+                valueLiteral = Util.createLiteral(valueRaw);
+            } else {
+                valueLiteral = Util.createLiteral(`${valueRaw}`);
+            }
             // let predicateName: string = `${NS2}attribute#${key}`;
             let predicateName = predicateContainsKey(key);
-
             switch (key) {
                 case "comment":
                     predicateName = `${NS_rdfs}#comment`;
@@ -407,17 +426,6 @@ export class RdfNodeSerializer {
                     break;
                 default:
                 // console.log(`attribute: ${key}`);
-            }
-            let valueRaw = attrs[key];
-            let valueLiteral: any;
-            if (typeof valueRaw === "string") {
-                // valueLiteral = Util.createLiteral(valueRaw, "en");
-                if (valueRaw.length < 1) {
-                    continue;
-                }
-                valueLiteral = Util.createLiteral(`${valueRaw}`, "en");
-            } else {
-                valueLiteral = Util.createLiteral(`${valueRaw}`, "en");
             }
             this.writer.addTriple({
                 subject: subjectName,
@@ -487,6 +495,7 @@ export class RdfNodeSerializer {
                 }
                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
                 let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
+                /*
                 let objIsAtom = isAtom(objective);
                 let objIsCollection = isCollection(objective);
 
@@ -538,17 +547,18 @@ export class RdfNodeSerializer {
                     }
                 }
                 if (!objIsAtom || !objIsCollection) {
-                    let reason = child[guid];
-                    let parentReason = this.nodeDict.get(reason.parent);
-                    let childReason = this.nodeDict.get(reason.child);
-                    let predicateName = predicateByContainment(parentReason, childReason);
-                    console.log(`model child: s:${subjectName} p:${predicateName} o:${objectName}`);
-                    this.writer.addTriple({
-                        subject: subjectName,
-                        predicate: predicateName,
-                        object: objectName
-                    });
-                }
+                    */
+                let reason = child[guid];
+                let parentReason = this.nodeDict.get(reason.parent);
+                let childReason = this.nodeDict.get(reason.child);
+                let predicateName = predicateByContainment(parentReason, childReason);
+                console.log(`model child: s:${subjectName} p:${predicateName} o:${objectName}`);
+                this.writer.addTriple({
+                    subject: subjectName,
+                    predicate: predicateName,
+                    object: objectName
+                });
+                // }
             };
         }
     }
