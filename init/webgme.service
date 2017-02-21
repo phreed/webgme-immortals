@@ -18,14 +18,15 @@ SyslogLevel=debug
 User=brass
 # Group=nobody
 Environment="NODE_ENV=immortals" 
-Environment="GME_DIR=projects/brass/webgme-immortals"
-WorkingDirectory=/isis/home/brass/projects/brass/webgme-immortals
+Environment="GME_DIR=projects/immortals/webgme"
+WorkingDirectory=/isis/home/brass/projects/immortals/webgme
 # ExecStartPre=/usr/bin/env
-ExecStart=/isis/home/brass/.nvm/versions/node/v6.9.2/bin/node ./dist-client/main/app_bootstrap.js
+ExecStart=/isis/home/brass/.nvm/versions/node/v6.9.4/bin/node ./dist-client/main/app_bootstrap.js
+TimeoutStopSec=5
 
 
 # man systemd.special
 # Services that can be socket-activated shall add Wants=
 # dependencies to this unit for their socket unit during installation.
-# [Install]
-# WantedBy=multi-user.target
+[Install]
+WantedBy=multi-user.target
