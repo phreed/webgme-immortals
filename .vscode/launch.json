@@ -25,7 +25,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "StreamPlugin",
-                "immortals_v03_cp02_network",
+                "immortals_feature_model",
                 "--owner",
                 "fred",
                 "--user",
