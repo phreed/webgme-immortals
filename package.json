@@ -51,7 +51,7 @@
     "toposort": "github:phreed/toposort",
     "typescript": "^2.2.0",
     "underscore": "^1.8.3",
-    "webgme": "^2.10.0"
+    "webgme": "github:webgme/webgme#typings"
   },
   "devDependencies": {
     "@types/cytoscape": "github:phreed/ts-typings#cytoscape",
@@ -64,7 +64,6 @@
     "@types/node": "^7.0.5",
     "@types/requirejs": "^2.1.28",
     "@types/underscore": "^1.7.36",
-    "@types/webgme": "github:phreed/ts-typings#webgme",
     "bower": "^1.8.0",
     "browserify": "^14.1.0",
     "chai": "^3.5.0",
@@ -79,7 +78,7 @@
     "ts-node": "^2.1.0",
     "tsify": "^3.0.1",
     "tslint": "^4.4.2",
-    "typescript": "^2.1.6",
+    "typescript": "^2.2.1",
     "vinyl-source-stream": "^1.1.0",
     "which": "^1.2.12"
   }

@@ -7,7 +7,6 @@
 [Unit]
 Description=WebGME Listen Socket"
 # Documentation=https://webgme.org
-# Requires=webgme.service
 
 [Socket]
 ListenStream=3000

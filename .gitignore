@@ -12,4 +12,5 @@ typings/
 log/
 config/
 *.ttl
+immortals_model.json
 

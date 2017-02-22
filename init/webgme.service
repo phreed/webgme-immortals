@@ -6,12 +6,13 @@
 Description=WebGME Immortals Service"
 Documentation=https://webgme.org
 Requires=mongodb.service
+Requires=webgme.socket
 
 [Service]
 Type=simple
 # Restart=always
-# StandardInput=
-StandardOutput=syslog
+StandardInput=socket
+StandardOutput=journal
 StandardError=syslog
 SyslogIdentifier=webgme
 SyslogLevel=debug
