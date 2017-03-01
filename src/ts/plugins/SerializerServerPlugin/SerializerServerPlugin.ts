@@ -5,6 +5,7 @@
  */
 
 import PluginBase = require("plugin/PluginBase");
+// import edn = require("jsedn");
 
 import MetaDataStr = require("text!plugins/SerializerServerPlugin/metadata.json");
 
@@ -54,6 +55,12 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
         case "json:1.0.0":
             that.sendNotification("serializing json");
             payload = await JSON.stringify([...nodeDict], null, 4);
+            break;
+
+        case "edn:1.0.0":
+            that.sendNotification("serializing to EDN");
+            payload = await JSON.stringify([...nodeDict], null, 4);
+            // payload = await edn.encode(nodeDict);
             break;
 
         case "ttl:1.0.0":

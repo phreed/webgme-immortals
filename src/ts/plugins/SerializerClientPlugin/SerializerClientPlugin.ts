@@ -5,6 +5,7 @@
  */
 
 import PluginBase = require("plugin/PluginBase");
+// import edn = require("jsedn");
 
 import MetaDataStr = require("text!plugins/SerializerClientPlugin/metadata.json");
 
@@ -54,6 +55,12 @@ async function serialize(that: SerializerClientPlugin, configDictionary: any): P
             that.sendNotification("serializing json");
 
             payload = await JSON.stringify([...nodeDict], null, 4);
+            break;
+
+        case "edn:1.0.0":
+            that.sendNotification("serializing to EDN");
+            payload = await JSON.stringify([...nodeDict], null, 4);
+            // payload = await edn.encode(nodeDict);
             break;
 
         case "ttl:1.0.0":
@@ -110,22 +117,22 @@ class SerializerClientPlugin extends PluginBase {
     public async main(mainHandler: GmeCommon.ResultCallback<GmeClasses.Result>): Promise<void> {
         let configDict = this.getCurrentConfig();
         if (configDict === null) {
-            this.sendNotification("The streaming plugin has failed: no configuration");
+            this.sendNotification("The serializer plugin has failed: no configuration");
             mainHandler(null, this.result);
         }
-        this.sendNotification(`This streaming plugin is running: ${new Date(Date.now()).toTimeString()}`);
+        this.sendNotification(`This serializer plugin is running: ${new Date(Date.now()).toTimeString()}`);
         let configDictionary: any = configDict;
         try {
             await serialize(this, configDictionary);
 
             this.logger.info("successful completion");
-            this.sendNotification("The streaming plugin has completed successfully.");
+            this.sendNotification("The serializer plugin has completed successfully.");
             mainHandler(null, this.result);
-        } catch (err) {
-
-            this.logger.info(`failed: ${err.stack}`);
-            console.log(`streaming plugin failed: ${err.stack}`);
-            this.sendNotification(`The streaming plugin has failed: ${err.message}`);
+        }
+        catch (err) {
+            this.logger.info(`Serializer server plugin failed: ${err.stack}`);
+            console.log(`serializer plugin failed: ${err.stack}`);
+            this.sendNotification(`The serializer plugin has failed: ${err.message}`);
             mainHandler(err, this.result);
         };
     }

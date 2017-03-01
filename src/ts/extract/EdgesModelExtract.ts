@@ -9,6 +9,7 @@
 * @param {Node}              rootNode    [description]
 * @param {Core.Callback} mainHandler [description]
 */
+import _ = require("underscore");
 
 import PluginBase = require("plugin/PluginBase");
 import { attrToString, pathToString } from "utility/GmeString";
@@ -222,8 +223,12 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                             name: targetMetaName,
                             guid: targetGuid
                         };
-                        targetEntry.inv_pointers[ptrName] =
-                            new nt.NGuidType(targetMetaName, sourceGuid);
+                        let inv = new nt.NGuidType(targetMetaName, sourceGuid);
+                        if (_.isEmpty(targetEntry.inv_pointers[ptrName])) {
+                            targetEntry.inv_pointers[ptrName] = [inv];
+                        } else {
+                            targetEntry.inv_pointers[ptrName].push(inv);
+                        }
                     }
                 }
             });

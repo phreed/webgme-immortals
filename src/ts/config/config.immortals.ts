@@ -10,7 +10,6 @@ export NODE_ENV=immortals
 - --------------------- */
 import * as config from "./config.default";
 
-// let config = require("./config.default");
 let path = require("path");
 let systemdSocket = require("systemd-socket");
 

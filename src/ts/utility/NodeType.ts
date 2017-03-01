@@ -40,6 +40,10 @@ export interface Pointers {
     [key: string]: NGuidType;
 }
 
+export interface PointersArray {
+    [key: string]: [NGuidType];
+}
+
 export interface Sets {
     [kind: string]: (FaultType | NGuidType)[];
 }
@@ -123,7 +127,7 @@ export class Subject {
     name: NameType;
     type: TypeType;
     pointers: Pointers;
-    inv_pointers: Pointers;
+    inv_pointers: PointersArray;
     sets: Sets;
     inv_sets: Sets;
     base: NGuidType;
@@ -148,7 +152,7 @@ export class Subject {
         name: NameType,
         type: TypeType,
         pointers: Pointers,
-        inv_pointers: Pointers,
+        inv_pointers: PointersArray,
         sets: Sets,
         inv_sets: Sets,
         base: NGuidType,
