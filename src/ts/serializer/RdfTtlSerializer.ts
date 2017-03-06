@@ -381,10 +381,23 @@ export class RdfNodeSerializer {
         let fnGuid = isClass(subject) ? noGuid : appendGuid;
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
         let subjectType: string = objectifyType(subject.type, this.nodeDict);
-        // TODO: maybe this should be controlled by a input parameter
+
+        // This is overly complex the goal is to decide if a
+        // self-typed object should be preserved.
+        let attrs = subject.attributes;
         if (subjectName === subjectType) {
-            console.log(`considering not writing: ${subjectName} with type ${subjectType}`);
-            // return;
+            if (typeof attrs !== "number") {
+                let key = "PRESERVE_CLASS";
+                if (attrs.hasOwnProperty(key)) {
+                    if (!attrs[key]) {
+                        console.log(`not writing: ${subjectName}`);
+                        return;
+                    }
+                } else {
+                    console.log(`not writing: ${subjectName}`);
+                    return;
+                }
+            }
         }
 
         this.writer.addTriple({
@@ -410,16 +423,18 @@ export class RdfNodeSerializer {
             });
         }
         // console.log("write subject attributes");
-        let attrs = subject.attributes;
         for (let key in attrs) {
-
+            if ("PRESERVE_CLASS".startsWith(key)) {
+                continue;
+            }
             let valueRaw = attrs[key];
             let valueLiteral: any;
             if (typeof valueRaw === "string") {
+
                 if (generateRegExp.test(valueRaw)) {
                     let match = generateRegExp.exec(valueRaw);
                     if (match === null) {
-                       valueLiteral = Util.createLiteral(`${this.randomString()}`);
+                        valueLiteral = Util.createLiteral(`${this.randomString()}`);
                     } else {
                         valueLiteral = Util.createLiteral(`${match[1]}${this.randomString()}`);
                     }
