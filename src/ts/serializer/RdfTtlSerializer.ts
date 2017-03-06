@@ -369,7 +369,7 @@ export class RdfNodeSerializer {
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
         let subjectType: string = objectifyType(subject.type, this.nodeDict);
         // TODO: maybe this should be controlled by a 
-        if (subjectName === subjectType) { return; }
+        // if (subjectName === subjectType) { return; }
         // console.log(`write subject name: ${nt.NameType.brief(subject.name)}`);
         this.writer.addTriple({
             subject: subjectName,
