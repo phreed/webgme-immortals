@@ -1,3 +1,6 @@
+
+
+// import { loadConfigurationFromPath } from 'tslint/lib/configuration';
 import { NULL_GUID } from "../utility/NodeType";
 
 import _ = require("underscore");
@@ -306,6 +309,7 @@ export class RdfNodeSerializer {
                     IMMoRTALS: `${NS2}#`,
                     IMMoRTALS_gmei: `${NS2}/gmei#`,
                     IMMoRTALS_cp1: `${NS2}/cp#`,
+                    IMMoRTALS_cp2: `${NS2}/cp2#`,
                     IMMoRTALS_cp_java: `${NS2}/cp/java#`,
 
                     IMMoRTALS_ordering: `${NS2}/ordering#`,
@@ -342,6 +346,14 @@ export class RdfNodeSerializer {
             });
     }
 
+    randomString = (): string => {
+        let text = "";
+        let possible = "0123456789";
+        for (let ix = 0; ix < 5; ix++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
 
     /**
      * name,type,pointers,sets,base,attributes,children,guid
@@ -354,6 +366,7 @@ export class RdfNodeSerializer {
      * If a subject is its own type then leave it out.
      */
     write = (subject: nt.Subject): void => {
+        let generateRegExp = new RegExp("^<PATTERN>:(\w+)");
 
         // console.log(`write: ${subject.prune} ... ${(subject.prune & PruningFlag.Library)}`);
         /*
@@ -368,9 +381,12 @@ export class RdfNodeSerializer {
         let fnGuid = isClass(subject) ? noGuid : appendGuid;
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
         let subjectType: string = objectifyType(subject.type, this.nodeDict);
-        // TODO: maybe this should be controlled by a 
-        // if (subjectName === subjectType) { return; }
-        // console.log(`write subject name: ${nt.NameType.brief(subject.name)}`);
+        // TODO: maybe this should be controlled by a input parameter
+        if (subjectName === subjectType) {
+            console.log(`considering not writing: ${subjectName} with type ${subjectType}`);
+            // return;
+        }
+
         this.writer.addTriple({
             subject: subjectName,
             predicate: `${NS2}#name`,
@@ -400,11 +416,14 @@ export class RdfNodeSerializer {
             let valueRaw = attrs[key];
             let valueLiteral: any;
             if (typeof valueRaw === "string") {
-                // valueLiteral = Util.createLiteral(valueRaw, "en");
-                if (valueRaw.length < 1) {
-                    continue;
+                if (generateRegExp.test(valueRaw)) {
+                    valueLiteral = Util.createLiteral(`S${this.randomString()}`);
+                } else {
+                    if (valueRaw.length < 1) {
+                        continue;
+                    }
+                    valueLiteral = Util.createLiteral(`${valueRaw}`); // , "en");
                 }
-                valueLiteral = Util.createLiteral(`${valueRaw}`); // , "en");
             } else if (typeof valueRaw === "boolean") {
                 valueLiteral = Util.createLiteral(valueRaw);
             } else {
