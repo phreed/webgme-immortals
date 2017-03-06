@@ -351,6 +351,7 @@ export class RdfNodeSerializer {
      *   connection : has pointers/sets/etc.
      * Atoms are never subjects.
      *
+     * If a subject is its own type then leave it out.
      */
     write = (subject: nt.Subject): void => {
 
@@ -366,7 +367,9 @@ export class RdfNodeSerializer {
         }
         let fnGuid = isClass(subject) ? noGuid : appendGuid;
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
-
+        let subjectType: string = objectifyType(subject.type, this.nodeDict);
+        // TODO: maybe this should be controlled by a 
+        if (subjectName === subjectType) { return; }
         // console.log(`write subject name: ${nt.NameType.brief(subject.name)}`);
         this.writer.addTriple({
             subject: subjectName,
@@ -378,7 +381,7 @@ export class RdfNodeSerializer {
         this.writer.addTriple({
             subject: subjectName,
             predicate: `${NS_rdf}#type`,
-            object: objectifyType(subject.type, this.nodeDict)
+            object: subjectType
         });
 
         // console.log("write subject base");
@@ -401,7 +404,7 @@ export class RdfNodeSerializer {
                 if (valueRaw.length < 1) {
                     continue;
                 }
-                valueLiteral = Util.createLiteral(`${valueRaw}`, "en");
+                valueLiteral = Util.createLiteral(`${valueRaw}`); // , "en");
             } else if (typeof valueRaw === "boolean") {
                 valueLiteral = Util.createLiteral(valueRaw);
             } else {
