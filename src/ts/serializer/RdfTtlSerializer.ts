@@ -366,7 +366,7 @@ export class RdfNodeSerializer {
      * If a subject is its own type then leave it out.
      */
     write = (subject: nt.Subject): void => {
-        let generateRegExp = new RegExp("^<PATTERN>:(\w+)");
+        let generateRegExp = new RegExp("^<PATTERN>:(.+)");
 
         // console.log(`write: ${subject.prune} ... ${(subject.prune & PruningFlag.Library)}`);
         /*
@@ -417,7 +417,12 @@ export class RdfNodeSerializer {
             let valueLiteral: any;
             if (typeof valueRaw === "string") {
                 if (generateRegExp.test(valueRaw)) {
-                    valueLiteral = Util.createLiteral(`S${this.randomString()}`);
+                    let match = generateRegExp.exec(valueRaw);
+                    if (match === null) {
+                       valueLiteral = Util.createLiteral(`${this.randomString()}`);
+                    } else {
+                        valueLiteral = Util.createLiteral(`${match[1]}${this.randomString()}`);
+                    }
                 } else {
                     if (valueRaw.length < 1) {
                         continue;
