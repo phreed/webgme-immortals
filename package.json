@@ -52,7 +52,7 @@
     "toposort": "github:phreed/toposort",
     "typescript": "^2.2.0",
     "underscore": "^1.8.3",
-    "webgme": "github:webgme/webgme#typings"
+    "webgme": "github:webgme/webgme#typescript"
   },
   "devDependencies": {
     "@types/cytoscape": "github:phreed/ts-typings#cytoscape",

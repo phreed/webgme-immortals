@@ -13,7 +13,7 @@ import * as config from "./config.default";
 let path = require("path");
 let systemdSocket = require("systemd-socket");
 
-config.client.log.level = "debug";
+// config.client.log.level = "debug";
 // config.debug = true;
 config.server.port = 3000;
 config.server.handle = systemdSocket(0);

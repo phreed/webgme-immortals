@@ -10,6 +10,7 @@ let validateConfig = require("webgme/config/validator");
 // See config.immortals.js for server settings.
 
 config.client.log.level = "debug";
+config.client.defaultConnectionRouter = "basic";
 
 config.plugin.basePaths.push("./dist-client/plugins");
 // console.log(config.plugin.basePaths);
@@ -18,6 +19,7 @@ config.requirejsPaths["WebGMEGlobal"] = "./dist-client/WebGMEGlobal";
 config.requirejsPaths["favicon"] = "img/favicon.ico";
 
 // Visualizer descriptors
+config.visualization.svgDirs = ["./res/svgicons"];
 config.visualization.panelPaths.push("./dist-client/visualizers/panels");
 config.visualization.visualizerDescriptors.push("./src/ts/visualizers/Visualizers.json");
 
@@ -36,7 +38,7 @@ config.seedProjects.allowDuplication = true;
 
 config.requirejsPaths["bower"] = "./bower_components/";
 config.requirejsPaths["style"] = "./style";
-// need to get 
+// need to get
 // https://github.com/GeoKnow/Jassa-Bower/archive/v0.9.0-SNAPSHOT.zip
 // so that there can be interaction with Jena
 
