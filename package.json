@@ -52,12 +52,12 @@
     "toposort": "github:phreed/toposort",
     "typescript": "^2.2.0",
     "underscore": "^1.8.3",
-    "webgme": "github:webgme/webgme#typescript"
+    "webgme": "^2.11.0"
   },
   "devDependencies": {
     "@types/cytoscape": "github:phreed/ts-typings#cytoscape",
     "@types/form-data": "0.0.33",
-    "@types/fs-extra": "0.0.37",
+    "@types/fs-extra": "2.0.0",
     "@types/jquery": "^2.0.40",
     "@types/jszip": "0.0.32",
     "@types/kafka-node": "^1.3.0",
