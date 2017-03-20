@@ -1,2 +1,4 @@
 These represent the candidate systems under scrutiny.
-These are all android based systems.
+
+Most of these models are for demonstration only.
+The official models are located in the IMMoRTALS Subversion Repository.

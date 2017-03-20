@@ -121,8 +121,6 @@ see brass/webgme-immortals/init/README.md
 
 ### Samples ###
 
-There are a few sample projects in...
-webgme-immortals/samples/model/
-...notably ./deployment_model/webgme/immortals_dm_v2_master.json
-See the accompanying README.md for more information.
+There are a few sample projects...
+webgme-immortals/samples/README.md
 
