@@ -27,8 +27,10 @@ Clone the repository into an appropriate place and build the application.
 ```
 If you want to run the application to see if it works.
 ```bash
-  webgme start
+  ./init/runit.sh
 ```
+
+You should now be able to connect to the running webGME server, http://127.0.0.1:3000
 
 ### Slow Start (explanations provided)
 
@@ -48,8 +50,8 @@ I work in a project folder and clone projects into that:
   mkdir -p ~/projects/brass
   cd ~/projects/brass
 
-  # git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
-  git clone git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git
+  git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
+  git clone git@github.com:phreed/webgme-immortals.git
 
   cd webgme-immortals
 ```
@@ -88,13 +90,26 @@ This establishes a set of node_modules specifically for the project.
   cd ~/projects/brass/webgme-immortals
   npm install
 ```
+We also need to build the javascript from the typescript.
+```bash
+  tsc
+  gulp
+```
+
 Things are now configured to start the webGME server.
 Pay attention to the output as the URL for connecting
 to the 'gme web server' will be written stdout.
 ```bash
-  webgme start
+   export NODE_ENV=immortals
+   pushd .
+   [[ -d ./log ]] || mkdir ./log
+   node ./dist-client/main/app_bootstrap.js
+   popd
 ```
 Ctrl-C is used to shut the server down.
+
+You should now be able to connect to the running webGME server, http://127.0.0.1:3000
+
 Some changes to the running system will necessitate restarting the server.
 This includes changes to the packages listed in 'packages.json' (npm),
 or 'bower.json'.
