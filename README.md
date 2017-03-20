@@ -16,7 +16,7 @@ Clone the repository into an appropriate place and build the application.
   git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
   cd webgme-immortals
 
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
   nvm install v6.10.0
   nvm use v6.10.0
 
@@ -56,20 +56,30 @@ I work in a project folder and clone projects into that:
 WebGME does not closely track node.js nor npm therefore it is
 useful to use the node-version-manager (nvm https://github.com/creationix/nvm)
 to establish a consistent set of Javascript packages.
+If you will be working on this for a while it is better to do a manual install.
+
 ```bash
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+  export NVM_DIR="${HOME}/.nvm" && (
+  git clone https://github.com/creationix/nvm.git "${NVM_DIR}"
+  cd "${NVM_DIR}"
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
+) && . "${NVM_DIR}/nvm.sh"
 ```
+
+Add the following lines to your ~/.bashrc, ~/.profile, or ~/.zshrc file.
+This will source nvm automatically upon login.
+(You may have to add to more than one of the mentioned files)
+```
+export NVM_DIR="${HOME}/.nvm"
+[ -s "${NVM_DIR}/nvm.sh" ] && . "${NVM_DIR}/nvm.sh" # This loads nvm
+```
+
 **Close and reopen your terminal to start using nvm (or source .bashrc).**
 
 Once nvm installed the appropriate bundle for webGME is enabled.
 ```bash
   nvm install v6.10.0
   nvm use v6.10.0
-```
-
-Some of the tasks use the webgme-cli which includes the 'webgme' tool.
-```bash
-  npm install -g webgme-cli
 ```
 
 Update all the npm packages within the webgme-immortals directory.
