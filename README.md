@@ -48,7 +48,7 @@ I work in a project folder and clone projects into that:
   mkdir -p ~/projects/brass
   cd ~/projects/brass
 
-  git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
+  # git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
   git clone git@git.isis.vanderbilt.edu:immortals/webgme-immortals.git
 
   cd webgme-immortals
