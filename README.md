@@ -13,7 +13,7 @@ Clone the repository into an appropriate place and build the application.
 ```bash
   mkdir -p ~/projects/brass
   cd ~/projects/brass
-  git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
+  git clone https://github.com/phreed/webgme-immortals.git
   cd webgme-immortals
 
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
@@ -53,6 +53,10 @@ openssl genrsa -out token_keys/private_key 1024
 openssl rsa -in token_keys/private_key -pubout > token_keys/public_key
 popd
 ```
+To be clear, the location of the token_keys and 
+authentication generally is controlled in
+`/webgme/src/ts/config/config.immortals.ts`
+
 
 ### Long Running Service
 
@@ -81,8 +85,7 @@ I work in a project folder and clone projects into that:
   mkdir -p ~/projects/brass
   cd ~/projects/brass
 
-  git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
-  git clone git@github.com:phreed/webgme-immortals.git
+  git clone https://github.com/phreed/webgme-immortals.git
 
   cd webgme-immortals
 ```
