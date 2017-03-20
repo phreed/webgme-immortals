@@ -16,21 +16,26 @@ Clone the repository into an appropriate place and build the application.
   git clone https://git.isis.vanderbilt.edu/immortals/webgme-immortals.git
   cd webgme-immortals
 
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
-  nvm install v4.2.4
-  nvm use v4.2.4
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+  nvm install v6.10.0
+  nvm use v6.10.0
 
   npm install
+
+  tsc
+  gulp
 ```
 If you want to run the application to see if it works.
 ```bash
   webgme start
 ```
 
+### Slow Start (explanations provided)
+
 webGME and its derivatives are node.js applications which
 use mongodb as the backing store and git for version-control.
 Development and operation are possible on MS-Windows and Mac-OSX.
-The following instructions are for Ubuntu 16.04 (which I use).
+The following instructions are for Ubuntu 16.10 (which I use).
 Note that mongodb-clients is not necessary but it can be useful.
 ```bash
   sudo apt-get install mongodb-server
@@ -52,18 +57,14 @@ WebGME does not closely track node.js nor npm therefore it is
 useful to use the node-version-manager (nvm https://github.com/creationix/nvm)
 to establish a consistent set of Javascript packages.
 ```bash
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
 ```
 **Close and reopen your terminal to start using nvm (or source .bashrc).**
 
 Once nvm installed the appropriate bundle for webGME is enabled.
 ```bash
-  nvm install v4.2.4
-  nvm use v4.2.4
-```
-It may be necessary to disable the prefix.
-```bash
-nvm use --delete-prefix v4.2.4
+  nvm install v6.10.0
+  nvm use v6.10.0
 ```
 
 Some of the tasks use the webgme-cli which includes the 'webgme' tool.
@@ -100,16 +101,3 @@ webgme-immortals/samples/model/
 ...notably ./deployment_model/webgme/immortals_dm_v2_master.json
 See the accompanying README.md for more information.
 
-### Creating User Accounts ###
-By default webgme starts with a single user, 'guest',
-additional users can be added with the 'usermanager'.
-
-```bash
-node node_modules/webgme/src/bin/usermanager.js -h
-```
-
-```bash
-node node_modules/webgme/src/bin/usermanager.js useradd --canCreate foo foo@bar.org foopass
-node node_modules/webgme/src/bin/usermanager.js organizationadd baz
-node node_modules/webgme/src/bin/usermanager.js usermod_organization_add foo baz
-```

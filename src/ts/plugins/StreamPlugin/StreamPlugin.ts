@@ -3,13 +3,13 @@
  * A plugin that inherits from the PluginBase.
  * To see source code documentation about available
  * properties and methods visit %host%/docs/source/PluginBase.html.
- * 
- * The idea here is to export all of the commits 
+ *
+ * The idea here is to export all of the commits
  * to a stream processor. From there the commits will
- * be extracted and used to construct different 
+ * be extracted and used to construct different
  * data-structures suitable for various questions and
  * the generation of derived and related facts.
- * In particular the incorporation of static and 
+ * In particular the incorporation of static and
  * dynamic information about the system environment
  * and constructed components.
  */
@@ -21,7 +21,7 @@ import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
 import { GmeRegExp } from "utility/GmeRegExp";
 
 /**
- * The JSON.stringify takes an argument that can be 
+ * The JSON.stringify takes an argument that can be
  * Used to halt unlimited circular dependency descent.
  * There seems to be a harded maximum of 30 serialized objects.
  * At that hard limit an exception is thrown.
@@ -65,9 +65,6 @@ function replacer(root: any, options: { maxLevel?: number, maxNodes?: number }) 
     };
 }
 
-interface Sender {
-    (req: Array<ProduceRequest>): Promise<any>;
-}
 
 class ResultTree {
     root: Core.Node | null;
@@ -116,6 +113,10 @@ async function getCommits(project: GmeClasses.Project,
     return Promise.reject(new Error(`could not get commits`));
 }
 
+
+interface Sender {
+    (reqs: Array<ProduceRequest>): Promise<any>;
+}
 
 /**
  * generate the commit and send it as indicated by the sender.
@@ -208,11 +209,11 @@ async function deliverCommits(
 }
 
 /**
- * wrap the... 
+ * wrap the...
  * Project.loadObject(key: string, cb: GmeCommon.LoadObjectCallback): void;
  * ...method in an async promise.
  * type LoadObjectCallback = GmeCommon.ResultCallback<GmeStorage.CommitObject | Core.DataObject>;
- * 
+ *
  */
 function loadObjectAsync(project: GmeClasses.Project,
     commit: GmeStorage.CommitHash): Promise<GmeCommon.LoadObject> {
@@ -262,7 +263,7 @@ async function loadCommit(core: GmeClasses.Core,
 }
 
 /**
- * Typically the key is simply a commit but if a 
+ * Typically the key is simply a commit but if a
  * branch name is supplied the head commit is looked up first.
  */
 async function getRootCommit(
@@ -286,12 +287,12 @@ async function getRootCommit(
 /**
    * Candidates for building patches:
    * ./webgme/src/common/util/jsonPatcher.js
-   * ./webgme/src/common/storage/util.js 
+   * ./webgme/src/common/storage/util.js
    *   * getPatchObject()
    * ./webgme/src/common/storage/storageclasses/editorstorage.js
    *   * makeCommit()
-   * 
-   * 
+   *
+   *
    * @see http://tools.ietf.org/html/rfc6902
    */
 async function processCommits(config: any,
