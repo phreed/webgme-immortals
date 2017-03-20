@@ -25,12 +25,43 @@ Clone the repository into an appropriate place and build the application.
   tsc
   gulp
 ```
-If you want to run the application to see if it works.
+
+Running webgme as a user process is simply performed: 
 ```bash
   ./init/runit.sh
 ```
 
 You should now be able to connect to the running webGME server, http://127.0.0.1:3000
+
+There are a couple of other things that should be done to run
+webgme as it is intented to be run.
+One is setting up proper authentication which is covered in the following section.
+The other is to make webgme a proper systemd service.
+
+
+#### Authentication
+
+The authentication scheme for Json Web Token uses OpenSSL RSA256 keys. 
+The config for the editor is set up to find a public and private key in
+the files `private_key` and `public_key` inside 
+a folder named `token_keys` next to the folder containing 
+the webgme git repository.
+```bash
+pushd ..
+mkdir token_keys
+openssl genrsa -out token_keys/private_key 1024
+openssl rsa -in token_keys/private_key -pubout > token_keys/public_key
+popd
+```
+
+### Long Running Service
+
+see brass/webgme-immortals/init/README.md
+
+### Samples ###
+
+There are a few sample projects...
+webgme-immortals/samples/README.md
 
 ### Slow Start (explanations provided)
 
@@ -115,12 +146,4 @@ This includes changes to the packages listed in 'packages.json' (npm),
 or 'bower.json'.
 Changes to Javascript or CSS will only require an refresh on the browser.
 
-### Long Running Service
-
-see brass/webgme-immortals/init/README.md
-
-### Samples ###
-
-There are a few sample projects...
-webgme-immortals/samples/README.md
 
