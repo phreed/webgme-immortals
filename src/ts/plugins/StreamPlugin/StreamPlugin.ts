@@ -17,7 +17,8 @@
 import _ = require("underscore");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
-import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
+// import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
+import { Producer } from "no-kafka";
 import { GmeRegExp } from "utility/GmeRegExp";
 
 /**
