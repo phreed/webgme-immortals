@@ -18,7 +18,7 @@ import _ = require("underscore");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
 // import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
-import { Producer } from "no-kafka";
+import { Producer, KeyedMessage } from "no-kafka";
 import { GmeRegExp } from "utility/GmeRegExp";
 
 /**
@@ -341,14 +341,13 @@ function dummySender(_config: any): Sender {
 
 /**
  * Make a sender for a kafka stream.
- * This returns a sender function that sends payload.
+ * This function forms a sender function that sends payload.
  */
 function kafkaSender(configDictionary: any): Sender {
-    return (payloads: Array<ProduceRequest>): Promise<Sender> => {
+    return (payloads: Array<any>): Promise<void> => {
         let connStr = configDictionary["deliveryUrl"];
         console.log(`connecting to: ${connStr}`);
-        let client = new Client(connStr, "kafka-node-client");
-        let producer = new Producer(client);
+        let producer = new Producer({connectionString: "kafka://127.0.0.1:9092"});
         return new Promise<Sender>((resolve, reject) => {
             producer.on("error", (err: any) => {
                 reject(`could not ${err}`);

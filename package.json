@@ -43,7 +43,7 @@
     "fs-extra": "^2.1.2",
     "jquery": "^3.2.0",
     "jsedn": "^0.4.0",
-    "no-kafka": "github:phreed/kafka",
+    "no-kafka": "/home/fred/projects/immortals/kafka",
     "mongodb": "^2.2.25",
     "n3": "^0.9.1",
     "requirejs": "^2.3.3",
