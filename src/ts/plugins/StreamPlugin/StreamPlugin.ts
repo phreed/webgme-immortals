@@ -14,11 +14,9 @@
  * and constructed components.
  */
 // import { exec } from "child_process";
-import _ = require("underscore");
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
-// import { Producer, KeyedMessage, Client, ProduceRequest } from "kafka-node";
-import { Producer, KeyedMessage } from "no-kafka";
+import { Producer as KafkaProducer, Result as KafkaResult, Message as KafkaMessage } from "no-kafka";
 import { GmeRegExp } from "utility/GmeRegExp";
 
 /**
@@ -116,11 +114,11 @@ async function getCommits(project: GmeClasses.Project,
 
 
 interface Sender {
-    (reqs: Array<ProduceRequest>): Promise<any>;
+    (reqs: Array<KafkaMessage>): Promise<KafkaResult[]>;
 }
 
 /**
- * generate the commit and send it as indicated by the sender.
+ * generate the commit and send it as indicated by the producer.
  */
 async function deliverCommits(
     core: GmeClasses.Core, project: GmeClasses.Project,
@@ -138,16 +136,9 @@ async function deliverCommits(
         }
 
         let diff = await core.generateTreeDiff(nullCommit, postCommit.root);
-        let payload = [
-            {
-                topic: "vu-isis_gme_brass_immortals",
-                project: project.projectId,
-                commit: prime,
-                messages: new KeyedMessage("payload", diff),
-                partition: 0
-            }
-        ];
-        return await sender(payload);
+        return await sender(
+            [{topic: "vu-isis_gme_brass_immortals", partition: 0,
+            message: {key: "natural diff", value: JSON.stringify(diff) }}] );
     }
 
 
@@ -156,7 +147,7 @@ async function deliverCommits(
     */
     async function normalHelper(_previous: GmeStorage.CommitObject,
         current: GmeStorage.CommitObject,
-        _ix: number): Promise<void> {
+        _ix: number): Promise<KafkaResult[]> {
         // console.log(`normal helper:`);
         // console.log(` ix: ${_ix}, \n`
         //    + `prev: ${JSON.stringify(_previous, replacer(_previous, {}), 2)}, \n`
@@ -176,16 +167,9 @@ async function deliverCommits(
 
         let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
         // console.log(`diff:`);
-        let payload = [
-            {
-                topic: "urn:vu-isis:gme/brass/immortals",
-                project: project.projectId,
-                commit: current,
-                messages: new KeyedMessage("payload", diff),
-                partition: 0
-            }
-        ];
-        return await sender(payload);
+        return await sender(
+            [{topic: "vu-isis_gme_brass_immortals", partition: 0,
+            message: {key: "normal diff", value: JSON.stringify(diff) }}] );
     }
 
     // processing
@@ -329,9 +313,9 @@ async function processCommits(config: any,
 
 }
 
-function dummySender(_config: any): Sender {
-    return (payloads: Array<ProduceRequest>): Promise<Sender> => {
-        return new Promise<Sender>((resolve, _reject) => {
+async function dummyPublisher(_config: any): Promise<Sender> {
+    return async (payloads: KafkaMessage[]): Promise<KafkaResult[]> => {
+        return new Promise<KafkaResult[]>((resolve, _reject) => {
             console.log(`dummy: ${JSON.stringify(payloads, replacer(payloads, {}), 2)}`);
             resolve();
         });
@@ -340,29 +324,15 @@ function dummySender(_config: any): Sender {
 
 
 /**
- * Make a sender for a kafka stream.
- * This function forms a sender function that sends payload.
+ * Make a publisher for a kafka stream.
+ * This function forms a sender function that delivers payload.
  */
-function kafkaSender(configDictionary: any): Sender {
-    return (payloads: Array<any>): Promise<void> => {
+async function kafkaPublisher(configDictionary: any): Promise<Sender> {
+    return async (payloads: KafkaMessage[]): Promise<KafkaResult[]> => {
         let connStr = configDictionary["deliveryUrl"];
         console.log(`connecting to: ${connStr}`);
-        let producer = new Producer({connectionString: "kafka://127.0.0.1:9092"});
-        return new Promise<Sender>((resolve, reject) => {
-            producer.on("error", (err: any) => {
-                reject(`could not ${err}`);
-            });
-            producer.on("ready", () => {
-                producer.send(payloads, (err, data) => {
-                    if (_.isEmpty(err) || _.isUndefined(err)) {
-                        console.log(`data sent: ${JSON.stringify(data, null, 2)}`);
-                        resolve(data);
-                    } else {
-                        reject(`error sending [[${typeof err} : ${err}]]`);
-                    }
-                });
-            });
-        });
+        let producer = new KafkaProducer({connectionString: connStr});
+        return await producer.send(payloads);
     };
 }
 
@@ -409,11 +379,11 @@ class StreamPlugin extends PluginBase {
         switch (this.configDictionary["deliveryType"]) {
             case "kafka:001":
                 console.log(`making a kafka sender`);
-                sender = await kafkaSender(this.configDictionary);
+                sender = await kafkaPublisher(this.configDictionary);
                 break;
             default:
                 console.log(`making a dummy sender`);
-                sender = await dummySender(this.configDictionary);
+                sender = await dummyPublisher(this.configDictionary);
         }
         /**
          * publish the latest commits.

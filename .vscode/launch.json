@@ -5,11 +5,12 @@
     "version": "0.2.0",
     "configurations": [       
         {
-            "type": "node2",
+            "type": "node",
+            "protocol": "auto",
             "request": "launch",
             "name": "Launch webGME",
             "program": "${workspaceRoot}/dist-client/main/app_bootstrap.js",
-            "cwd": "${workspaceRoot}",
+            "cwd": "legacy",
             "outFiles": [],
             "sourceMaps": true,
             "env": {
@@ -17,7 +18,8 @@
             }
         },
         {
-            "type": "node2",
+            "type": "node",
+            "protocol": "auto",
             "request": "launch",
             "name": "Launch Stream Plugin",
             "stopOnEntry": false,
@@ -37,10 +39,12 @@
             "sourceMaps": true,
             "env": {
                 "NODE_ENV": "immortals"
-            }
+            },
+            "console": "integratedTerminal"
         },
         {
-            "type": "node2",
+            "type": "node",
+            "protocol": "auto",
             "request": "launch",
             "name": "Server Serialize Plugin",
             "stopOnEntry": false,
@@ -63,7 +67,8 @@
             }
         },
         {
-            "type": "node2",
+            "type": "node",
+            "protocol": "auto",
             "request": "attach",
             "name": "Attach to Worker Process",
             "port": 5860,

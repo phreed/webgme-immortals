@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "taskName": "Update Metadata",
+            "command": "gulp",
+            "args": ["dist-client"],
+            "isShellCommand": true,
+            "options": {
+                "cwd": "${workspaceRoot}"
+            }
+        },
+        {
+            "taskName": "Compile Typescript",
+            "command": "tsc",
+            "args": [],
+            "isShellCommand": true,
+            "options": {
+                "cwd": "${workspaceRoot}"
+            }
+        },
+        {
+            "taskName": "Build",
+            "dependsOn": ["Compile Typescript", "Update Metadata"]
+        }
+    ]
+}

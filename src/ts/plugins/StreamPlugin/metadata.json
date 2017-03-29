@@ -42,7 +42,7 @@
       "regex": "^[0-9a-zA-Z:\/\\.-_]+$",
       "regexMessage": "Name can only contain digits, latin characters, slash, dot, hyphen and underscore!",
       "description": "What is the ip address or name of the zookeeper host.",
-      "value": "localhost:2181/",
+      "value": "kafka://127.0.0.1:9092",
       "valueType": "string",
       "readOnly": false
     },
