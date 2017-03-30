@@ -59,7 +59,6 @@
     "@types/fs-extra": "2.0.0",
     "@types/jquery": "^2.0.41",
     "@types/jszip": "0.0.32",
-    "@types/kafka-node": "^1.3.1",
     "@types/n3": "github:phreed/ts-typings#n3",
     "@types/node": "^7.0.8",
     "@types/requirejs": "^2.1.28",
