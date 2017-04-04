@@ -51,7 +51,7 @@
       "name": "deliveryMode",
       "displayName": "Delivery Mode",
       "description": "Specify the manner of delivery for the serialization",
-      "value": "file:1.0.0",
+      "value": "kafka:1.0.0",
       "valueType": "string",
       "valueItems": [
         "file:1.0.0",

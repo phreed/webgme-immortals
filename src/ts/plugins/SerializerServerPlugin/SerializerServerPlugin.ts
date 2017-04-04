@@ -20,6 +20,7 @@ import { getEdgesModel } from "extract/EdgesModelExtract";
 
 import { deliverFile } from "delivery/FileDelivery";
 import { deliverMultipart, deliverSinglepart } from "delivery/UriDelivery";
+import { deliverKafka } from "delivery/KafkaDelivery";
 
 async function serialize(that: SerializerServerPlugin, configDictionary: any): Promise<GmeClasses.Result> {
     /**
@@ -106,6 +107,10 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
         case "singlepart:1.0.0":
             that.sendNotification("deliver as text/plain");
             return await deliverSinglepart(that, configDictionary, payload);
+
+        case "kafka:1.0.0":
+        that.sendNotification("deliver to kafka");
+            return await deliverKafka(that, configDictionary, payload);
 
         default:
             return Promise.reject(new Error(`unknown delivery mode: ${configDictionary["deliveryMode"]}`));

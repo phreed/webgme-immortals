@@ -45,7 +45,7 @@
     "jsedn": "^0.4.0",
     "mongodb": "^2.2.25",
     "n3": "^0.9.1",
-    "no-kafka": "../kafka",
+    "no-kafka": "^3.1.4",
     "requirejs": "^2.3.3",
     "systemd-socket": "0.0.0",
     "text": "github:requirejs/text",
