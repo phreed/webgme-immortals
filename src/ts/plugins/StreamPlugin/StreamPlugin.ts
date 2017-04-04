@@ -16,7 +16,7 @@
 // import { exec } from "child_process";
 import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
-import { Producer as KafkaProducer, Result as KafkaResult, Message as KafkaMessage } from "no-kafka";
+import { Producer as KafkaProducer, Result as KafkaResult, Message as KafkaMessage, COMPRESSION_NONE } from "no-kafka";
 import { GmeRegExp } from "utility/GmeRegExp";
 
 /**
@@ -136,9 +136,12 @@ async function deliverCommits(
         }
 
         let diff = await core.generateTreeDiff(nullCommit, postCommit.root);
+        // console.log(`deliver commits: ${JSON.stringify(diff)}`);
         return await sender(
-            [{topic: "vu-isis_gme_brass_immortals", partition: 0,
-            message: {key: "natural diff", value: JSON.stringify(diff) }}] );
+            [{
+                topic: "vu-isis_gme_brass_immortals", partition: 0,
+                message: { key: "natural diff", value: JSON.stringify(diff) }
+            }]);
     }
 
 
@@ -168,8 +171,10 @@ async function deliverCommits(
         let diff = await core.generateTreeDiff(preCommit.root, postCommit.root);
         // console.log(`diff:`);
         return await sender(
-            [{topic: "vu-isis_gme_brass_immortals", partition: 0,
-            message: {key: "normal diff", value: JSON.stringify(diff) }}] );
+            [{
+                topic: "vu-isis_gme_brass_immortals", partition: 0,
+                message: { key: "normal diff", value: JSON.stringify(diff) }
+            }]);
     }
 
     // processing
@@ -322,16 +327,21 @@ async function dummyPublisher(_config: any): Promise<Sender> {
     };
 };
 
-
 /**
  * Make a publisher for a kafka stream.
  * This function forms a sender function that delivers payload.
  */
 async function kafkaPublisher(configDictionary: any): Promise<Sender> {
+    let connStr = configDictionary["deliveryUrl"];
+    console.log(`connecting to: ${connStr}`);
+    let producer = new KafkaProducer({
+        connectionString: connStr,
+        clientId: "producer",
+        codec: COMPRESSION_NONE
+    });
+    await producer.init();
+
     return async (payloads: KafkaMessage[]): Promise<KafkaResult[]> => {
-        let connStr = configDictionary["deliveryUrl"];
-        console.log(`connecting to: ${connStr}`);
-        let producer = new KafkaProducer({connectionString: connStr});
         return await producer.send(payloads);
     };
 }
@@ -391,6 +401,7 @@ class StreamPlugin extends PluginBase {
         try {
             await processCommits(this.configDictionary,
                 this.core, this.project, sender);
+            this.result.setSuccess(true);
 
             console.log(`processing complete`);
             mainHandler(null, this.result);
