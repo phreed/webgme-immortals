@@ -139,7 +139,7 @@ async function deliverCommits(
         // console.log(`deliver commits: ${JSON.stringify(diff)}`);
         return await sender(
             [{
-                topic: "vu-isis_gme_brass_immortals", partition: 0,
+                topic: "darpa.brass.immortals.vu.isis.gme", partition: 0,
                 message: { key: "natural diff", value: JSON.stringify(diff) }
             }]);
     }
@@ -172,7 +172,7 @@ async function deliverCommits(
         // console.log(`diff:`);
         return await sender(
             [{
-                topic: "vu-isis_gme_brass_immortals", partition: 0,
+                topic: "darpa.brass.immortals.vu.isis.gme", partition: 0,
                 message: { key: "normal diff", value: JSON.stringify(diff) }
             }]);
     }
