@@ -9,7 +9,7 @@ dist-server/
 dist-client/
 typings/
 *.js.map
-log/
+log/*
 config/
 *.ttl
 immortals_model.json
