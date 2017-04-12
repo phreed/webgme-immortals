@@ -24,7 +24,7 @@ export async function deliverStream(sponsor: PluginBase,
     let configDictionary: any = config;
 
     try {
-        let fileName = await addSytacticSuffix(config, configDictionary["fileName"]);
+        let fileName = await addSytacticSuffix(config, configDictionary["topic"]);
 
         let form = new FormData();
         form.append("filename", payload, {

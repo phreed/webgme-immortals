@@ -13,7 +13,7 @@ export async function deliverArtifact(sponsor: PluginBase, config: GmeConfig.Gme
     let configDictionary: any = config;
     sponsor.logger.info("deliver artifact");
 
-    if (!configDictionary.hasOwnProperty("fileName")) {
+    if (!configDictionary.hasOwnProperty("topic")) {
         return Promise.reject(new Error("No file name provided."));
     }
     sponsor.sendNotification("config has property");
@@ -37,11 +37,11 @@ export async function deliverArtifact(sponsor: PluginBase, config: GmeConfig.Gme
         let artifact = await sponsor.blobClient.createArtifact(artifactName);
 
         sponsor.sendNotification("artifact created");
-        let pushedFileName = addSytacticSuffix(config, configDictionary["fileName"]);
+        let pushedTopic = addSytacticSuffix(config, configDictionary["topic"]);
 
 
-        sponsor.sendNotification(`adding: ${pushedFileName}`);
-        let hash = await artifact.addFile(pushedFileName, payload);
+        sponsor.sendNotification(`adding: ${pushedTopic}`);
+        let hash = await artifact.addFile(pushedTopic, payload);
 
         sponsor.sendNotification(`saving: ${hash}`);
         let reHash = await artifact.save();

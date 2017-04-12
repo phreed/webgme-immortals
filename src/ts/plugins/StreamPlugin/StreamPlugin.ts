@@ -18,6 +18,7 @@ import PluginBase = require("plugin/PluginBase");
 import MetaDataStr = require("text!plugins/StreamPlugin/metadata.json");
 import { Producer as KafkaProducer, Result as KafkaResult, Message as KafkaMessage, COMPRESSION_NONE } from "no-kafka";
 import { GmeRegExp } from "utility/GmeRegExp";
+import * as transit from "transit-js";
 
 /**
  * The JSON.stringify takes an argument that can be
@@ -137,10 +138,12 @@ async function deliverCommits(
 
         let diff = await core.generateTreeDiff(nullCommit, postCommit.root);
         // console.log(`deliver commits: ${JSON.stringify(diff)}`);
+        let transitWriter = transit.writer("json");
+
         return await sender(
             [{
-                topic: "darpa.brass.immortals.vu.isis.gme", partition: 0,
-                message: { key: "natural diff", value: JSON.stringify(diff) }
+                topic: "immortals.model.commit", partition: 0,
+                message: { key: "", value: transitWriter.write(diff) }
             }]);
     }
 
@@ -172,7 +175,7 @@ async function deliverCommits(
         // console.log(`diff:`);
         return await sender(
             [{
-                topic: "darpa.brass.immortals.vu.isis.gme", partition: 0,
+                topic: "immortals.model", partition: 0,
                 message: { key: "normal diff", value: JSON.stringify(diff) }
             }]);
     }

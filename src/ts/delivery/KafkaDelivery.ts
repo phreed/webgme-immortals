@@ -2,6 +2,7 @@
 
 import PluginBase = require("plugin/PluginBase");
 import { Producer as KafkaProducer, COMPRESSION_NONE } from "no-kafka";
+import * as transit from "transit-js";
 
 /**
  * This function connects to the designated server and posts
@@ -26,10 +27,12 @@ export async function deliverKafka(sponsor: PluginBase,
         });
         await producer.init();
 
-        let topic = configDictionary["fileName"];
+        let transitWriter = transit.writer("json");
+
+        let topic = configDictionary["topic"];
         let keyedMessage = [{
             topic: topic, partition: 0,
-            message: { key: "natural diff", value: payload }
+            message: { key: "current model", value: transitWriter.write(payload) }
         }];
         sponsor.logger.info(`payload being written: ${topic}`);
         await producer.send(keyedMessage);

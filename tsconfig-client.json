@@ -3,5 +3,6 @@
   
     "outDir": "./dist-client",
    
-    "module": "amd",
+    "module": "amd"
+}
    

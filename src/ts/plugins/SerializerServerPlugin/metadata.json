@@ -72,10 +72,10 @@
       "readOnly": false
     },
     {
-      "name": "fileName",
-      "displayName": "File name: for delivery modes that require one.",
-      "description": "click and drag file .",
-      "value": "immortals_model",
+      "name": "topic",
+      "displayName": "topic name: for delivery modes that require one.",
+      "description": "the name of the topic, will produce a file or message of the specified topic.",
+      "value": "immortals.model",
       "valueType": "string",
       "readOnly": false
     },

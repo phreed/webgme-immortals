@@ -6,6 +6,6 @@ pushd /home/kafka/kafka_2.11-0.10.2.0/
     --zookeeper localhost:2181 \
     --replication-factor 1 \
     --partitions 1 \
-    --topic "darpa.brass.immortals.vu.isis.gme"
+    --topic "immortals.model"
 popd
 

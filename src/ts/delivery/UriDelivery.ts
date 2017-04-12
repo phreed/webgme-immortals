@@ -24,7 +24,7 @@ export async function deliverMultipart(sponsor: PluginBase,
     let configDictionary: any = config;
 
     try {
-        let fileName = await addSytacticSuffix(config, configDictionary["fileName"]);
+        let fileName = await addSytacticSuffix(config, configDictionary["topic"]);
 
         let form = new FormData();
         form.append("filename", payload, {
@@ -57,7 +57,7 @@ export async function deliverSinglepart(sponsor: PluginBase,
     }
     let configDictionary: any = config;
 
-    let fileName = addSytacticSuffix(config, configDictionary["fileName"]);
+    let fileName = addSytacticSuffix(config, configDictionary["topic"]);
     let deliveryUrl = configDictionary["deliveryUrl"];
     try {
         let urlMap = await url.parse(deliveryUrl);

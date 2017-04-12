@@ -14,13 +14,13 @@ export async function deliverFile(sponsor: PluginBase, config: GmeConfig.GmeConf
     sponsor.logger.info(`deliver file of size: ${payload.length}`);
 
     let configDictionary: any = config;
-    if (!configDictionary.hasOwnProperty("fileName")) {
+    if (!configDictionary.hasOwnProperty("topic")) {
         return Promise.reject(new Error("No file name provided."));
     }
     sponsor.sendNotification("config has property");
 
     try {
-        let targetFileName = await addSytacticSuffix(config, configDictionary["fileName"]);
+        let targetFileName = await addSytacticSuffix(config, configDictionary["topic"]);
         fs.ensureFileSync(targetFileName);
         let fileName = targetFileName;
 

@@ -3,5 +3,5 @@
   
     "outDir": "./dist-server",
    
-    "module": "umd",
+    "module": "umd"
 }

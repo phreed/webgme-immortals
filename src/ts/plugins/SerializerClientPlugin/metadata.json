@@ -49,8 +49,8 @@
       ]
     },
     {
-      "name": "fileName",
-      "displayName": "File name: for delivery modes that require one.",
+      "name": "topic",
+      "displayName": "topic: for delivery modes that require one.",
       "description": "click and drag file .",
       "value": "immortals_model",
       "valueType": "string",
