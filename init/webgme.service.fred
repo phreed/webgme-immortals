@@ -1,0 +1,19 @@
+
+
+[Unit]
+Description=WebGME Immortals Service"
+Documentation=https://webgme.org
+Requires=mongodb.service
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+User=fred
+# Group=fred
+Environment="NODE_ENV=immortals"
+WorkingDirectory=/home/fred/projects/immortals/webgme-immortals
+ExecStart=/home/fred/.nvm/versions/node/v6.10.2/bin/node ./dist-client/main/app_bootstrap.js
+
+[Install]
+WantedBy=multi-user.target

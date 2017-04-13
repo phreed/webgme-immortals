@@ -7,7 +7,6 @@ npm-debug.log*
 dist/
 dist-server/
 dist-client/
-typings/
 *.js.map
 log/*
 config/
