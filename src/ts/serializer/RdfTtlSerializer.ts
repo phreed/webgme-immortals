@@ -1,6 +1,7 @@
 
 
 // import { loadConfigurationFromPath } from 'tslint/lib/configuration';
+import PluginBase = require("plugin/PluginBase");
 import { NULL_GUID } from "../utility/NodeType";
 
 import _ = require("underscore");
@@ -274,9 +275,11 @@ export class RdfNodeSerializer {
     private pruningCondition: PruningCondition;
     private writer: N3Writer;
     public ttlStr: string = "none produced";
+    private context: PluginBase;
     private nodeDict: Map<string, nt.Subject>;
 
-    constructor(dict: Map<string, nt.Subject>, pruningCondition: PruningCondition) {
+    constructor(context: PluginBase, dict: Map<string, nt.Subject>, pruningCondition: PruningCondition) {
+        this.context = context;
         this.nodeDict = dict;
         let subject = nt.Subject.makeIdentity(NA);
         subject.name = nt.NameType.makeByHash({
@@ -399,6 +402,7 @@ export class RdfNodeSerializer {
                 }
             }
         }
+        this.context.logger.debug(`subject: ${subjectName}`);
 
         this.writer.addTriple({
             subject: subjectName,
@@ -460,8 +464,9 @@ export class RdfNodeSerializer {
                     predicateName = `${NS2}#hasHumanReadableForm`;
                     break;
                 default:
-                // console.log(`attribute: ${key}`);
             }
+            this.context.logger.debug(`attribute: ${key} => ${predicateName}`);
+
             this.writer.addTriple({
                 subject: subjectName,
                 predicate: predicateName,
@@ -469,7 +474,7 @@ export class RdfNodeSerializer {
             });
         }
 
-        // console.log("write subject pointers");
+        this.context.logger.info("write subject pointers");
         let ptrs = subject.pointers;
         for (let key in ptrs) {
             let valueNode = ptrs[key];
@@ -480,7 +485,7 @@ export class RdfNodeSerializer {
             });
         }
 
-        // console.log("write subject sets");
+        this.context.logger.info("write subject sets");
         let sets: nt.Sets = subject.sets;
         for (let kind in sets) {
             let members = sets[kind];
@@ -498,11 +503,10 @@ export class RdfNodeSerializer {
                     let fnGuid = isClass(objective) ? noGuid : appendGuid;
                     let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
                     if (isAtom(objective)) {
-                        console.log(`atom member ${objectName}`);
-                        // console.log(`atom member> s:${subjectName} <atom> o:${objectName}`);
+                        this.context.logger.debug(`atom member> s:${subjectName} <atom> o:${objectName}`);
                     } else {
                         let predicateName = predicateContainsKey(kind);
-                        // console.log(`model member> s:${subjectName} p:{predicateName} o:${objectName}`);
+                        this.context.logger.debug(`model member> s:${subjectName} p:{predicateName} o:${objectName}`);
                         this.writer.addTriple({
                             subject: subjectName,
                             predicate: predicateName,
@@ -513,17 +517,17 @@ export class RdfNodeSerializer {
             });
         }
 
-        // console.log("write subject children");
+        this.context.logger.debug("write subject children");
         let children = subject.children;
         for (let key in children) {
             if (!children.hasOwnProperty(key)) { continue; }
-            // console.log(`child keys: ${key}`);
-            let child = children[key];
-            // console.log(`guids: ${child.length}`);
-            for (let guid in child) {
-                if (!child.hasOwnProperty(guid)) { continue; }
 
-                // console.log(`guid: ${guid}`);
+            this.context.logger.debug(`child keys: ${key}`);
+            let childIds = children[key];
+            for (let guid in childIds) {
+                if (!childIds.hasOwnProperty(guid)) { continue; }
+
+                this.context.logger.debug(`guid: ${guid}`);
                 let objective = this.nodeDict.get(guid);
                 if (typeof objective === "undefined") {
                     return;
@@ -531,11 +535,12 @@ export class RdfNodeSerializer {
                 let fnGuid = isClass(objective) ? noGuid : appendGuid;
                 let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
 
-                let reason = child[guid];
+                let reason = childIds[guid];
                 let parentReason = this.nodeDict.get(reason.parent);
                 let childReason = this.nodeDict.get(reason.child);
                 let predicateName = predicateByContainment(parentReason, childReason);
-                console.log(`model child: s:${subjectName} p:${predicateName} o:${objectName}`);
+                this.context.logger.debug(`model child: s:${subjectName} p:${predicateName} o:${objectName}`);
+
                 this.writer.addTriple({
                     subject: subjectName,
                     predicate: predicateName,

@@ -3,21 +3,6 @@ WebGME can be run as a service on Ubuntu.
 
 https://wiki.ubuntu.com/SystemdForUpstartUsers
 
-It makes use of 'upstart' (<16.04) and 'systemd' (>= 16.04).
-
-#### Upstart (Ubuntu <16.04)
-Copy the webgme files to their appropriate locations.
-The config file may need to be updated based on where your
-webgme-immortals project resides.
-```bash
-sudo cp ./init/webgme.conf /etc/init/webgme.conf
-```
-Fire it up!
-```bash
-# service webgme start
-```
-
-
 #### systemd (Ubuntu >=16.04)
 The recommended way to run webgme as a service is with systemd.
 The scripts presume that the project has been cloned into

@@ -82,7 +82,7 @@ async function serialize(that: SerializerClientPlugin, configDictionary: any): P
                     pruningCondition.cond = false;
             }
 
-            let accumulator = new RdfNodeSerializer(nodeDict, pruningCondition);
+            let accumulator = new RdfNodeSerializer(that, nodeDict, pruningCondition);
             nlv.visitMap(nodeDict, accumulator.visitNode);
             await accumulator.complete();
             payload = accumulator.ttlStr;

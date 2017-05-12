@@ -16,10 +16,13 @@ import { attrToString, pathToString } from "utility/GmeString";
 
 import { PruningFlag } from "serializer/filters";
 import * as nt from "utility/NodeType";
-import { whyIsValidChildOf } from "utility/Reasons";
+import { explainGenealogy } from "utility/Reasons";
 import { getCoreGuid } from "utility/CoreExtras";
 
-
+/**
+ * This method uses the visitor pattern to examine each node.
+ * The goal is to produce a tree over the containment model.
+ */
 export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
     _rootNode: Core.Node, _metaNode: Node): Promise<Map<string, nt.Subject>> {
 
@@ -157,7 +160,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 let children = parentData.children;
                 children[containRel] = children[containRel] || {};
                 // children[containRel].push(sourceEntry);
-                let reason = whyIsValidChildOf(core, node, parent);
+                let reason = explainGenealogy(core, node, parent);
                 if (reason === null) {
                     console.log(`problem with reason`);
                 }

@@ -83,7 +83,7 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
                     pruningCondition.cond = false;
             }
 
-            let accumulator = new RdfNodeSerializer(nodeDict, pruningCondition);
+            let accumulator = new RdfNodeSerializer(that, nodeDict, pruningCondition);
             nlv.visitMap(nodeDict, accumulator.visitNode);
             await accumulator.complete();
             payload = accumulator.ttlStr;
@@ -151,7 +151,6 @@ class SerializerServerPlugin extends PluginBase {
         }
         catch (err) {
             this.logger.info(`Serializer server plugin failed: ${err.stack}`);
-            console.log(`serializer plugin failed: ${err.stack}`);
             this.sendNotification(`The serializer plugin has failed: ${err.message}`);
             mainHandler(err, this.result);
         };
