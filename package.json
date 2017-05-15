@@ -52,7 +52,7 @@
     "text": "github:requirejs/text",
     "toposort": "github:phreed/toposort",
     "underscore": "^1.8.3",
-    "webgme": "^2.13.0"
+    "webgme": "^2.13.1"
   },
   "devDependencies": {
     "@types/cytoscape": "github:phreed/ts-typings#cytoscape",
