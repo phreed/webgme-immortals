@@ -55,7 +55,7 @@
     "webgme": "^2.13.1"
   },
   "devDependencies": {
-    "@types/cytoscape": "github:phreed/ts-typings#cytoscape",
+    "@types/cytoscape": "github:phreed/ts-typings#cytoscape3",
     "@types/form-data": "0.0.33",
     "@types/fs-extra": "3.0.0",
     "@types/jquery": "^2.0.43",
