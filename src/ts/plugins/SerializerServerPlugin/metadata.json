@@ -51,7 +51,7 @@
       "name": "deliveryMode",
       "displayName": "Delivery Mode",
       "description": "Specify the manner of delivery for the serialization",
-      "value": "kafka:1.0.0",
+      "value": "singlepart:1.0.0",
       "valueType": "string",
       "valueItems": [
         "file:1.0.0",
@@ -67,7 +67,7 @@
       "regex": "^[0-9a-zA-Z:\/'-]+$",
       "regexMessage": "Name can only contain latin characters, digits, dot, hyphen and underscore!",
       "description": "What is the ip address or name of the host for the graph database mega-model.",
-      "value": "http://localhost:8088/das/deployment-model",
+      "value": "http://localhost:8080/bbn/das/deployment-model",
       "valueType": "string",
       "readOnly": false
     },
