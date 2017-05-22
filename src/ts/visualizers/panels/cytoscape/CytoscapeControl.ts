@@ -65,7 +65,7 @@ export interface CytoscapeControlOptions {
     logger: Global.GmeLogger;
     client: Gme.Client;
     widget: CytoscapeWidget;
-};
+}
 
 export class ToolbarItems {
     constructor() {
@@ -114,8 +114,8 @@ class EventMethods extends NodeMethods<DescEvent> {
     /**
      * This includes:
      *   [x] pointers,
-     *   [ ] containment, 
-     *   [ ] sets, and 
+     *   [ ] containment,
+     *   [ ] sets, and
      *   [ ] inheritance.
      */
     predsFn(event: DescEvent): string[] {
@@ -190,7 +190,7 @@ export class CytoscapeControl {
         this._initWidgetEventHandlers();
 
         this._logger.debug("ctor finished");
-    };
+    }
 
     _initWidgetEventHandlers = () => {
         this._widget.onNodeClick = (id) => {
@@ -199,7 +199,7 @@ export class CytoscapeControl {
             if (typeof state === "undefined") { return; }
             state.registerActiveObject(id);
         };
-    };
+    }
 
     /**
      * Managing the Territory.
@@ -271,7 +271,7 @@ export class CytoscapeControl {
         this._patterns.clear();
         this._patterns.set(nodeId, { children: 1 });
         this._client.updateTerritory(this._territoryId, this._patterns.toObj());
-    };
+    }
 
     // This next function retrieves the relevant node information for the widget
     _getObjectDescriptor = (nodeId: GmeCommon.NodeId): ObjectDescriptor => {
@@ -297,7 +297,7 @@ export class CytoscapeControl {
             objDescriptor.pointers.set(name, nodeObj.getPointer(name));
         });
         return objDescriptor;
-    };
+    }
 
     /**
      * This builds the cytoscape elements associated with a node.
@@ -353,7 +353,7 @@ export class CytoscapeControl {
         }
 
         return data;
-    };
+    }
 
     /* * * * * * * * Node Event Handling * * * * * * * */
 
@@ -391,7 +391,7 @@ export class CytoscapeControl {
             }
 
             /********** ORDER EVENTS BASED ON DEPENDENCY ************/
-            /** 
+            /**
              * relations which imply dependency
              *  * containment : except for containment in the context-node
              *  * pointers : but only those starting at children of the context-node
@@ -440,10 +440,10 @@ export class CytoscapeControl {
         }
     }
 
-    /** 
+    /**
      * return true if the object was seccessfully loaded (false otherwise)
      * True indicates that the territory changed.
-     * 
+     *
      * An entity is a node with no pointers
      * realize that a node should not be added if...
      * return true if the object was seccessfully loaded (false otherwise)
@@ -498,11 +498,11 @@ export class CytoscapeControl {
         }
 
         return true;
-    };
+    }
 
     /**
-     * This function checks that all pointers that point 
-     * point to something have been loaded. 
+     * This function checks that all pointers that point
+     * point to something have been loaded.
      */
     _areAllPointersLoaded = (desc: ObjectDescriptor) => {
         let pointers = desc.pointers;
@@ -530,45 +530,45 @@ export class CytoscapeControl {
         }
         this._widget.updateNode(desc);
         return true;
-    };
+    }
 
     _onUnload = (event: DescEvent): boolean => {
         this._widget.removeNode(event.eid);
         return true;
-    };
+    }
 
     _stateActiveObjectChanged = (_model: any, activeObjectId: string) => {
         this.selectedObjectChanged(activeObjectId);
-    };
+    }
 
     /* * * * * * * * Visualizer life cycle callbacks * * * * * * * */
     destroy = () => {
         this._detachClientEventListeners();
         this._removeToolbarItems();
-    };
+    }
 
     _attachClientEventListeners = () => {
         this._detachClientEventListeners();
         let state = WebGMEGlobal.State;
         if (typeof state === "undefined") { return; }
         state.on(`change: ${GmeConstants.STATE_ACTIVE_OBJECT}`, this._stateActiveObjectChanged, this);
-    };
+    }
 
     _detachClientEventListeners = () => {
         let state = WebGMEGlobal.State;
         if (typeof state === "undefined") { return; }
         state.off(`change: ${GmeConstants.STATE_ACTIVE_OBJECT}`, this._stateActiveObjectChanged);
-    };
+    }
 
     onActivate = () => {
         this._attachClientEventListeners();
         this._displayToolbarItems();
-    };
+    }
 
     onDeactivate = () => {
         this._detachClientEventListeners();
         this._hideToolbarItems();
-    };
+    }
 
     /* * * * * * * * * * Updating the toolbar * * * * * * * * * */
     _displayToolbarItems = () => {
@@ -577,19 +577,19 @@ export class CytoscapeControl {
         } else {
             this._initializeToolbar();
         }
-    };
+    }
 
     _hideToolbarItems = () => {
         if (this._toolbarInitialized === true) {
             this._toolbarItems.items.forEach((v) => { v.hide(); });
         }
-    };
+    }
 
     _removeToolbarItems = () => {
         if (this._toolbarInitialized === true) {
             this._toolbarItems.items.forEach((v) => { v.destroy(); });
         }
-    };
+    }
 
     _setCyObjectProperty = (params: { [name: string]: string }) => {
         let cyObj = this._widget._selectedCyObject;
@@ -598,7 +598,7 @@ export class CytoscapeControl {
         for (let p in params) {
             cyObj.style(p, params[p]);
         }
-    };
+    }
 
     _initializeToolbar = (): void => {
         let toolBar = WebGMEGlobal.Toolbar;
@@ -801,7 +801,7 @@ export class CytoscapeControl {
 
 
         this._toolbarInitialized = true;
-    };
+    }
 
     /**
      * uses http://dmitrybaranovskiy.github.io/raphael/
@@ -825,20 +825,18 @@ export class CytoscapeControl {
         /*
         let paper = Raphael(el[0], hSize, vSize);
         let bezierControlOffset = 10;
-        
         if (type === CytoscapeConstants.LINE_TYPES.BEZIER) {
-            
+
             path = paper.path(`M 5, ${Math.round(vSize / 2) + 0.5} C${5 + bezierControlOffset},` +
                 `${Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2} ${hSize - bezierControlOffset},` +
                 `${Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2} ${hSize - 5},` +
                 `${Math.round(vSize / 2) + 0.5}`);
-                
+
         } else {
             path = paper.path(`M 5,${Math.round(vSize / 2) + 0.5} L${hSize - 5},` +
                 `${Math.round(vSize / 2) + 0.5}`);
         }
-        
-     
+
         path.attr({
             "arrow-start": startArrow,
             "arrow-end": endArrow,
@@ -849,5 +847,5 @@ export class CytoscapeControl {
         */
 
         return el;
-    };
+    }
 }

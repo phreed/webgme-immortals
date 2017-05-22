@@ -1,7 +1,6 @@
 
 /**
  * The cytoscape widget describes the visual elements drawn on the cytoscape panel.
- * 
  */
 
 import cytoscape = require("cytoscape");
@@ -14,7 +13,7 @@ import { CytoscapeControl, ObjectDescriptor } from "visualizers/panels/cytoscape
 export class CytoscapeWidget {
     // var cytoscapeWidget,
     private readonly WIDGET_CLASS = "cytoscape";
-    public _cy: Cy.Instance;
+    public _cy: Cy.Core;
 
     private _logger: Global.GmeLogger;
     private _activeNode: any;
@@ -43,7 +42,7 @@ export class CytoscapeWidget {
         this._selectedCyObject = null;
 
         this._logger.debug("ctor finished");
-    };
+    }
 
     _initialize = () => {
         // let width = this._el.width();
@@ -61,12 +60,12 @@ export class CytoscapeWidget {
             event.preventDefault();
             this.onBackgroundDblClick();
         });
-    };
+    }
 
     _initializeCytoscape = (): void => {
         let nodeStyle: Cy.Stylesheet = {
             selector: "node",
-            css: <Cy.Css.Node>{
+            style: <Cy.Css.Node>{
                 "background-color": "red",
                 "border-width": 3,
                 "border-color": "black",
@@ -77,7 +76,7 @@ export class CytoscapeWidget {
         };
         let edgeStyle: Cy.Stylesheet = {
             selector: "edge",
-            css: <Cy.Css.Edge>{
+            style: <Cy.Css.Edge>{
                 "width": 1,
                 "line-color": "blue",
                 "mid-target-arrow-color": "blue",
@@ -88,7 +87,7 @@ export class CytoscapeWidget {
         };
         let selectedStyle: Cy.Stylesheet = {
             selector: ":selected",
-            css: {
+            style: {
                 "background-color": "gold",
                 "line-color": "gold",
                 "mid-target-arrow-color": "gold",
@@ -98,14 +97,18 @@ export class CytoscapeWidget {
         };
         let fadeStyle: Cy.Stylesheet = {
             selector: ".faded",
-            css: {
+            style: {
                 "opacity": 0.25,
                 "text-opacity": 0
             }
         };
         let layout: Cy.CircleLayoutOptions = {
             name: "circle",
-            padding: 10
+            padding: 10,
+            startAngle: 0,
+            fit: true,
+            nodeDimensionsIncludeLabels: true,
+            animate: false
         };
         let options: Cy.CytoscapeOptions = {
 
@@ -118,7 +121,7 @@ export class CytoscapeWidget {
         };
 
         this._cy = cytoscape(options);
-    };
+    }
 
     initializeEventListeners = (): void => {
 
@@ -131,12 +134,12 @@ export class CytoscapeWidget {
             let control = pm.getActivePanel().control;
             let isEdge = false;
             let isNode = false;
-            if (typeof evt.cyTarget.id === "function") {
-                isEdge = evt.cyTarget.isEdge();
-                isNode = evt.cyTarget.isNode();
+            if (typeof evt.target.id === "function") {
+                isEdge = evt.target.isEdge();
+                isNode = evt.target.isNode();
 
-                state.registerActiveSelection([evt.cyTarget.id()]);
-                this._selectedCyObject = evt.cyTarget;
+                state.registerActiveSelection([evt.target.id()]);
+                this._selectedCyObject = evt.target;
 
             } else /* if  (evt.cyTarget instanceof this._cy) */ {
                 isEdge = false;
@@ -173,13 +176,13 @@ export class CytoscapeWidget {
 
 
         });
-    };
+    }
 
     onWidgetContainerResize = (_width: number, _height: number): void => {
         this._logger.debug("Widget is resizing...");
         // this._cy.invalidateDimensions();
         this._cy.resize();
-    };
+    }
 
     // Adding/Removing/Updating items
     addNode = (cyData: Cy.ElementDefinition[]): void => {
@@ -188,21 +191,21 @@ export class CytoscapeWidget {
         cyData.forEach((desc: Cy.ElementDefinition): void => {
             this._cy.add(desc);
         });
-    };
+    }
 
     setActiveNode = (nodeId: string): void => {
         this._activeNode = nodeId;
-    };
+    }
 
     removeNode = (gmeId: string): void => {
         delete this.nodes[gmeId];
-    };
+    }
 
     updateNode = (desc: ObjectDescriptor): void => {
         if (!desc) { return; }
 
         this._logger.debug("Updating node:", desc.name);
-    };
+    }
 
     beginUpdate = (): void => {
         this._logger.debug("beginUpdate");
@@ -218,36 +221,36 @@ export class CytoscapeWidget {
         this._insertedConnectionIDs = [];
         this._updatedConnectionIDs = [];
         this._deletedConnectionIDs = [];
-    };
+    }
 
     endUpdate = (): void => {
         this._logger.debug("endUpdate");
 
         this._updating = false;
-    };
+    }
 
     /* * * * * * * * Visualizer event handlers * * * * * * * */
 
     onNodeClick = (_id: string): void => {
         // This currently changes the active node to the given id and
         // this is overridden in the controller.
-    };
+    }
 
     onBackgroundDblClick = (): void => {
         this._el.append("<div>Background was double-clicked!!</div>");
-    };
+    }
 
     /* * * * * * * * Visualizer life cycle callbacks * * * * * * * */
     destroy = (): void => {
-    };
+    }
 
     onActivate = (): void => {
         this._logger.debug("cytoscapeWidget has been activated");
-    };
+    }
 
     onDeactivate = (): void => {
         this._logger.debug("cytoscapeWidget has been deactivated");
-    };
+    }
 
     onUIActivity: () => void;
 }

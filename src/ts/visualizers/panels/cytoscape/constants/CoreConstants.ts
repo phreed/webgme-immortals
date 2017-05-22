@@ -5,6 +5,24 @@
  * https://github.com/webgme/webgme/blob/master/src/common/core/constants.js
  */
 
+export class AttributeTypes {
+    public static readonly STRING = "string";
+    public static readonly INTEGER = "integer";
+    public static readonly FLOAT = "float";
+    public static readonly BOOLEAN = "boolean";
+    public static readonly ASSET = "asset";
+}
+
+export class MixinErrorType {
+    public static readonly MISSING = "missing";
+    public static readonly ATTRIBUTE_COLLISION = "attribute collision";
+    public static readonly SET_COLLISION = "set collision";
+    public static readonly POINTER_COLLISION = "pointer collision";
+    public static readonly CONTAINMENT_COLLISION = "containment collision";
+    public static readonly ASPECT_COLLISION = "aspect collision";
+    public static readonly CONSTRAINT_COLLISION = "constraint collision";
+}
+
 export class CoreConstants {
     public static readonly ATTRIBUTES_PROPERTY = "atr";
     public static readonly REGISTRY_PROPERTY = "reg";
@@ -56,22 +74,4 @@ export class CoreConstants {
     public static readonly MAX_TICKS = 2000;
     public static readonly MAX_MUTATE = 30000;
     public static readonly MAXIMUM_STARTING_RELID_LENGTH = 5;
-};
-
-export class AttributeTypes {
-    public static readonly STRING = "string";
-    public static readonly INTEGER = "integer";
-    public static readonly FLOAT = "float";
-    public static readonly BOOLEAN = "boolean";
-    public static readonly ASSET = "asset";
-};
-
-export class MixinErrorType {
-    public static readonly MISSING = "missing";
-    public static readonly ATTRIBUTE_COLLISION = "attribute collision";
-    public static readonly SET_COLLISION = "set collision";
-    public static readonly POINTER_COLLISION = "pointer collision";
-    public static readonly CONTAINMENT_COLLISION = "containment collision";
-    public static readonly ASPECT_COLLISION = "aspect collision";
-    public static readonly CONSTRAINT_COLLISION = "constraint collision";
-};
+}

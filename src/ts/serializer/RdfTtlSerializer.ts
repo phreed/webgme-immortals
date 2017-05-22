@@ -51,7 +51,7 @@ function setDefault(value: string, fault: string): string {
 }
 
 function objectifyName(nodeName: nt.NameType): string {
-    // console.log("objectify name: ");
+    // this.context.logger.info("objectify name: ");
     return setDefault(nodeName.name, NA);
 }
 
@@ -59,7 +59,7 @@ function objectifyName(nodeName: nt.NameType): string {
  * This function determines the type of an object.
  */
 function objectifyType(nodeType: nt.TypeType, dict: Map<string, nt.Subject>): string {
-    // console.log("objectify type: ");
+    // this.context.logger.info("objectify type: ");
     if (nodeType === undefined) {
         return `${NS2}/cp#undefined`;
     }
@@ -76,18 +76,18 @@ function objectifyType(nodeType: nt.TypeType, dict: Map<string, nt.Subject>): st
 
 function objectifyBase(nodeBase: nt.NGuidType, dict: Map<string, nt.Subject>): string {
     let guid = nodeBase.guid;
-    // console.log(`objectify base: ${guid}`);
+    // this.context.logger.info(`objectify base: ${guid}`);
     return objectifyByGuid(guid, dict);
 }
 
 function objectifyPointer(nodePointer: nt.NGuidType, dict: Map<string, nt.Subject>): string {
     let guid = nodePointer.guid;
-    // console.log(`objectify pointer: ${guid}`);
+    // this.context.logger.info(`objectify pointer: ${guid}`);
     return objectifyByGuid(guid, dict);
 }
 
 function objectifyByGuid(nodeGuid: string, dict: Map<string, nt.Subject>): string {
-    // console.log(`object by guid: ${nodeGuid}`);
+    // this.context.logger.info(`object by guid: ${nodeGuid}`);
     let node = dict.get(nodeGuid);
     if (typeof node === "undefined") {
         return NULL_GUID;
@@ -97,12 +97,12 @@ function objectifyByGuid(nodeGuid: string, dict: Map<string, nt.Subject>): strin
 }
 
 function predicateContainsKey(key: string): string {
-    // console.log(`predicate contains key: ${key}`);
+    // this.context.logger.info(`predicate contains key: ${key}`);
     return `${NS2}#has${acase.bactrian(acase.cookName(key))}`;
 }
 
 function predicateIndicatesKey(key: string): string {
-    // console.log(`predicate contains key: ${key}`);
+    // this.context.logger.info(`predicate contains key: ${key}`);
     return `${NS2}#has${acase.bactrian(acase.cookName(key))}`;
 }
 
@@ -134,15 +134,15 @@ function buildSemanticUriForNode(name: nt.NameType, conditioner: (raw: string) =
     let uriName: string = setDefault(name.uriName, BLANK);
     let nickName: string = conditioner(setDefault(name.name, BLANK));
     if (uriPrefix.slice(-1) === "/") {
-        // console.log("your uriPrefix has a trailing slash (/) you should remove it");
+        // this.context.logger.info("your uriPrefix has a trailing slash (/) you should remove it");
         uriPrefix = uriPrefix.slice(0, -1);
     }
     if (uriExt.slice(-1) === "/") {
-        // console.log("your uriExt has a trailing slash (/) you should remove it");
+        // this.context.logger.info("your uriExt has a trailing slash (/) you should remove it");
         uriExt = uriExt.slice(0, -1);
     }
     if (uriExt.slice(-1) === "#") {
-        // console.log("your uriExt has a trailing octathorp (#) you should remove it");
+        // this.context.logger.info("your uriExt has a trailing octathorp (#) you should remove it");
         uriExt = uriExt.slice(0, -1);
     }
 
@@ -177,10 +177,10 @@ function getRdfNameForNode(node: nt.Subject,
     guidFn: (raw: string, guid: string) => string,
     conditioner: (raw: string) => string): string {
     let guid = setDefault(node.guid, "00000-01");
-    // console.log(`write node having gid: ${guid}`);
+    // this.context.logger.info(`write node having gid: ${guid}`);
     let nameDict = node.name;
     let uriGen = setDefault(nameDict.uriGen, "none");
-    // console.log(`uri generator: ${uriGen}`);
+    // this.context.logger.info(`uri generator: ${uriGen}`);
     switch (uriGen) {
         case "semantic":
             return guidFn(buildSemanticUriForNode(nameDict, conditioner), guid);
@@ -371,7 +371,7 @@ export class RdfNodeSerializer {
     write = (subject: nt.Subject): void => {
         let generateRegExp = new RegExp("^<PATTERN>:(.+)");
 
-        // console.log(`write: ${subject.prune} ... ${(subject.prune & PruningFlag.Library)}`);
+        // this.context.logger.info(`write: ${subject.prune} ... ${(subject.prune & PruningFlag.Library)}`);
         /*
          Determine if the node should be written based
          on the pruning criteria.
@@ -385,19 +385,27 @@ export class RdfNodeSerializer {
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
         let subjectType: string = objectifyType(subject.type, this.nodeDict);
 
-        // This is overly complex the goal is to decide if a
-        // self-typed object should be preserved.
+        /**
+         * This defines the bounds of the epoch.
+         * Some objects are considered static for a particular epoch
+         * and others are dynamic.
+         * This attribute indicates that boundary.
+         * Any object at this level or lower is considered to be an instance.
+         * The default epoch boundary is the highest object for which
+         * none of its decendants have meta-rules.
+         * The higher static rules are presumed to have been specified elsewhere.
+         */
         let attrs = subject.attributes;
         if (subjectName === subjectType) {
             if (typeof attrs !== "number") {
                 let key = "PRESERVE_CLASS";
                 if (attrs.hasOwnProperty(key)) {
                     if (!attrs[key]) {
-                        console.log(`not writing: ${subjectName}`);
+                        this.context.logger.info(`not writing: ${subjectName}`);
                         return;
                     }
                 } else {
-                    console.log(`not writing: ${subjectName}`);
+                    this.context.logger.info(`not writing: ${subjectName}`);
                     return;
                 }
             }
@@ -410,14 +418,14 @@ export class RdfNodeSerializer {
             object: Util.createLiteral(objectifyName(subject.name))
         });
 
-        // console.log(`write subject type: ${nt.TypeType.brief(subject.type)}`);
+        // this.context.logger.info(`write subject type: ${nt.TypeType.brief(subject.type)}`);
         this.writer.addTriple({
             subject: subjectName,
             predicate: `${NS_rdf}#type`,
             object: subjectType
         });
 
-        // console.log("write subject base");
+        // this.context.logger.info("write subject base");
         let base = subject.base;
         if (base !== null) {
             this.writer.addTriple({
@@ -426,7 +434,7 @@ export class RdfNodeSerializer {
                 object: objectifyBase(subject.base, this.nodeDict)
             });
         }
-        // console.log("write subject attributes");
+        // this.context.logger.info("write subject attributes");
         for (let key in attrs) {
             if ("PRESERVE_CLASS".startsWith(key)) {
                 continue;
@@ -491,7 +499,7 @@ export class RdfNodeSerializer {
             let members = sets[kind];
             members.forEach((member) => {
                 if (nt.isFaultType(member)) {
-                    console.log(`faulty member ${kind}`);
+                    this.context.logger.info(`faulty member ${kind}`);
                 } else if (nt.isNGuidType(member)) {
                     let memberGuid = member.guid;
                     // let memberName = member.name;
@@ -559,7 +567,7 @@ export class RdfNodeSerializer {
 
     visitNode = (node: nlv.ListNode): void => {
         let subject = nt.Subject.makeByHash(node);
-        console.log(`visiting a node: ${nt.Subject.brief(subject)}`);
+        this.context.logger.info(`visiting a node: ${nt.Subject.brief(subject)}`);
         this.write(subject);
     }
 }
