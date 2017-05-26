@@ -23,7 +23,7 @@ import { getCoreGuid } from "utility/CoreExtras";
  * This method uses the visitor pattern to examine each node.
  * The goal is to produce a tree over the containment model.
  */
-export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
+export async function get(sponsor: PluginBase, core: GmeClasses.Core,
     _rootNode: Core.Node, _metaNode: Node): Promise<Map<string, nt.Subject>> {
 
     // let config = sponsor.getCurrentConfig();
@@ -63,7 +63,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
             let prunedRootPath: string | null = null;
             pruneList.forEach((pl) => {
                 if (nodePath.indexOf(pl) !== 0) { return; }
-                // console.log(`pruned: ${nodePath}::${pl}`);
+                sponsor.logger.info(`pruned: ${nodePath}::${pl}`);
                 prunedRootPath = pl;
             });
 
@@ -128,7 +128,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 metaName = ":LibraryRoot:";
                 metaNodeGuid = getCoreGuid(core, node);
 
-                // console.log(`prune: ${nodePath}`);
+                sponsor.logger.info(`prune: ${nodePath}`);
                 pruneList.push(nodePath);
                 prunedRootPath = nodePath;
             } else {
@@ -154,7 +154,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
 
                 let parentData = path2entry.get(parentPath);
                 if (typeof parentData === "undefined") {
-                    console.log(`problem with parentPath ${parentPath}`);
+                    sponsor.logger.warn(`problem with parentPath ${parentPath}`);
                     return;
                 }
                 let children = parentData.children;
@@ -162,7 +162,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 // children[containRel].push(sourceEntry);
                 let reason = explainGenealogy(core, node, parent);
                 if (reason === null) {
-                    console.log(`problem with reason`);
+                    sponsor.logger.warn(`problem with reason`);
                 }
                 else {
                     children[containRel][sourceGuid] = {
@@ -191,7 +191,7 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                 } else if (typeof attrValue === "number") {
                     sourceEntry.attributes[attrName] = attrValue;
                 } else {
-                    console.log(`problem with attribute ${attrName} [${typeof attrValue}] : ${attrValue}`);
+                    sponsor.logger.warn(`problem with attribute ${attrName} [${typeof attrValue}] : ${attrValue}`);
                 }
             });
 
@@ -277,11 +277,11 @@ export async function getEdgesModel(sponsor: PluginBase, core: GmeClasses.Core,
                                 invSets[setName] = [invLoad];
                             } else {
                                 targetSet.push(invLoad);
-                            };
+                            }
                         }
                     }
                     catch (err) {
-                        console.log(`difficulty loading target path: ${targetPath} with err: ${err.message}`);
+                        sponsor.logger.error(`difficulty loading target path: ${targetPath} with err: ${err.message}`);
                         let load = {
                             "fault": `could not load member path: ${targetPath}`
                         };

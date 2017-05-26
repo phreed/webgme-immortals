@@ -18,9 +18,7 @@
       "value": "model-flat:1.0.0",
       "valueType": "string",
       "valueItems": [
-        "schema-tree:1.0.0",
         "schema-flat:1.0.0",
-        "model-tree:1.0.0",
         "model-flat:1.0.0"
       ]
     },

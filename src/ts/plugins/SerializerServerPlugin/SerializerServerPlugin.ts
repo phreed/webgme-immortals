@@ -13,10 +13,8 @@ import * as nlv from "serializer/NodeListVisitor";
 import { RdfNodeSerializer } from "serializer/RdfTtlSerializer";
 import { PruningCondition, PruningFlag } from "serializer/filters";
 
-import { getEdgesModel } from "extract/EdgesModelExtract";
-// import { getEdgesSchema } from "extract/EdgesSchemaExtract";
-// import { getTreeModel } from "extract/TreeModelExtract";
-// import { getTreeSchema } from "extract/TreeSchemaExtract";
+import { get as getModel } from "extract/EdgesModelExtract";
+import { get as getSchema } from "extract/EdgesSchemaExtract";
 
 import { deliverFile } from "delivery/FileDelivery";
 import { deliverMultipart, deliverSinglepart } from "delivery/UriDelivery";
@@ -29,24 +27,13 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
     let nodeDict: Map<string, any>;
 
     switch (configDictionary["schematicVersion"]) {
-        /*
-        case "schema-tree:1.0.0":
-            that.sendNotification("get schema tree");
-            nodeDict = await getTreeSchema(this, this.core, this.rootNode, this.META);
-        */
-        /*
-        case "schema-flat:1.0.0":
-            this.sendNotification("get schema edges");
-            return getEdgesSchema(this, this.core, this.rootNode, this.META);
-        */
-        /*
-        case "model-tree:1.0.0":
-            this.sendNotification("get model tree");
-            return getTreeModel(this, this.core, this.rootNode, this.META);
-        */
+         case "schema-flat:1.0.0":
+            that.sendNotification("get model edges");
+            nodeDict = await getSchema(that, that.core, that.rootNode, that.META);
+            break;
         case "model-flat:1.0.0":
             that.sendNotification("get model edges");
-            nodeDict = await getEdgesModel(that, that.core, that.rootNode, that.META);
+            nodeDict = await getModel(that, that.core, that.rootNode, that.META);
             break;
         default:
             return Promise.reject(new Error("no serializer matches typed version"));
@@ -153,7 +140,7 @@ class SerializerServerPlugin extends PluginBase {
             this.logger.info(`Serializer server plugin failed: ${err.stack}`);
             this.sendNotification(`The serializer plugin has failed: ${err.message}`);
             mainHandler(err, this.result);
-        };
+        }
     }
 }
 
