@@ -426,7 +426,7 @@ export class RdfNodeSerializer {
         });
 
         // this.context.logger.info(`write external uuid: ${nt.})
-        if (subject.name.extUuid.length > 0) {
+        if (subject.name.extUuid && subject.name.extUuid.length > 0) {
             this.writer.addTriple({
                 subject: subjectName,
                 predicate: `${NS_rdf}#hasExtGuid`,
