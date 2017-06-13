@@ -86,6 +86,7 @@ export class TypeType {
 
 export class NameType {
     name: string;
+    extUuid: string;
     uriGen: string;
     uriPrefix: string;
     uriExt: string;
@@ -95,26 +96,29 @@ export class NameType {
         if (typeof that === "undefined") {
             return "undef";
         }
-        return `[A]${that.name} [G]${that.uriGen} [P]${that.uriPrefix} [X]${that.uriExt} [N]${that.uriName}`;
+        return `[A]${that.name} [G]${that.uriGen} [P]${that.uriPrefix} [X]${that.uriExt} [N]${that.uriName} [U]${that.extUuid}`;
     }
 
     constructor(name: string,
+        extUuid: string,
         uriGen: string,
         uriPrefix: string,
         uriExt: string,
         uriName: string) {
+
         this.name = name;
+        this.extUuid = extUuid;
         this.uriGen = uriGen;
         this.uriPrefix = uriPrefix;
         this.uriName = uriName;
         this.uriExt = uriExt;
     }
     static makeEmpty() {
-        return new NameType(NULL_OBJECT, BLANK, BLANK,
+        return new NameType(NULL_OBJECT, BLANK, BLANK, BLANK,
             BLANK, BLANK);
     }
     static makeByHash(hash: { [key: string]: any }) {
-        return new NameType(hash["name"],
+        return new NameType(hash["name"], hash["extUuid"],
             hash["uriGen"], hash["uriPrefix"], hash["uriExt"], hash["uriName"]);
     }
 }
@@ -124,6 +128,7 @@ export class Subject {
 
     version: string;
     guid: string;
+    ext_uuid: string;
     name: NameType;
     type: TypeType;
     pointers: Pointers;
@@ -149,6 +154,7 @@ export class Subject {
     constructor(
         version: string,
         guid: string,
+        ext_uuid: string,
         name: NameType,
         type: TypeType,
         pointers: Pointers,
@@ -162,6 +168,7 @@ export class Subject {
 
         this.version = version;
         this.guid = guid;
+        this.ext_uuid = ext_uuid;
         this.name = name;
         this.type = type;
         this.pointers = pointers;
@@ -176,7 +183,8 @@ export class Subject {
 
     static makeByHash(hash: { [key: string]: any }) {
         return new Subject(hash["version"],
-            hash["guid"], hash["name"], hash["type"],
+            hash["guid"], hash["ext_uuid"],
+            hash["name"], hash["type"],
             hash["pointers"], hash["inv_pointers"],
             hash["sets"], hash["inv_sets"],
             hash["base"], hash["attributes"],
@@ -187,6 +195,7 @@ export class Subject {
         return new Subject(
             "0.0.1",
             guid,
+            "",
             NameType.makeEmpty(),
             TypeType.makeEmpty(),
             {}, {},
@@ -205,6 +214,7 @@ export class Subject {
         return new Subject(
             "0.0.1",
             NULL_GUID,
+            "",
             NameType.makeEmpty(),
             TypeType.makeDomain(languageName),
             {}, {},
