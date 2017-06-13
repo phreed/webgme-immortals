@@ -398,7 +398,7 @@ export class RdfNodeSerializer {
         let attrs = subject.attributes;
         if (subjectName === subjectType) {
             if (typeof attrs !== "number") {
-                let key = "PRESERVE_CLASS";
+                let key = "@preserve";
                 if (attrs.hasOwnProperty(key)) {
                     if (!attrs[key]) {
                         this.context.logger.info(`not writing: ${subjectName}`);
@@ -436,7 +436,7 @@ export class RdfNodeSerializer {
         }
         // this.context.logger.info("write subject attributes");
         for (let key in attrs) {
-            if ("PRESERVE_CLASS".startsWith(key)) {
+            if ("@preserve".startsWith(key)) {
                 continue;
             }
             let valueRaw = attrs[key];
