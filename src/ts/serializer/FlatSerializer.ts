@@ -19,7 +19,7 @@ interface Abstract {
 interface SheetDetail {
     registry?: any;
     attributes: any;
-};
+}
 
 interface Sheet {
     [key: string]: SheetDetail;
@@ -52,7 +52,7 @@ export class JsonLibrary {
     metaSheets: any;
     relids: any;
     root: { path: string, guid: string };
-};
+}
 
 class JsonNode {
     attributes: any;
@@ -171,7 +171,7 @@ export class FlatSerializer {
             let uriPrefix = core.getAttribute(node, "@uriPrefix"); // .trim();
             let uriExt = core.getAttribute(node, "@uriExt"); // .trim();
             let uriName = core.getAttribute(node, "@uriName"); // .trim();
-            let name = core.getAttribute(node, "@name"); // .trim();
+            let name = core.getAttribute(node, "name"); // .trim();
 
             if (typeof uriExt === "string") {
                 if (uriExt.slice(-1) !== "#") {
@@ -386,7 +386,7 @@ export class FlatSerializer {
             }
             catch (err) {
                 return next(err || new Error(`no node found at given path: ${path}`));
-            };
+            }
         }
 
         function postProcessing() {
@@ -1447,6 +1447,6 @@ export class FlatSerializer {
                 }
             }, 10);
         });
-    };
+    }
 }
 

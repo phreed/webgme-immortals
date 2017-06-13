@@ -140,9 +140,9 @@ export class Subject {
             return "undef";
         }
         return `
-         version: ${that.version} 
+         version: ${that.version}
          guid: ${that.guid}
-         name: ${NameType.brief(that.name)}, 
+         name: ${NameType.brief(that.name)},
          type: ${TypeType.brief(that.type)}`;
     }
 

@@ -554,7 +554,7 @@ export class RdfNodeSerializer {
                     predicate: predicateName,
                     object: objectName
                 });
-            };
+            }
         }
     }
 

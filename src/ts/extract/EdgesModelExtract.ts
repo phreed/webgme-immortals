@@ -182,7 +182,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                         case "@uriExt": sen.uriExt = attrValue; break;
                         case "@uriGen": sen.uriGen = attrValue; break;
                         case "@uriPrefix": sen.uriPrefix = attrValue; break;
-                        case "@name": sen.name = attrValue; break;
+                        case "name": sen.name = attrValue; break;
                         default:
                             sourceEntry.attributes[attrName] = attrValue;
                     }
