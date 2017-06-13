@@ -1,6 +1,6 @@
-
-
-
+/**
+ * As the nodes are extracted from the GME model nodes are formed.
+ */
 import { PruningFlag } from "serializer/filters";
 
 export type GuidType = string;
@@ -128,7 +128,6 @@ export class Subject {
 
     version: string;
     guid: string;
-    ext_uuid: string;
     name: NameType;
     type: TypeType;
     pointers: Pointers;
@@ -154,7 +153,6 @@ export class Subject {
     constructor(
         version: string,
         guid: string,
-        ext_uuid: string,
         name: NameType,
         type: TypeType,
         pointers: Pointers,
@@ -168,7 +166,6 @@ export class Subject {
 
         this.version = version;
         this.guid = guid;
-        this.ext_uuid = ext_uuid;
         this.name = name;
         this.type = type;
         this.pointers = pointers;
@@ -183,7 +180,7 @@ export class Subject {
 
     static makeByHash(hash: { [key: string]: any }) {
         return new Subject(hash["version"],
-            hash["guid"], hash["ext_uuid"],
+            hash["guid"],
             hash["name"], hash["type"],
             hash["pointers"], hash["inv_pointers"],
             hash["sets"], hash["inv_sets"],
@@ -195,7 +192,6 @@ export class Subject {
         return new Subject(
             "0.0.1",
             guid,
-            "",
             NameType.makeEmpty(),
             TypeType.makeEmpty(),
             {}, {},
@@ -214,7 +210,6 @@ export class Subject {
         return new Subject(
             "0.0.1",
             NULL_GUID,
-            "",
             NameType.makeEmpty(),
             TypeType.makeDomain(languageName),
             {}, {},

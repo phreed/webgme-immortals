@@ -419,11 +419,20 @@ export class RdfNodeSerializer {
         });
 
         // this.context.logger.info(`write subject type: ${nt.TypeType.brief(subject.type)}`);
-        this.writer.addTriple({
+         this.writer.addTriple({
             subject: subjectName,
             predicate: `${NS_rdf}#type`,
             object: subjectType
         });
+
+        // this.context.logger.info(`write external uuid: ${nt.})
+        if (subject.name.extUuid.length > 0) {
+            this.writer.addTriple({
+                subject: subjectName,
+                predicate: `${NS_rdf}#hasExtGuid`,
+                object: Util.createLiteral(`${subject.name.extUuid}`)
+            });
+        }
 
         // this.context.logger.info("write subject base");
         let base = subject.base;
