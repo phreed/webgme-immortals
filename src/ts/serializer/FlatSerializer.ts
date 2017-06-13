@@ -168,9 +168,9 @@ export class FlatSerializer {
         }
 
         function buildSemanticUriForNode(node: any) {
-            let uriPrefix = core.getAttribute(node, "@uriPrefix"); // .trim();
-            let uriExt = core.getAttribute(node, "@uriExt"); // .trim();
-            let uriName = core.getAttribute(node, "@uriName"); // .trim();
+            let uriPrefix = core.getAttribute(node, "uriPrefix"); // .trim();
+            let uriExt = core.getAttribute(node, "uriExt"); // .trim();
+            let uriName = core.getAttribute(node, "uriName"); // .trim();
             let name = core.getAttribute(node, "name"); // .trim();
 
             if (typeof uriExt === "string") {

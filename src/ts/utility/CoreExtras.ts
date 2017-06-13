@@ -9,7 +9,7 @@
  * FCO as an attribute named 'extguid'.
  */
 export function getCoreGuid(core: GmeClasses.Core, node: Core.Node | null): string {
-    let attr = core.getAttribute(node, "extguid");
+    let attr = core.getAttribute(node, "@extguid");
     if (typeof attr !== "string") {
         return core.getGuid(node);
     }
