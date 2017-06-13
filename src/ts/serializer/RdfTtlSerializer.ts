@@ -429,7 +429,7 @@ export class RdfNodeSerializer {
         if (subject.name.extUuid && subject.name.extUuid.length > 0) {
             this.writer.addTriple({
                 subject: subjectName,
-                predicate: `${NS_rdf}#hasExtGuid`,
+                predicate: `${NS2}#hasExtGuid`,
                 object: Util.createLiteral(`${subject.name.extUuid}`)
             });
         }
