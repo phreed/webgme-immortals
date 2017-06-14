@@ -262,7 +262,8 @@ function isClass(nodeDict: Map<string, nt.Subject>, node: nt.Subject): boolean {
     if (node === undefined) { return false; }
 
     if (node.type.isMeta) { return true; }
-    let parent = nodeDict.get(node.guid);
+
+    let parent = nodeDict.get(node.base.guid);
     if (typeof parent !== "undefined") {
         if (node.name.epoch !== parent.name.epoch) { return true; }
     }

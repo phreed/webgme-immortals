@@ -180,7 +180,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                     let sen = sourceEntry.name;
                     switch (attrName) {
                         case "@epoch": sen.epoch = attrValue; break;
-                        case "@preserve": sen.setPropagation(attrValue); break;
+                        case "@preserve": sen.propagation = nt.makePropagation(attrValue); break;
                         case "@uriName": sen.uriName = attrValue; break;
                         case "@uriExt": sen.uriExt = attrValue; break;
                         case "@uriGen": sen.uriGen = attrValue; break;

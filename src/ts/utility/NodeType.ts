@@ -96,6 +96,14 @@ export class TypeType {
  */
 export type PropagationType = "preserve" | "suppress" | null;
 
+export function makePropagation(val: string | null): PropagationType {
+    switch (val) {
+        case "preserve": return "preserve";
+        case "supress": return "suppress";
+        default: return null;
+    }
+}
+
 export class NameType {
     name: string;
     epoch: string | null;
@@ -140,15 +148,6 @@ export class NameType {
     static makeByHash(hash: { [key: string]: any }) {
         return new NameType(hash["name"], hash["preserve"], hash["epoch"], hash["extUuid"],
             hash["uriGen"], hash["uriPrefix"], hash["uriExt"], hash["uriName"]);
-    }
-
-    setPropagation(val: string | null): PropagationType {
-        switch (val) {
-            case "preserve": this.propagation = "preserve"; break;
-            case "supress": this.propagation = "suppress"; break;
-            default: this.propagation = null;
-        }
-        return this.propagation;
     }
 
 }
