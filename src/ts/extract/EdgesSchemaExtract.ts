@@ -175,6 +175,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                 if (typeof attrValue === "string") {
                     let sen = sourceEntry.name;
                     switch (attrName) {
+                        case "@preserve": sen.setPropagation(attrValue); break;
                         case "@uriName": sen.uriName = attrValue; break;
                         case "@uriExt": sen.uriExt = attrValue; break;
                         case "@uriGen": sen.uriGen = attrValue; break;

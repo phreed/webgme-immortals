@@ -84,8 +84,20 @@ export class TypeType {
     }
 }
 
+/**
+ * Makes reference to objects that are included, propagated, in the output.
+ * These flags indicate under what conditions objects may be filtered.
+ *
+ * preserve : by default classes are *not* preserved in the output this
+ *    flag indicates that they should be preserved in that output.
+ * supress : by default instances *are* preserved in the output this
+ *    flag indicates that they should not be so preserved.
+ */
+export type PropagationType = "preserve" | "suppress" | null;
+
 export class NameType {
     name: string;
+    propagation: PropagationType;
     extUuid: string;
     uriGen: string;
     uriPrefix: string;
@@ -100,13 +112,16 @@ export class NameType {
     }
 
     constructor(name: string,
+        propagation: PropagationType,
         extUuid: string,
+
         uriGen: string,
         uriPrefix: string,
         uriExt: string,
         uriName: string) {
 
         this.name = name;
+        this.propagation = propagation;
         this.extUuid = extUuid;
         this.uriGen = uriGen;
         this.uriPrefix = uriPrefix;
@@ -114,13 +129,23 @@ export class NameType {
         this.uriExt = uriExt;
     }
     static makeEmpty() {
-        return new NameType(NULL_OBJECT, BLANK, BLANK, BLANK,
+        return new NameType(NULL_OBJECT, null, BLANK, BLANK, BLANK,
             BLANK, BLANK);
     }
     static makeByHash(hash: { [key: string]: any }) {
-        return new NameType(hash["name"], hash["extUuid"],
+        return new NameType(hash["name"], hash["epoch"], hash["extUuid"],
             hash["uriGen"], hash["uriPrefix"], hash["uriExt"], hash["uriName"]);
     }
+
+    setPropagation(val: string | null): PropagationType {
+        switch (val) {
+            case "preserve": this.propagation = "preserve"; break;
+            case "supress": this.propagation = "suppress"; break;
+            default: this.propagation = null;
+        }
+        return this.propagation;
+    }
+
 }
 
 export type ChildReasonType = { [type: string]: { [guid: string]: { parent: GuidType, child: GuidType } } };

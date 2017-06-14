@@ -1,15 +1,15 @@
 
-/** 
+/**
  * Convert a dash/dot/underscore/space separated string or array.
- * 
+ *
  * dromedary : less humps, the first character is lower case.
  * bactrian : more humps, the first character is upper case.
- * 
- * 
- * Based on 
+ *
+ *
+ * Based on
  *  - https://github.com/sindresorhus/camelcase
  *  - https://github.com/SamVerschueren/uppercamelcase
- * 
+ *
  *  - https://github.com/ianstormtaylor/to-case
  */
 export function cookName(rawName: string): string {
@@ -60,7 +60,7 @@ export function bactrian(input: string): string {
 }
 
 /**
- * Remove all not ascii characters and make the first 
+ * Remove all not ascii characters and make the first
  * character of each word upper case.
  */
 export function dromedary(input: string[] | string): string {

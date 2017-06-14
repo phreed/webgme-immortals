@@ -176,6 +176,7 @@ function buildNoneUriForNode(name: nt.NameType, conditioner: (raw: string) => st
 function getRdfNameForNode(node: nt.Subject,
     guidFn: (raw: string, guid: string) => string,
     conditioner: (raw: string) => string): string {
+
     let guid = setDefault(node.guid, "00000-01");
     // this.context.logger.info(`write node having gid: ${guid}`);
     let nameDict = node.name;
@@ -396,19 +397,20 @@ export class RdfNodeSerializer {
          * The higher static rules are presumed to have been specified elsewhere.
          */
         let attrs = subject.attributes;
-        if (subjectName === subjectType) {
-            if (typeof attrs !== "number") {
-                let key = "@preserve";
-                if (attrs.hasOwnProperty(key)) {
-                    if (!attrs[key]) {
-                        this.context.logger.info(`not writing: ${subjectName}`);
-                        return;
-                    }
-                } else {
+        switch (subject.name.propagation) {
+            case "preserve":
+                this.context.logger.info(`not writing: ${subjectName}`);
+                break;
+            case "suppress":
+                break;
+            case null:
+                if (subjectName === subjectType) {
                     this.context.logger.info(`not writing: ${subjectName}`);
                     return;
                 }
-            }
+                break;
+            default:
+                this.context.logger.info(`default writing: ${subjectName}`);
         }
         this.context.logger.debug(`subject: ${subjectName}`);
 
@@ -445,9 +447,6 @@ export class RdfNodeSerializer {
         }
         // this.context.logger.info("write subject attributes");
         for (let key in attrs) {
-            if ("@preserve".startsWith(key)) {
-                continue;
-            }
             let valueRaw = attrs[key];
             let valueLiteral: any;
             if (typeof valueRaw === "string") {
