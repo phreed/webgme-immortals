@@ -92,7 +92,7 @@ function objectifyByGuid(nodeGuid: string, dict: Map<string, nt.Subject>): strin
     if (typeof node === "undefined") {
         return NULL_GUID;
     }
-    let fnGuid: FnGuid = isClass(node) ? noGuid : appendGuid;
+    let fnGuid: FnGuid = isClass(dict, node) ? noGuid : appendGuid;
     return getRdfNameForNode(node, fnGuid, acase.bactrian);
 }
 
@@ -250,20 +250,22 @@ function isCollection(node: nt.Subject): boolean {
 
 
 /**
+ * If the node is a 'meta' node then it describes a class.
+ * What does it mean to be a 'meta' node?
  * If the base of the node and its meta are the same
  * then the node describes the class.
+ *
+ * If an object has a different epoch than its base then
+ * it is a sub-class of that base, i.e. it is a class.
  */
-function isClass(node: nt.Subject): boolean {
+function isClass(nodeDict: Map<string, nt.Subject>, node: nt.Subject): boolean {
     if (node === undefined) { return false; }
-    if (!("type" in node)) { return false; }
-    let nodeType = node.type;
 
-    let selfNodeGuid = setDefault(node.guid, NA);
-    // let domainName = setDefault(nodeType.domain, NA);
-    let metaNodeGuid = setDefault(nodeType.meta, NA);
-    // let rootNodeGuid = setDefault(nodeType.root, NA);
-    // let baseNodeGuid = setDefault(nodeType.base, NA);
-    if (metaNodeGuid === selfNodeGuid) { return true; }
+    if (node.type.isMeta) { return true; }
+    let parent = nodeDict.get(node.guid);
+    if (typeof parent !== "undefined") {
+        if (node.name.epoch !== parent.name.epoch) { return true; }
+    }
     return false;
 }
 
@@ -382,7 +384,7 @@ export class RdfNodeSerializer {
         } else {
             if (this.pruningCondition.cond) { return; }
         }
-        let fnGuid = isClass(subject) ? noGuid : appendGuid;
+        let fnGuid = isClass(this.nodeDict, subject) ? noGuid : appendGuid;
         let subjectName: string = getRdfNameForNode(subject, fnGuid, acase.bactrian);
         let subjectType: string = objectifyType(subject.type, this.nodeDict);
 
@@ -516,7 +518,7 @@ export class RdfNodeSerializer {
                         return;
                     }
 
-                    let fnGuid = isClass(objective) ? noGuid : appendGuid;
+                    let fnGuid = isClass(this.nodeDict, objective) ? noGuid : appendGuid;
                     let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
                     if (isAtom(objective)) {
                         this.context.logger.debug(`atom member> s:${subjectName} <atom> o:${objectName}`);
@@ -548,7 +550,7 @@ export class RdfNodeSerializer {
                 if (typeof objective === "undefined") {
                     return;
                 }
-                let fnGuid = isClass(objective) ? noGuid : appendGuid;
+                let fnGuid = isClass(this.nodeDict, objective) ? noGuid : appendGuid;
                 let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
 
                 let reason = childIds[guid];

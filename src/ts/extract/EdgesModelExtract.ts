@@ -97,7 +97,8 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                             "domain": languageName,
                             "meta": baseNodeTypeGuid,
                             "root": baseNodeRootGuid,
-                            "base": baseNodeGuid
+                            "base": baseNodeGuid,
+                            "isMeta": core.isMetaNode(node),
                         },
                         "pointers": {}, "inv_pointers": {},
                         "sets": {}, "inv_sets": {},
@@ -178,6 +179,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                 if (typeof attrValue === "string") {
                     let sen = sourceEntry.name;
                     switch (attrName) {
+                        case "@epoch": sen.epoch = attrValue; break;
                         case "@preserve": sen.setPropagation(attrValue); break;
                         case "@uriName": sen.uriName = attrValue; break;
                         case "@uriExt": sen.uriExt = attrValue; break;

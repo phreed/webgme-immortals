@@ -51,6 +51,7 @@ export interface Sets {
 export class TypeType {
     domain: string;
     meta: string;
+    isMeta: boolean;
     root: string;
     base: string;
     parent: string;
@@ -97,6 +98,7 @@ export type PropagationType = "preserve" | "suppress" | null;
 
 export class NameType {
     name: string;
+    epoch: string | null;
     propagation: PropagationType;
     extUuid: string;
     uriGen: string;
@@ -111,8 +113,10 @@ export class NameType {
         return `[A]${that.name} [G]${that.uriGen} [P]${that.uriPrefix} [X]${that.uriExt} [N]${that.uriName} [U]${that.extUuid}`;
     }
 
-    constructor(name: string,
+    constructor(
+        name: string,
         propagation: PropagationType,
+        epoch: string,
         extUuid: string,
 
         uriGen: string,
@@ -122,6 +126,7 @@ export class NameType {
 
         this.name = name;
         this.propagation = propagation;
+        this.epoch = epoch;
         this.extUuid = extUuid;
         this.uriGen = uriGen;
         this.uriPrefix = uriPrefix;
@@ -129,11 +134,11 @@ export class NameType {
         this.uriExt = uriExt;
     }
     static makeEmpty() {
-        return new NameType(NULL_OBJECT, null, BLANK, BLANK, BLANK,
+        return new NameType(NULL_OBJECT, null, BLANK, BLANK, BLANK, BLANK,
             BLANK, BLANK);
     }
     static makeByHash(hash: { [key: string]: any }) {
-        return new NameType(hash["name"], hash["epoch"], hash["extUuid"],
+        return new NameType(hash["name"], hash["preserve"], hash["epoch"], hash["extUuid"],
             hash["uriGen"], hash["uriPrefix"], hash["uriExt"], hash["uriName"]);
     }
 
