@@ -348,7 +348,8 @@ export class RdfNodeSerializer {
                     IMMoRTALS_ptr: `${NS2}/pointer#`,
                     IMMoRTALS_attr: `${NS2}/attribute#`,
 
-                    IMMoRTALS_impl: `${NS2}/com/securboration/immortals/example/instantiation#`
+                    IMMoRTALS_impl: `${NS2}/com/securboration/immortals/example/instantiation#`,
+                    IMMoRTALS_spec: `${NS2}/pattern/spec#`
                 }
             });
     }
