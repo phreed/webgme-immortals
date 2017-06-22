@@ -145,4 +145,4 @@ export class BranchStatus {
     public static readonly PULLING = "PULLING";
     public static readonly MERGING = "MERGING";
     public static readonly ERROR = "ERROR";
-};
+}

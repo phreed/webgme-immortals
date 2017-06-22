@@ -10,7 +10,7 @@ import { CytoscapeWidget } from "visualizers/widgets/cytoscape/CytoscapeWidget";
 import { CytoscapeControl } from "./CytoscapeControl";
 
 /**
- * This could be done better with a Mixin but typescript mixins are 
+ * This could be done better with a Mixin but typescript mixins are
  * kind of clunky at present.
  */
 class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
@@ -32,7 +32,7 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
         this._client = params.client;
         this._initialize();
         this.logger.debug("CytoscapePanel: constructor finished");
-    };
+    }
 
     /**
      * IActivePanel is not really an interface.
@@ -74,7 +74,7 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
         });
 
         this.onActivate();
-    };
+    }
 
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
@@ -83,12 +83,12 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
         // apply parent"s onReadOnlyChanged
         PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
-    };
+    }
 
     onResize(width: number, height: number): void {
         this.logger.debug(`onResize --> width: ${width}, height: ${height}`);
         this.widget.onWidgetContainerResize(width, height);
-    };
+    }
 
     /* * * * * * * * Visualizer life cycle callbacks * * * * * * * */
     destroy(): void {
@@ -104,13 +104,16 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
 
         km.setListener(undefined);
         tb.refresh();
-    };
+    }
 
     onActivate = () => {
         this.widget.onActivate();
         this.control.onActivate();
-        this.onResize(this.widget._el.width(), this.widget._el.height());
-
+        let width = this.widget._el.width();
+        let height = this.widget._el.height();
+        if (typeof width !== "undefined" && typeof height !== "undefined") {
+            this.onResize(width, height);
+        }
         let km = WebGMEGlobal.KeyboardManager;
         if (typeof km === "undefined") { return; }
         let tb = WebGMEGlobal.Toolbar;
@@ -118,7 +121,7 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
 
         km.setListener(this.widget);
         tb.refresh();
-    };
+    }
 
     onDeactivate = () => {
         this.widget.onDeactivate();
@@ -131,7 +134,7 @@ class CytoscapePanel extends PanelBaseWithHeader implements IActivePanel {
 
         km.setListener(undefined);
         tb.refresh();
-    };
+    }
 }
 
 export = CytoscapePanel;

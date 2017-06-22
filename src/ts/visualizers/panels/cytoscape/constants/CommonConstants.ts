@@ -2,7 +2,7 @@
 
 /**
  * String constant expressions used in both client and server.
- * 
+ *
  * node_modules/webgme/src/common/Constants.js
  * https://github.com/webgme/webgme/blob/master/src/common/Constants.js
  */

@@ -1,7 +1,7 @@
 
 /**
  * String constant definitions use in client
- * 
+ *
  * ./node_modules/webgme/src/client/js/Constants.js
  * https://github.com/webgme/webgme/blob/master/src/client/js/Constants.js
  */
@@ -20,13 +20,13 @@ export class LineStylePatterns {
 export class LineStyleTypes {
     public static readonly NONE = "";
     public static readonly BEZIER = "bezier";
-};
+}
 
 export class LineStylePlacements {
     public static readonly SRC = "src";
     public static readonly MIDDLE = "mid";
     public static readonly DST = "dst";
-};
+}
 
 export class LineStyleArrows {
     public static readonly NONE = "none";
@@ -37,7 +37,7 @@ export class LineStyleArrows {
     public static readonly OVAL = "oval";
     public static readonly DIAMOND2 = "diamond2";
     public static readonly INHERITANCE = "inheritance";
-};
+}
 
 export class LineStyle {
     public static readonly WIDTH = "width";
@@ -116,4 +116,4 @@ export class GmeConstants extends GmeCommonConstants {
     // the id defined in Visualizers.json.
     public static readonly VISUALIZER_PANEL_IDENTIFIER = "VISUALIZER_PANEL_IDENTIFIER";
 
-};
+}

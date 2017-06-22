@@ -34,4 +34,4 @@ export class ClientConstants {
     // Constraint Checking
     public static readonly META_RULES_RESULT = "META_RULES_RESULT";
     public static readonly CONSTRAINT_RESULT = "CONSTRAINT_RESULT";
-};
+}

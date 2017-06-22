@@ -45,9 +45,6 @@ export class CytoscapeWidget {
     }
 
     _initialize = () => {
-        // let width = this._el.width();
-        // let height = this._el.height();
-
         // set widget class
         this._el.addClass(this.WIDGET_CLASS);
 
@@ -104,11 +101,22 @@ export class CytoscapeWidget {
         };
         let layout: Cy.CircleLayoutOptions = {
             name: "circle",
-            padding: 10,
-            startAngle: 0,
             fit: true,
+            padding: 10,
+            boundingBox: {x1: 0, y1: 0, x2: 1000, y2: 1000},
+            avoidOverlap: true,
             nodeDimensionsIncludeLabels: true,
-            animate: false
+            spacingFactor: undefined,
+            radius: undefined,
+            startAngle: 0,
+            sweep: undefined,
+            clockwise: true,
+            sort: undefined,
+            animate: false,
+            animationDuration: 500,
+            animationEasing: undefined,
+            ready: undefined,
+            stop: undefined
         };
         let options: Cy.CytoscapeOptions = {
 
@@ -134,6 +142,9 @@ export class CytoscapeWidget {
             let control = pm.getActivePanel().control;
             let isEdge = false;
             let isNode = false;
+            if (typeof evt.target === "undefined") {
+                return;
+            }
             if (typeof evt.target.id === "function") {
                 isEdge = evt.target.isEdge();
                 isNode = evt.target.isNode();
@@ -145,7 +156,6 @@ export class CytoscapeWidget {
                 isEdge = false;
                 state.registerActiveSelection([this._activeNode]);
             }
-
 
             if (control._toolbarItems.cpFillColor) {
                 control._toolbarItems.cpFillColor.enabled(isEdge || isNode);
@@ -173,8 +183,6 @@ export class CytoscapeWidget {
             if (control._toolbarItems.ddbtnConnectionLineWidth) {
                 control._toolbarItems.ddbtnConnectionLineWidth.enabled(isEdge);
             }
-
-
         });
     }
 
