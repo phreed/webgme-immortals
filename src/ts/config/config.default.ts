@@ -54,6 +54,7 @@ config.requirejsPaths["serializer"] = "./dist-client/serializer/";
 config.requirejsPaths["extract"] = "./dist-client/extract/";
 config.requirejsPaths["delivery"] = "./dist-client/delivery/";
 config.requirejsPaths["utility"] = "./dist-client/utility/";
+// config.requirejsPaths["transit-js"] = "node_modules/transit-js/target/transit.js";
 // config.requirejsPaths["serializer"] = ["dist-client/serializer/","src/ts/serializer/"];
 
 config.requirejsPaths["plugins/SerializerServerPlugin/metadata"] = "./dist-client/plugins/SerializerServerPlugin/metadata";

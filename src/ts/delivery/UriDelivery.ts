@@ -50,7 +50,7 @@ export async function deliverMultipart(sponsor: PluginBase,
 
 export async function deliverSinglepart(sponsor: PluginBase,
     config: GmeConfig.GmeConfig, payload: string): Promise<GmeClasses.Result> {
-    sponsor.logger.info("deliver multipart/form-data to URI");
+    sponsor.logger.info("deliver single-part to URI");
 
     if (!config.hasOwnProperty("deliveryUrl")) {
         return Promise.reject(new Error("No uri provided."));

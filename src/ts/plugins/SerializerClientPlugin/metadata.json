@@ -29,7 +29,7 @@
       "value": "ttl:1.0.0",
       "valueType": "string",
       "valueItems": [
-        "edn:1.0.0",
+        "trzt:1.0.0",
         "json:1.0.0",
         "ttl:1.0.0"
       ]

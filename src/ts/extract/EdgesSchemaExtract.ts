@@ -50,6 +50,22 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
      * The base node makes reference to inheritance.
      * The parent node makes reference to containment.
      * The traverse function follows the containment tree.
+     * The concepts:
+     *  * containment:
+     *       * a meta-rule permits containment.
+     *       * parent/children properties indicate containment.
+     *  * pointer/set:
+     *       * a meta-rule permits pointers/sets which are named.
+     *       * the pointers and sets are named collections of nodes.
+     *  * instance/inherit:
+     *       * no meta-rule is required to allow inheritance.
+     *       * the `base` of the node indicates both.
+     *  * mixin:
+     *       * a meta-rule associates mixins.
+     *       * the `base` activates mixin properties.
+     *  * attributes:
+     *       * meta-rules are specified on nodes.
+     *       * values may be overridden down the inheritance path
      * @type {[type]}
      */
     let visitFn = async (node: Core.Node, done: GmeCommon.VoidFn): Promise<void> => {
@@ -60,7 +76,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
             let prunedRootPath: string | null = null;
             pruneList.forEach((pl) => {
                 if (nodePath.indexOf(pl) !== 0) { return; }
-                sponsor.logger.info(`pruned: ${nodePath}::${pl}`);
+                sponsor.logger.info(`pruning: ${nodePath}::${pl}`);
                 prunedRootPath = pl;
             });
 
@@ -71,7 +87,9 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
             let baseNode = core.getBase(node);
             let baseNodeGuid: string;
             let baseNodeTypeGuid: string;
+            let mixinTypeGuidS: nt.GuidType[] = [];
             let baseNodeRootGuid: string;
+            let ownRules: any = {};
             if (baseNode === null) {
                 baseNodeGuid = "NULL";
                 baseNodeTypeGuid = "NULL";
@@ -80,21 +98,36 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                 baseNodeGuid = getCoreGuid(core, baseNode);
                 baseNodeTypeGuid = getCoreGuid(core, core.getBaseType(node));
                 baseNodeRootGuid = getCoreGuid(core, core.getBaseRoot(node));
+                ownRules = core.getOwnJsonMeta(node);
+                let aDict = core.getBaseTypes(node);
+                if (aDict !== null) {
+                    for (let iName in aDict) {
+                        if (!aDict.hasOwnProperty(iName)) { continue; }
+                        let iNode = aDict[iName];
+                        console.log(`index node ${iName}`);
+                        let iGuid = getCoreGuid(core, iNode);
+                        if (iGuid === baseNodeGuid) { continue; }
+                        mixinTypeGuidS.push(iGuid);
+                    }
+                }
             }
 
-            // set the nodes sourceGuid
             let sourceGuid: string = getCoreGuid(core, node);
+            sponsor.logger.info(`set the subject's ${sourceGuid}`);
             let sourceEntry: nt.Subject
                 = Object.assign({},
                     nodeGuidMap.get(sourceGuid),
                     <nt.Subject>{
                         "guid": sourceGuid,
+                        "version": "0.0.1",
                         "name": {},
                         "type": {
                             "domain": languageName,
                             "meta": baseNodeTypeGuid,
+                            "mixin": mixinTypeGuidS,
                             "root": baseNodeRootGuid,
-                            "base": baseNodeGuid
+                            "base": baseNodeGuid,
+                            "isMeta": core.isMetaNode(node),
                         },
                         "pointers": {}, "inv_pointers": {},
                         "sets": {}, "inv_sets": {},
@@ -102,6 +135,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                             "name": nt.NULL_OBJECT,
                             "guid": nt.NULL_GUID
                         },
+                        "rules": ownRules,
                         "attributes": {},
                         "children": {},
                         "prune": PruningFlag.None
@@ -149,6 +183,8 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                 }
                 let parentPath: string = core.getPath(parent);
 
+                sponsor.logger.info(`set the parent path ${parentPath}`);
+
                 let parentData = path2entry.get(parentPath);
                 if (typeof parentData === "undefined") {
                     sponsor.logger.warn(`problem with parentPath ${parentPath}`);
@@ -169,7 +205,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                 }
             }
 
-            // set the nodes attributes
+            sponsor.logger.info(`set the subject's attributes`);
             core.getAttributeNames(node).forEach((attrName: string) => {
                 let attrValue = core.getAttribute(node, attrName);
                 if (typeof attrValue === "string") {
@@ -196,9 +232,8 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                 }
             });
 
-            // get pointers & inv_pointers
-            let ptrNameList: string[] = /* await */ core.getPointerNames(node);
-            ptrNameList.forEach(async (ptrName, _index, _array) => {
+            sponsor.logger.info(`get the subject's pointers & inv_pointers`);
+            core.getPointerNames(node).forEach(async (ptrName, _index, _array) => {
 
                 let targetPathRaw = pathToString(core.getPointerPath(node, ptrName));
                 if (typeof targetPathRaw !== "string") { return; }
@@ -238,9 +273,11 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
             });
 
             // get sets & inv_set
-            let setNameList: string[] = core.getValidSetNames(node);
-            setNameList.forEach((setName, _index, _array) => {
+            core.getValidSetNames(node).forEach((setName, _index, _array) => {
+                console.log(`set name: ${setName}`);
+                if ("_mixin" === setName) { return; }
                 let targetMemberPathsRaw = core.getMemberPaths(node, setName);
+
                 targetMemberPathsRaw.forEach(async (targetMemberPath) => {
                     if (typeof targetMemberPath !== "string") { return; }
                     let targetPath: string = targetMemberPath;
@@ -312,6 +349,8 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
         await core.traverse(sponsor.rootNode,
             { excludeRoot: false },
             visitFn);
-    } finally { }
+    } finally {
+        sponsor.logger.info(`traversal complete`);
+    }
     return nodeGuidMap;
 }

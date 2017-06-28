@@ -5,7 +5,7 @@
  */
 
 import PluginBase = require("plugin/PluginBase");
-// import edn = require("jsedn");
+// import trzt = require("transit-js");
 
 import MetaDataStr = require("text!plugins/SerializerClientPlugin/metadata.json");
 
@@ -26,7 +26,7 @@ async function serialize(that: SerializerClientPlugin, configDictionary: any): P
 
     switch (configDictionary["schematicVersion"]) {
         case "schema-flat:1.0.0":
-            that.sendNotification("get model edges");
+            that.sendNotification("get model edges with schema");
             nodeDict = await getSchema(that, that.core, that.rootNode, that.META);
             break;
         case "model-flat:1.0.0":
@@ -44,10 +44,17 @@ async function serialize(that: SerializerClientPlugin, configDictionary: any): P
             payload = await JSON.stringify([...nodeDict], null, 4);
             break;
 
-        case "edn:1.0.0":
-            that.sendNotification("serializing to EDN");
-            payload = await JSON.stringify([...nodeDict], null, 4);
-            // payload = await edn.encode(nodeDict);
+        case "trzt:1.0.0":
+            that.sendNotification("serializing to Transit");
+            try {
+                that.logger.info(`preparing transit writer`);
+                // let w = trzt.writer("json-verbose");
+                that.logger.info(`preparing to serialize to transit`);
+                // payload = w.write(nodeDict);
+            } catch (err) {
+                that.sendNotification(`problem writing transit file: ${err.message}`);
+                return Promise.reject(err.message);
+            }
             break;
 
         case "ttl:1.0.0":

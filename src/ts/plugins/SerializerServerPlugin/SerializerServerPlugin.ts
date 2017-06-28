@@ -5,7 +5,7 @@
  */
 
 import PluginBase = require("plugin/PluginBase");
-// import edn = require("jsedn");
+import trzt = require("transit-js");
 
 import MetaDataStr = require("text!plugins/SerializerServerPlugin/metadata.json");
 
@@ -27,8 +27,8 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
     let nodeDict: Map<string, any>;
 
     switch (configDictionary["schematicVersion"]) {
-         case "schema-flat:1.0.0":
-            that.sendNotification("get model edges");
+        case "schema-flat:1.0.0":
+            that.sendNotification("get model edges with schema");
             nodeDict = await getSchema(that, that.core, that.rootNode, that.META);
             break;
         case "model-flat:1.0.0":
@@ -45,10 +45,17 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
             payload = await JSON.stringify([...nodeDict], null, 4);
             break;
 
-        case "edn:1.0.0":
-            that.sendNotification("serializing to EDN");
-            payload = await JSON.stringify([...nodeDict], null, 4);
-            // payload = await edn.encode(nodeDict);
+        case "trzt:1.0.0":
+            that.sendNotification("serializing to Transit");
+            try {
+                that.logger.info(`preparing transit writer`);
+                let w = trzt.writer("json-verbose");
+                that.logger.info(`preparing to serialize to transit`);
+                payload = w.write(nodeDict);
+            } catch (err) {
+                that.sendNotification(`problem writing transit file: ${err.message}`);
+                return Promise.reject(err.message);
+            }
             break;
 
         case "ttl:1.0.0":
@@ -96,7 +103,7 @@ async function serialize(that: SerializerServerPlugin, configDictionary: any): P
             return await deliverSinglepart(that, configDictionary, payload);
 
         case "kafka:1.0.0":
-        that.sendNotification("deliver to kafka");
+            that.sendNotification("deliver to kafka");
             return await deliverKafka(that, configDictionary, payload);
 
         default:

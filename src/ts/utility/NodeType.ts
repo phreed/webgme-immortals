@@ -51,6 +51,7 @@ export interface Sets {
 export class TypeType {
     domain: string;
     meta: string;
+    mixin: GuidType[];
     isMeta: boolean;
     root: string;
     base: string;
@@ -152,11 +153,27 @@ export class NameType {
 
 }
 
-export type ChildReasonType = { [type: string]: { [guid: string]: { parent: GuidType, child: GuidType } } };
+export type ChildReasonType =
+    {
+        [type: string]:
+        {
+            [guid: string]:
+            { parent: GuidType, child: GuidType }
+        }
+    };
+
+export interface Rules {
+    attr?: { [name: string]: GmeCommon.DefObject };
+    pointer?: {};
+    set?: {};
+    compose?: {};
+}
+
+
 export class Subject {
 
     version: string;
-    guid: string;
+    guid: GuidType;
     name: NameType;
     type: TypeType;
     pointers: Pointers;
@@ -164,6 +181,7 @@ export class Subject {
     sets: Sets;
     inv_sets: Sets;
     base: NGuidType;
+    rules: Rules;
     attributes: { [attr: string]: string | number };
     children: ChildReasonType;
     prune: PruningFlag;
@@ -189,6 +207,7 @@ export class Subject {
         sets: Sets,
         inv_sets: Sets,
         base: NGuidType,
+        rules: Rules,
         attributes: { [attr: string]: string | number },
         children: ChildReasonType,
         prune: PruningFlag) {
@@ -202,6 +221,7 @@ export class Subject {
         this.sets = sets;
         this.inv_sets = inv_sets;
         this.base = base;
+        this.rules = rules;
         this.attributes = attributes;
         this.children = children;
         this.prune = prune;
@@ -213,7 +233,8 @@ export class Subject {
             hash["name"], hash["type"],
             hash["pointers"], hash["inv_pointers"],
             hash["sets"], hash["inv_sets"],
-            hash["base"], hash["attributes"],
+            hash["base"],
+            hash["attributeRules"], hash["attributes"],
             hash["children"], hash["prune"]);
     }
 
@@ -229,7 +250,7 @@ export class Subject {
                 "name": NULL_OBJECT,
                 "guid": NULL_GUID
             },
-            {},
+            {}, {},
             {},
             PruningFlag.None
         );
@@ -247,7 +268,7 @@ export class Subject {
                 "name": NULL_OBJECT,
                 "guid": NULL_GUID,
             },
-            {},
+            {}, {},
             {},
             PruningFlag.None
         );

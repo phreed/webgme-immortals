@@ -92,6 +92,7 @@ export async function get(sponsor: PluginBase, core: GmeClasses.Core,
                     nodeGuidMap.get(sourceGuid),
                     <nt.Subject>{
                         "guid": sourceGuid,
+                        "version": "0.0.1",
                         "name": {},
                         "type": {
                             "domain": languageName,

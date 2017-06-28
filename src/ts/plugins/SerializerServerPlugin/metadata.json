@@ -29,6 +29,7 @@
       "value": "ttl:1.0.0",
       "valueType": "string",
       "valueItems": [
+        "trzt:1.0.0",
         "json:1.0.0",
         "ttl:1.0.0"
       ]
@@ -49,7 +50,7 @@
       "name": "deliveryMode",
       "displayName": "Delivery Mode",
       "description": "Specify the manner of delivery for the serialization",
-      "value": "singlepart:1.0.0",
+      "value": "file:1.0.0",
       "valueType": "string",
       "valueItems": [
         "file:1.0.0",

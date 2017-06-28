@@ -4,7 +4,6 @@
 import PluginBase = require("plugin/PluginBase");
 import { NULL_GUID } from "../utility/NodeType";
 
-import _ = require("underscore");
 import { Writer, N3Writer, Util } from "n3";
 import * as nlv from "serializer/NodeListVisitor";
 import * as acase from "utility/altCase";
@@ -199,56 +198,6 @@ function getRdfNameForNode(node: nt.Subject,
     }
 }
 
-
-/**
- * A function to determine if a node is an atom.
- *
- * atom => a node with no pointers, and attributes
- * The predicate for a contained atom is constructed from
- * the name of the atom plus the names of its attributes.
- * There will be one triple for each attribute.
- * When traversing the tree an atom has no subject so
- * it produces no triples of its own.
- */
-function isAtom(node: nt.Subject): boolean {
-    if (isModel(node)) { return false; }
-
-    if (isConnection(node)) { return false; }
-    if (!_.isEmpty(node.inv_pointers)) { return false; }
-
-    if (isCollection(node)) { return false; }
-    if (!_.isEmpty(node.inv_sets)) { return false; }
-    return true;
-}
-
-/**
-* model => a node with children
-* If a child is an "atom" then its attributes are rendered
-* as triples where the model is the subject.
-* Children that are not atoms are treated as objects.
-*/
-function isModel(node: any): boolean {
-    if (_.isEmpty(node.children)) { return false; }
-    return true;
-}
-
-/**
- * connection => a node with pointers
- */
-function isConnection(node: any): boolean {
-    if (_.isEmpty(node.pointers)) { return false; }
-    return true;
-}
-
-/**
- * The node is a set if it points to sets.
- */
-function isCollection(node: nt.Subject): boolean {
-    if (_.isEmpty(node.sets)) { return false; }
-    return true;
-}
-
-
 /**
  * If the node is a 'meta' node then it describes a class.
  * What does it mean to be a 'meta' node?
@@ -375,6 +324,13 @@ export class RdfNodeSerializer {
      * If a subject is its own type then leave it out.
      */
     write = (subject: nt.Subject): void => {
+        /*
+        if (subject.name.extUuid
+            && subject.name.extUuid.length > 0
+            && subject.name.extUuid === "a44c233e-1d58-432f-bf5d-cfac6276efee") {
+            this.context.logger.debug(`this is the droid you are looing for`);
+        }
+        */
         let generateRegExp = new RegExp("^<PATTERN>:(.+)");
 
         // this.context.logger.info(`write: ${subject.prune} ... ${(subject.prune & PruningFlag.Library)}`);
@@ -426,7 +382,7 @@ export class RdfNodeSerializer {
         });
 
         // this.context.logger.info(`write subject type: ${nt.TypeType.brief(subject.type)}`);
-         this.writer.addTriple({
+        this.writer.addTriple({
             subject: subjectName,
             predicate: `${NS_rdf}#type`,
             object: subjectType
@@ -507,7 +463,7 @@ export class RdfNodeSerializer {
         }
 
         this.context.logger.info("write subject sets");
-        let sets: nt.Sets = subject.sets;
+        let sets = subject.sets;
         for (let kind in sets) {
             let members = sets[kind];
             members.forEach((member) => {
@@ -523,17 +479,13 @@ export class RdfNodeSerializer {
 
                     let fnGuid = isClass(this.nodeDict, objective) ? noGuid : appendGuid;
                     let objectName = getRdfNameForNode(objective, fnGuid, acase.bactrian);
-                    if (isAtom(objective)) {
-                        this.context.logger.debug(`atom member> s:${subjectName} <atom> o:${objectName}`);
-                    } else {
-                        let predicateName = predicateContainsKey(kind);
-                        this.context.logger.debug(`model member> s:${subjectName} p:{predicateName} o:${objectName}`);
-                        this.writer.addTriple({
-                            subject: subjectName,
-                            predicate: predicateName,
-                            object: objectName
-                        });
-                    }
+                    let predicateName = predicateContainsKey(kind);
+                    this.context.logger.debug(`model member> s:${subjectName} p:{predicateName} o:${objectName}`);
+                    this.writer.addTriple({
+                        subject: subjectName,
+                        predicate: predicateName,
+                        object: objectName
+                    });
                 }
             });
         }

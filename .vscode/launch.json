@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [       
+
         {
             "type": "node",
             "protocol": "auto",
@@ -47,12 +48,12 @@
             "protocol": "auto",
             "request": "launch",
             "name": "Server Serialize Plugin",
-            "stopOnEntry": false,
-            "program": "${workspaceRoot}/dist-client/main/run_plugin.js",
+            "stopOnEntry": true,
+            "program": "${workspaceRoot}/src/ts/main/run_plugin.ts",
             "cwd": "${workspaceRoot}",
             "args": [
                 "SerializerServerPlugin",
-                "immortals_v04_mission_2017",
+                "mission",
                 "--owner",
                 "fred",
                 "--user",
@@ -60,7 +61,8 @@
                 "--branchName",
                 "master"
             ],
-            "outFiles": ["${workspaceRoot}/output"],
+            "outFiles": ["${workspaceRoot}/dist-client/**/*.js",
+                         "${workspaceRoot}/dist-client/**/*.d.ts"],
             "sourceMaps": true,
             "env": {
                 "NODE_ENV": "immortals"
